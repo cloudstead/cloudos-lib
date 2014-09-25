@@ -1,0 +1,44 @@
+<% apache = Chef::Recipe::Apache %>
+
+<% if @config[:vhost] %>
+  IncludeOptional apps/<%=@app_name%>/vhost.conf
+<% end %>
+
+<% if @config[:mode] == :proxy_service %>
+
+  RequestHeader set X_FORWARDED_PROTO 'https'
+  ProxyPreserveHost On
+
+  <% if @cloudos_port %>
+  ProxyPass <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+  ProxyPassReverse <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+  <% end %>
+
+  ProxyPass <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
+  ProxyPassReverse <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
+
+<% else %>
+  ProxyPass /<%=%x(basename #{@config[:doc_root]}).strip%> !
+<% end %>
+
+<% if @config && @config[:dir] %>
+    <% @config[:dir].each do |dir| %>
+
+      <% full_path = dir.sub('@doc_root', @config[:doc_root]) %>
+
+      <Directory <%=full_path%>>
+        IncludeOptional <%=apache.dir_config_path(@app_name, apache.dir_base(dir))%>
+      </Directory>
+
+    <% end %>
+<% end %>
+
+<% if @config[:location] %>
+    <% @config[:location].each do |loc| %>
+
+      <Location <%=loc%>>
+        IncludeOptional <%=apache.loc_config_path(@app_name, apache.loc_base(loc))%>
+      </Location>
+
+    <% end %>
+<% end %>

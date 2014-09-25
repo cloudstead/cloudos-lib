@@ -1,0 +1,164 @@
+#!/bin/bash
+#
+# jrun - a launcher for java servers that values convention over configuration
+#
+# Usage:
+#
+#    jrun [debug] <app-base-dir> [java-class] [config-file]
+#
+# If "debug" is the first argument, the JVM listens on port 5005 at startup,
+# and resumes when a debugger connects.
+#
+# For the examples below, assume the app-base-dir is /home/web/acmecorp-cool-app
+#
+# In both modes described below, the app-base-dir determines the "parent" and "role"
+# of the app. For an app-base-dir of /home/web/acmecorp-cool-app the parent is
+# acmecorp and the role is "cool-app".
+#
+# When invoking the JVM, options passed are JVM_OPTS and COOL-APP_
+# and the value of the ${ROLE} . These are env vars defined in the shell that invokes this script, NOT any env vars
+# found in the files described below.
+#
+# If a java-class is NOT provided, a lot of things happen automatically:
+#   Environment configuration is expected to be in one of the predefined places:
+#     /etc/acmecorp.env                 # /etc/${PARENT}.env
+#     ${HOME}/.acmecorp.env             # ${HOME}/.${PARENT}.env
+#     ./acmecorp-cool-app.env           # ./${PARENT}-${ROLE}.env
+#     ${HOME}/.acmecorp-cool-app.env    # ${HOME}/.${PARENT}-${ROLE}.env
+#
+#   The env file should be a series of "export ENV_NAME=something" statements.
+#   todo: parse env file, discard anything that's not an export statement.
+#
+#   The env file is expected to define a DEPLOY_ENV variable.
+#   In the examples below, assume the DEPLOY_ENV is prod
+#
+#   When the jar is run, the arguments to the Java "main" method will be
+#   a list of YML files, if these exist:
+#      /home/web/acmecorp-cool-app/conf/acmecorp-cool-app-fixed.yml
+#      /home/web/acmecorp-cool-app/conf/acmecorp-cool-app-prod.yml
+#
+#   The "fixed" YML file will be the first argument, and the DEPLOY_ENV file
+#   will be second. This allows override YML settings specific to a deployment
+#   environment.
+#
+#   There must be exactly one jar that matches the filename pattern:
+#      /home/web/acmecorp-cool-app/target/acmecorp-cool-app-*.jar
+#
+#   This jar is expected to be an uber-jar that has a Main-Class in its manifest.
+#   The jar is then run, and logs will be written to:
+#      /home/web/acmecorp-cool-app/logs/acmecorp-cool-app.log
+#
+# If a java-class IS provided, much less happens automatically:
+#   No environment is processed.
+#   No yml files are identified.
+#   The uber-jar file must still exist.
+#
+#   In the examples below, assuming the java-class is acmecorp.MyService and
+#   the config file is /etc/something.conf
+#
+#   If a config-file is provided, it will be the sole argument to
+#   the Java "main" method, and logs will go in:
+#      /home/web/acmecorp-cool-app/logs/acmecorp-cool-app-MyService-something.log
+#
+#   If a config-file is not provided, there will be no arguments to
+#   the Java "main" method, and logs will go in:
+#      /home/web/acmecorp-cool-app/logs/acmecorp-cool-app-MyService.log
+#
+
+umask 007
+
+DEBUG="${1}"
+DEBUG_OPTS=""
+if [ ! -z ${DEBUG} ] && [ ${DEBUG} = "debug" ] ; then
+  DEBUG_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"
+  shift
+fi
+
+APP_BASE="${1}"
+if [ -z "${APP_BASE}" ] ; then
+  APP_BASE=$(pwd)
+fi
+
+if [ ! -d ${APP_BASE} ] ; then
+  echo "jrun: Directory ${APP_BASE} does not exist"
+  exit 1
+fi
+
+# these are optional -- if present, it means run this class with this specific config
+JAVA_CLASS="${2}"
+CONFIG="${3}"
+#echo "using JAVA_CLASS=${JAVA_CLASS} and CONFIG=${CONFIG}"
+
+cd ${APP_BASE}
+APP_BASE=$(pwd)
+APP=$(basename ${APP_BASE})
+APP_PARENT=$(echo $APP | tr '-' ' ' | awk '{print $1}')
+APP_ROLE=$(echo $APP | tr '-' ' ' | awk '{print $2}')
+
+CONFIGS=""
+if [[ "${JAVA_CLASS}" =~ .+\..+ ]] ; then
+  CONFIGS="${CONFIG}"
+
+else
+  ENV_FILES="/etc/${APP_PARENT}.env ${HOME}/.${APP_PARENT}.env ${APP}.env ${HOME}/.${APP}.env"
+  found=0
+  for env_file in ${ENV_FILES} ; do
+    if [ -f ${env_file} ] ; then
+    . ${env_file}
+      echo "jrun: Loaded env from ${env_file}"
+      found=1
+    fi
+  done
+  if [ $found -eq 0 ] ; then
+    echo "jrun: No env file found. Looked in: ${ENV_FILES}"
+    exit 1
+  fi
+
+  FIXED_CONFIG=${APP_BASE}/conf/${APP}-fixed.yml
+  if [ -f "${FIXED_CONFIG}" ] ; then
+    CONFIGS="${CONFIGS} ${FIXED_CONFIG}"
+  fi
+
+  if [ -z "${DEPLOY_ENV}" ] ; then
+    echo "jrun: No DEPLOY_ENV set in /etc/${APP_PARENT}.env or ${HOME}/.${APP_PARENT}.env"
+  else
+    DEPLOY_ENV_CONFIG=${APP_BASE}/conf/${APP}-${DEPLOY_ENV}.yml
+    if [ -f "${DEPLOY_ENV_CONFIG}" ] ; then
+      CONFIGS="${CONFIGS} ${DEPLOY_ENV_CONFIG}"
+    fi
+  fi
+fi
+
+JAVA_OPTS_VAR="$(echo ${APP_ROLE} | tr '[:lower:]' '[:upper:]')_JAVA_OPTS"
+eval EXTRA_JAVA_OPTS=\$$JAVA_OPTS_VAR
+JAVA_OPTS="${JAVA_OPTS} ${EXTRA_JAVA_OPTS}"
+
+# The jar could be a regular files or a symlink, check for both
+JAR_FILE="$(find ${APP_BASE}/target -type f -name "${APP}-*.jar") $(find ${APP_BASE}/target -type l -name "${APP}-*.jar")"
+if [ -z ${JAR_FILE} ] ; then
+  echo "jrun: No jar file found matching ${APP_BASE}/target/${APP}-*.jar"
+  exit 1
+fi
+if [ $(echo $JAR_FILE | wc -l) -ne 1 ] ; then
+  echo "jrun: Multiple matching jar files found: ${JAR_FILE}"
+  exit 1
+fi
+
+mkdir -p ${APP_BASE}/logs
+
+COMMAND="java ${JAVA_OPTS} ${DEBUG_OPTS}"
+LOG="${APP_BASE}/logs/${APP}"
+if [[ "${JAVA_CLASS}" =~ .+\..+ ]] ; then
+  COMMAND="${COMMAND} -cp ${JAR_FILE} ${JAVA_CLASS}"
+  LOG="${LOG}-$(echo ${JAVA_CLASS} | awk -F '.' '{print $NF}')" # com.package.SomeService becomes SomeService
+  if [[ "${CONFIG}" =~ .+/.+ ]] ; then
+    LOG="${LOG}-$(echo $(basename ${CONFIG}) | awk -F '.' '{print $1}')"  # /path/to/service-name.yml becomes service-name
+  fi
+else
+  COMMAND="${COMMAND} -jar ${JAR_FILE}"
+fi
+COMMAND="${COMMAND} ${CONFIGS}"
+LOG="${LOG}.log"
+
+echo "jrun: exec: ${COMMAND} (as user $(whoami), logging to ${LOG})"
+exec ${COMMAND} 2>&1 | tee ${LOG}

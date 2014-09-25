@@ -1,0 +1,102 @@
+<%
+apache = Chef::Recipe::Apache
+
+cert_name = @config[:cert_name]
+
+if @config[:server_name]
+    server_name = @config[:server_name]
+
+elsif @config[:mode] == :proxy_root
+    server_name = @hostname
+else
+    server_name = "#{@app_name}-#{@hostname}"
+end
+%>
+
+<IfModule mod_ssl.c>
+
+<VirtualHost <%=@ip_address%>:443>
+
+  ServerName <%=server_name%>
+
+  SSLEngine on
+  <% if cert_name.nil? %>
+  SSLCertificateFile    /etc/ssl/certs/ssl-https.pem
+  SSLCertificateKeyFile /etc/ssl/private/ssl-https.key
+  <% else %>
+  SSLCertificateFile    /etc/ssl/certs/<%=cert_name%>.pem
+  SSLCertificateKeyFile /etc/ssl/private/<%=cert_name%>.key
+  <% end %>
+
+  ServerSignature Off
+  Header add Strict-Transport-Security: "max-age=15768000;includeSubdomains"
+
+<% if (@config[:mode] == :proxy || @config[:mode] == :proxy_root) && @config[:port] %>
+  RequestHeader set X_FORWARDED_PROTO 'https'
+  ProxyPreserveHost On
+
+<% if @config[:mode] == :proxy_root %>
+  IncludeOptional https-services-enabled/
+<% end %>
+
+<% if @cloudos_port %>
+  ProxyPass <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+  ProxyPassReverse <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+<% end %>
+
+  ProxyPass <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
+  ProxyPassReverse <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
+
+  LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b" common_forwarded
+  ErrorLog ${APACHE_LOG_DIR}/<%=server_name%>_error.log
+  CustomLog ${APACHE_LOG_DIR}/<%=server_name%>_forwarded.log common_forwarded
+  CustomLog ${APACHE_LOG_DIR}/<%=server_name%>_access.log combined env=!dontlog
+  CustomLog ${APACHE_LOG_DIR}/<%=server_name%>.log combined
+
+<% else %>
+  DocumentRoot <%=@config[:doc_root]%>
+
+  ErrorLog ${APACHE_LOG_DIR}/<%=server_name%>_error.log
+  CustomLog ${APACHE_LOG_DIR}/<%=server_name%>_access.log combined env=!dontlog
+  CustomLog ${APACHE_LOG_DIR}/<%=server_name%>.log combined
+<% end %>
+
+<% if @config[:vhost] %>
+  IncludeOptional apps/<%=@app_name%>/vhost.conf
+<% end %>
+
+<% if @config[:dir] %>
+    <% @config[:dir].each do |dir| %>
+
+      <% full_path = dir.sub('@doc_root', @config[:doc_root]) %>
+
+      <Directory <%=full_path%>>
+        IncludeOptional <%=apache.dir_config_path(@app_name, apache.dir_base(dir))%>
+      </Directory>
+
+    <% end %>
+<% end %>
+
+<% if @config[:location] %>
+    <% @config[:location].each do |loc| %>
+
+      <Location <%=loc%>>
+        IncludeOptional <%=apache.loc_config_path(@app_name, apache.loc_base(loc))%>
+      </Location>
+
+    <% end %>
+<% end %>
+
+	<FilesMatch "\.(cgi|shtml|phtml|php)$">
+		SSLOptions +StdEnvVars
+	</FilesMatch>
+
+	BrowserMatch "MSIE [2-6]" \
+		nokeepalive ssl-unclean-shutdown \
+		downgrade-1.0 force-response-1.0
+	# MSIE 7 and newer should be able to use keepalive
+	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
+
+</VirtualHost>
+
+</IfModule>

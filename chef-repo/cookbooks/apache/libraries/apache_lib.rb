@@ -1,0 +1,229 @@
+require 'securerandom'
+
+class Chef::Recipe::Apache
+
+  def self.reload(chef)
+    chef.bash "restart Apache" do
+      user "root"
+      code <<-EOH
+if [[ "$(service apache2 status)" =~ "not running" ]] ; then
+  service apache2 start
+else
+  service apache2 reload
+fi
+      EOH
+    end
+  end
+
+  def self.enable_module (chef, module_name)
+    chef.bash "enable Apache module: #{module_name}" do
+      user 'root'
+      cwd '/tmp'
+      code <<-EOH
+a2enmod #{module_name}
+      EOH
+      not_if { File.exists? "/etc/apache2/mods-enabled/#{module_name}.load" }
+    end
+  end
+
+  def self.define_app (chef, app_name, config = nil)
+
+    scope = {
+        :hostname => %x(hostname).strip,
+        :ip_address => chef.node['ipaddress'],
+        :app_name => app_name,
+        :config => config
+    }
+
+    chef.directory "/etc/apache2/apps/#{app_name}" do
+      owner 'www-data'
+      group 'www-data'
+      mode '0755'
+      action :create
+      recursive true
+    end
+
+    # normalize mount -- ensure it begins and ends with a slash
+    config[:mount] ||= '/'
+    config[:mount] = "/#{config[:mount]}" unless config[:mount].start_with? '/'
+    config[:mount] = "#{config[:mount]}/" unless config[:mount].end_with? '/'
+
+    if defined? config[:mode]
+      m = config[:mode]
+        if m == :service || m == :proxy_service
+          self.define_service(chef, scope)
+        elsif m == :vhost || m == :proxy || m == :proxy_root
+          self.define_vhost(chef, scope)
+        else
+          raise "Unknown mode: #{config[:mode]}"
+      end
+
+      # any mode may have htaccess files
+      if config[:htaccess]
+        config[:htaccess].each do |htaccess|
+          dest = "#{htaccess.sub('@doc_root', config[:doc_root])}/.htaccess"
+          src = "apache_htaccess_#{htaccess.sub('@doc_root', 'doc_root').sub('/', '_')}.conf.erb"
+          self.subst_template(chef, src, dest, scope)
+        end
+      end
+
+    else
+      self.subst_template(chef, "#{app_name}.conf.erb", "/etc/apache2/sites-available/#{app_name}.conf", scope, 'apache')
+      self.enable_site(chef, app_name)
+    end
+  end
+
+  def self.dir_base (dir)
+    dir.sub('@doc_root', 'doc_root').gsub('/', '_')
+  end
+
+  def self.dir_config_path (app_name, base)
+    "/etc/apache2/apps/#{app_name}/dir_#{base}.conf"
+  end
+
+  def self.loc_base (loc)
+    if loc.to_s == '' || loc == '/'
+      return 'location_root'
+    end
+    if loc.start_with? '/'
+      return "location_root_#{loc[1..loc.length].gsub('/', '_')}"
+    else
+      return "location_#{loc.gsub('/', '_')}"
+    end
+  end
+
+  def self.loc_config_path (app_name, base)
+    "/etc/apache2/apps/#{app_name}/#{base}.conf"
+  end
+
+  def self.define_vhost(chef, scope)
+
+    app_name = scope[:app_name]
+    config = scope[:config]
+
+    write_vhost_template(app_name, chef, config, scope)
+
+    subst_template(chef, 'app_vhost.conf.erb', "/etc/apache2/sites-available/#{app_name}.conf", scope, 'apache')
+    enable_site(chef, app_name)
+
+    define_dir_configs(app_name, chef, config, scope) if config[:dir]
+    define_location_configs(app_name, chef, config, scope) if config[:location]
+  end
+
+  def self.define_location_configs(app_name, chef, config, scope)
+    config[:location].each do |loc|
+      file_base = loc_base(loc)
+      dest = loc_config_path app_name, file_base
+      src = "apache_#{file_base}.conf.erb"
+      self.subst_template(chef, src, dest, scope)
+    end
+  end
+
+  def self.define_dir_configs(app_name, chef, config, scope)
+    config[:dir].each do |dir|
+      file_base = dir_base(dir)
+      dest = dir_config_path app_name, file_base
+      src = "apache_dir_#{file_base}.conf.erb"
+      self.subst_template(chef, src, dest, scope)
+    end
+  end
+
+  def self.define_service(chef, scope)
+
+    app_name = scope[:app_name]
+    config = scope[:config]
+
+    if config[:mode] == :proxy_service && config[:mount] == '/'
+      raise "define_service: refusing to proxy root of default domain: #{app_name}"
+    end
+
+    write_vhost_template(app_name, chef, config, scope)
+
+    self.subst_template(chef, 'app_service.conf.erb', "/etc/apache2/https-services-available/#{app_name}", scope, 'apache')
+
+    define_dir_configs(app_name, chef, config, scope) if config[:dir]
+    define_location_configs(app_name, chef, config, scope) if config[:location]
+
+    self.enable_service(chef, app_name)
+  end
+
+  def self.write_vhost_template(app_name, chef, config, scope)
+    if config[:vhost] # todo: simply check if the vhost.conf file exists, if it does, write it. then we can save on a setting.
+      dest = "/etc/apache2/apps/#{app_name}/vhost.conf"
+      src = 'apache_vhost.conf.erb'
+      self.subst_template(chef, src, dest, scope)
+    end
+  end
+
+  def self.enable_site(chef, site_name)
+    chef.bash "enable Apache site: #{site_name}" do
+      user 'root'
+      cwd '/tmp'
+      code <<-EOH
+a2ensite #{site_name}
+      EOH
+    end
+  end
+
+  def self.disable_site (chef, site_name)
+    site_name = '000-default' if site_name == 'default'
+    chef.bash "disable Apache new_site: #{site_name}" do
+      user 'root'
+      cwd '/tmp'
+      code <<-EOH
+# always return true because new_site may already be disabled
+a2dissite #{site_name} || true
+      EOH
+    end
+  end
+
+  def self.enable_service(chef, service_name)
+    chef.bash "enable Apache service: #{service_name}" do
+      user 'root'
+      cwd '/tmp'
+      code <<-EOH
+ln -sf /etc/apache2/https-services-available/#{service_name} /etc/apache2/https-services-enabled/#{service_name}
+      EOH
+    end
+  end
+
+  def self.set_php_ini(chef, key, value)
+    value_hash = Digest::SHA256.hexdigest(value)
+    php_ini = "/etc/php5/apache2/conf.d/50-#{key}-#{value_hash}.ini"
+
+    chef.bash "setting #{key}=#{value} in #{php_ini}" do
+      user 'root'
+      code <<-EOH
+echo "#{key}=#{value}" > #{php_ini}
+      EOH
+    end
+  end
+
+  def self.subst_template(chef, source, destination, scope = {}, cb = nil)
+    chef.directory File.dirname(destination) do
+      owner 'www-data'
+      group 'www-data'
+      mode '0644'
+      recursive true
+      action :create
+    end
+
+    begin
+      scope['cloudos_port'] = chef.data_bag_item('cloudos', 'ports')['primary']
+    rescue
+      puts 'error reading cloudos_port'
+    end
+
+    chef.template destination do
+      source source unless source.start_with? '/'
+      local source if source.start_with? '/'
+      cookbook cb
+      owner 'www-data'
+      group 'www-data'
+      mode '0644'
+      variables (scope)
+      action :create
+    end
+  end
+
+end

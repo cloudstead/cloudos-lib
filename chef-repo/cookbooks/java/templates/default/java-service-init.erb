@@ -1,0 +1,8 @@
+#!/bin/bash
+
+APP_BASE="<%=@app_dir%>"
+RUN_AS_USER="<%=@run_as_user%>"
+JAVA_CLASS="<%=@java_class%>"
+CONFIG="<%=@config%>"
+
+exec /usr/local/bin/jrun-init "${APP_BASE}" "${RUN_AS_USER}" ${JAVA_CLASS} ${CONFIG} "$@"

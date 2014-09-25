@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+(c) Copyright 2014 cloudstead.io
+For personal or non-commercial use, this code is available under the GNU Affero General Public License, version 3:
+  https://www.gnu.org/licenses/agpl-3.0.html
+For commercial use, please contact cloudstead.io
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>cloudstead</groupId>
+    <artifactId>cloudos-lib</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <org.slf4j.version>1.6.4</org.slf4j.version>
+        <junit.version>4.8</junit.version>
+        <jclouds.groupId>org.apache.jclouds</jclouds.groupId>
+        <jclouds.version>1.8.0</jclouds.version>
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.cobbzilla</groupId>
+            <artifactId>cobbzilla-utils</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.cobbzilla</groupId>
+            <artifactId>rooty-toots</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${org.slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${org.slf4j.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${org.slf4j.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.16</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-exec</artifactId>
+            <version>1.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+        </dependency>
+
+        <!-- ssh -->
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.50</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jclouds.groupId}</groupId>
+            <artifactId>jclouds-all</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>${jclouds.groupId}</groupId>-->
+            <!--<artifactId>jclouds-compute</artifactId>-->
+            <!--<version>${jclouds.version}</version>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>${jclouds.groupId}</groupId>
+            <artifactId>jclouds-allcompute</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>${jclouds.groupId}.labs</groupId>-->
+            <!--<artifactId>joyentcloud</artifactId>-->
+            <!--<version>${jclouds.version}</version>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>${jclouds.groupId}.labs</groupId>
+            <artifactId>digitalocean</artifactId>
+            <version>${jclouds.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>${jclouds.groupId}</groupId>
+                    <artifactId>jclouds-compute</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${jclouds.groupId}.labs</groupId>
+            <artifactId>virtualbox</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <!-- note that if you want a smaller distribution
+             remove the above dependency and place something
+             like below -->
+        <!--
+            <dependency>
+            <groupId>org.jclouds.provider</groupId>
+            <artifactId>gogrid</artifactId>
+            <version>1.6.0</version>
+            </dependency>
+        -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk16</artifactId>
+            <version>1.46</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${jclouds.groupId}.driver</groupId>
+            <artifactId>jclouds-bouncycastle</artifactId>
+            <version>${jclouds.version}</version>
+            <exclusions>
+                <!-- bouncy castle is a provider, so
+                     it must be signed and used as-is.
+                     we are doing this to prevent its
+                     classes from getting into the
+                     jar-with-dependencies -->
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk16</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${jclouds.groupId}.driver</groupId>
+            <artifactId>jclouds-sshj</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${jclouds.groupId}.driver</groupId>
+            <artifactId>jclouds-enterprise</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.0.9</version>
+        </dependency>
+
+        <!-- Amazon SDK, for S3 -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk</artifactId>
+            <version>1.7.11</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.cobbzilla</groupId>
+            <artifactId>wizard-server</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Force Java 1.7 at all times -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <showWarnings>true</showWarnings>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
