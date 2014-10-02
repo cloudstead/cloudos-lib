@@ -32,6 +32,13 @@ For commercial use, please contact cloudstead.io
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
+        <!-- 2-factor authentication -->
+        <dependency>
+            <groupId>com.authy</groupId>
+            <artifactId>authy-java</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
