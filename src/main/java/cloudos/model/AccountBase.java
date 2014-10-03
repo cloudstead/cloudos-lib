@@ -29,7 +29,8 @@ public class AccountBase extends UniquelyNamedEntity {
     public static final String ERR_MOBILEPHONE_EMPTY = "{err.mobilePhone.empty}";
     public static final String ERR_MOBILEPHONE_CC_EMPTY = "{err.mobilePhoneCountryCode.empty}";
     public static final String ERR_PRIMARY_GROUP_LENGTH = "{err.primaryGroup.length}";
-    public static final int EMAIL_MAXLEN = 1024;
+    public static final int EMAIL_MAXLEN = 255;
+    public static final int VERIFY_CODE_MAXLEN = 100;
     public static final int LASTNAME_MAXLEN = 25;
     public static final int FIRSTNAME_MAXLEN = 25;
     public static final int MOBILEPHONE_MAXLEN = 30;
@@ -70,7 +71,7 @@ public class AccountBase extends UniquelyNamedEntity {
     @Getter private String email;
 
     @JsonIgnore @Getter @Setter private String emailVerificationCode;
-    @JsonIgnore @Getter @Setter private Long emailVerificationCodeCreatedAt;
+    @JsonIgnore @Size(max=VERIFY_CODE_MAXLEN) @Getter @Setter private Long emailVerificationCodeCreatedAt;
     @Getter @Setter private boolean emailVerified = false;
 
     public AccountBase setEmail (String email) {
@@ -87,7 +88,7 @@ public class AccountBase extends UniquelyNamedEntity {
     @HasValue(message=ERR_MOBILEPHONE_EMPTY)
     @Getter private String mobilePhone;
 
-    @JsonIgnore @Getter @Setter private String mobilePhoneVerificationCode;
+    @JsonIgnore @Size(max=VERIFY_CODE_MAXLEN) @Getter @Setter private String mobilePhoneVerificationCode;
     @JsonIgnore @Getter @Setter private Long mobilePhoneVerificationCodeCreatedAt;
     @Getter @Setter private boolean mobilePhoneVerified = false;
 
