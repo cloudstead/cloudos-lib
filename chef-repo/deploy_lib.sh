@@ -76,8 +76,11 @@ for cookbook in ${COOKBOOKS} ; do
 done
 
 # bootstrap files and run list...
-for f in JSON.sh install.sh solo.rb solo.json ; do
+for f in JSON.sh install.sh solo.rb ; do
   cp ${CLOUDOS_LIB_BASE}/${f} ${TEMP}/
+done
+for f in solo.json ; do
+  cp ${BASE}/${f} ${TEMP}/
 done
 
 # data bags and certs...
