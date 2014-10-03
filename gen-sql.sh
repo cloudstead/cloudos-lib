@@ -18,12 +18,13 @@ if [ -x ${DBNAME} ] ; then
   die "Usage: $0 <dbname> <sql-file>"
 fi
 
-SQLFILE=${2}
-if [ -z ${SQLFILE} ] ; then
+SQLFILE="${2}"
+if [ -z "${SQLFILE}" ] ; then
   die "Usage: $0 <dbname> <sql-file>"
 fi
-if [ ! -d $(dirname ${SQLFILE}) ] ; then
-  die "sql-file parent directory does not exist: $(dirname ${SQLFILE})"
+PARENT="$(dirname ${SQLFILE})"
+if [ ! -d "${PARENT}" ] ; then
+  mkdir ${PARENT} || die "sql-file parent directory does not exist and could not be created: ${PARENT}"
 fi
 
 # There should be exactly one class named "DbInit" in the test sources
