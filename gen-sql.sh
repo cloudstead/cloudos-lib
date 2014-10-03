@@ -41,3 +41,4 @@ mvn -Dtest=${DBINIT} test 2>&1 > ${MVN_LOG} || die "Error populating ${DBNAME} d
 rm -f ${MVN_LOG}
 
 pg_dump -U postgres ${DBNAME} | sed -e "s/$(whoami)/postgres/g" > ${SQLFILE}
+echo 1>&2 "Dumped SQL to ${SQLFILE}"
