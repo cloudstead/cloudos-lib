@@ -66,6 +66,9 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
     @Column(nullable=false, length=FIRSTNAME_MAXLEN)
     @Getter @Setter private String firstName;
 
+    @JsonIgnore public String getFullName() { return getFirstName() + " " + getLastName(); }
+    @JsonIgnore public String getLastNameFirstName() { return getLastName() + ", " + getFirstName(); }
+
     @Getter @Setter private boolean admin = false;
     @Getter @Setter private boolean suspended = false;
     @Getter @Setter private boolean twoFactor = false;

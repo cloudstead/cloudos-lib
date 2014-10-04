@@ -6,9 +6,10 @@ import com.authy.api.Token;
 import com.authy.api.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.http.ApiConnectionInfo;
 
-@AllArgsConstructor
+@AllArgsConstructor @Slf4j
 public class TwoFactorAuthService {
 
     final ApiConnectionInfo authy;
@@ -31,8 +32,12 @@ public class TwoFactorAuthService {
     }
 
     public void deleteUser(Integer authId) {
+        if (authId == null) {
+            log.warn("deleteUser: deleting 'null' is a noop, silently ignoring...");
+            return;
+        }
         final Hash result = getClient().getUsers().deleteUser(authId);
-        if (!result.isOk()) throw new IllegalStateException("Error deleting authy user: "+result.getError());
+        if (!result.isOk()) log.warn("Error deleting authy user: '" + result.getError()+"'");
     }
 
 }
