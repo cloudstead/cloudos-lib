@@ -70,8 +70,8 @@ public class AccountBase extends UniquelyNamedEntity {
     @Column(unique=true, nullable=false, length=EMAIL_MAXLEN)
     @Getter private String email;
 
-    @JsonIgnore @Getter @Setter private String emailVerificationCode;
-    @JsonIgnore @Size(max=VERIFY_CODE_MAXLEN) @Getter @Setter private Long emailVerificationCodeCreatedAt;
+    @JsonIgnore @Size(max=VERIFY_CODE_MAXLEN) @Getter @Setter private String emailVerificationCode;
+    @JsonIgnore @Getter @Setter private Long emailVerificationCodeCreatedAt;
     @Getter @Setter private boolean emailVerified = false;
 
     public AccountBase setEmail (String email) {
