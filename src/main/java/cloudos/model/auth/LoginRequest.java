@@ -1,4 +1,4 @@
-package cloudos.model;
+package cloudos.model.auth;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,7 +8,7 @@ import lombok.experimental.Accessors;
 import org.cobbzilla.util.string.StringUtil;
 
 @Accessors(chain=true)
-public class AccountLoginRequest {
+public class LoginRequest {
 
     @Setter private String name;
     public String getName () { return name == null ? null : name.toLowerCase(); }

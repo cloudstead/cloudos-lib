@@ -147,11 +147,13 @@ For commercial use, please contact cloudstead.io
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk16</artifactId>
             <version>1.46</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
             <version>1.48</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${jclouds.groupId}.driver</groupId>

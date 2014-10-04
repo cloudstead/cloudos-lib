@@ -1,4 +1,4 @@
-package cloudos.model;
+package cloudos.model.auth;
 
 import lombok.Getter;
 import lombok.Setter;

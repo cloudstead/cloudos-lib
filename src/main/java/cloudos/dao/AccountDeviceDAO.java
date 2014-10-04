@@ -1,6 +1,6 @@
 package cloudos.dao;
 
-import cloudos.model.AccountDevice;
+import cloudos.model.auth.AccountDevice;
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.stereotype.Repository;

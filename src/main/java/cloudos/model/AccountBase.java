@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.wizard.filters.Scrubbable;
+import org.cobbzilla.wizard.filters.ScrubbableField;
 import org.cobbzilla.wizard.model.UniquelyNamedEntity;
 import org.cobbzilla.wizard.validation.HasValue;
 import org.hibernate.validator.constraints.Email;
@@ -15,7 +17,13 @@ import javax.persistence.Transient;
 import javax.validation.constraints.Size;
 
 @MappedSuperclass @Accessors(chain=true)
-public class AccountBase extends UniquelyNamedEntity {
+public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
+
+    private static final ScrubbableField[] SCRUBBABLE_FIELDS = new ScrubbableField[]{
+            new ScrubbableField(AccountBase.class, "authId", String.class)
+    };
+
+    @Override @JsonIgnore public ScrubbableField[] getFieldsToScrub() { return SCRUBBABLE_FIELDS; }
 
     public static final String ERR_AUTHID_LENGTH = "{err.authid.length}";
     public static final String ERR_EMAIL_INVALID = "{err.email.invalid}";
