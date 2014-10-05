@@ -40,5 +40,5 @@ MVN_LOG=$(mktemp /tmp/gen-sql.mvn.dbinit.XXXXXXX)
 mvn -Dtest=${DBINIT} test 2>&1 > ${MVN_LOG} || die "Error populating ${DBNAME} database. ${MVN_LOG} has more info: $(cat ${MVN_LOG})"
 rm -f ${MVN_LOG}
 
-pg_dump -U postgres ${DBNAME} | sed -e "s/$(whoami)/postgres/g" > ${SQLFILE}
+pg_dump ${DBNAME} | sed -e "s/$(whoami)/postgres/g" > ${SQLFILE}
 echo 1>&2 "Dumped SQL to ${SQLFILE}"
