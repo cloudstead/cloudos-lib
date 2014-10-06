@@ -9,4 +9,14 @@ public abstract class AccountBaseDAO<T extends AccountBase> extends UniquelyName
 
     public abstract T authenticate(LoginRequest loginRequest) throws AuthenticationException;
 
+    public T findByActivationKey(String key) { return findByUniqueField("emailVerificationCode", key); }
+
+    public T findByResetPasswordToken(String key) { return findByUniqueField("hashedPassword.resetToken", key); }
+
+    public void setPassword(T account, String newPassword) {
+        account.getHashedPassword().setPassword(newPassword);
+        account.getHashedPassword().setResetToken(null);
+        update(account);
+    }
+
 }

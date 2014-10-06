@@ -7,17 +7,23 @@ import lombok.experimental.Accessors;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.filters.Scrubbable;
 import org.cobbzilla.wizard.filters.ScrubbableField;
+import org.cobbzilla.wizard.model.HashedPassword;
 import org.cobbzilla.wizard.model.UniquelyNamedEntity;
 import org.cobbzilla.wizard.validation.HasValue;
 import org.hibernate.validator.constraints.Email;
 
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.validation.constraints.Size;
 
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+
 @MappedSuperclass @Accessors(chain=true)
 public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
+
+    @JsonIgnore public int getVerifyCodeLength () { return 16; }
 
     private static final ScrubbableField[] SCRUBBABLE_FIELDS = new ScrubbableField[]{
             new ScrubbableField(AccountBase.class, "authId", String.class)
@@ -43,6 +49,9 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
     public static final int FIRSTNAME_MAXLEN = 25;
     public static final int MOBILEPHONE_MAXLEN = 30;
     public static final int PRIMARY_GROUP_MAXLEN = 100;
+
+    @Getter @Setter @Embedded
+    @JsonIgnore private HashedPassword hashedPassword;
 
     @Size(max=30, message=ERR_AUTHID_LENGTH)
     @Getter @Setter private String authId = null;
@@ -83,7 +92,23 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
 
     @JsonIgnore @Size(max=VERIFY_CODE_MAXLEN) @Getter @Setter private String emailVerificationCode;
     @JsonIgnore @Getter @Setter private Long emailVerificationCodeCreatedAt;
-    @Getter @Setter private boolean emailVerified = false;
+    @Getter private boolean emailVerified = false;
+
+    public String initEmailVerificationCode() {
+        emailVerificationCode = randomAlphanumeric(getVerifyCodeLength());
+        emailVerificationCodeCreatedAt = System.currentTimeMillis();
+        return emailVerificationCode;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+        emailVerificationCode = null;
+        emailVerificationCodeCreatedAt = null;
+    }
+
+    public boolean isEmailVerificationCodeValid (long expiration) {
+        return emailVerificationCodeCreatedAt != null && emailVerificationCodeCreatedAt > (System.currentTimeMillis() - expiration);
+    }
 
     public AccountBase setEmail (String email) {
         if (this.email == null || !this.email.equals(email)) {
@@ -98,16 +123,9 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
     @Size(max=MOBILEPHONE_MAXLEN, message=ERR_MOBILEPHONE_LENGTH)
     @HasValue(message=ERR_MOBILEPHONE_EMPTY)
     @Getter private String mobilePhone;
-
-    @JsonIgnore @Size(max=VERIFY_CODE_MAXLEN) @Getter @Setter private String mobilePhoneVerificationCode;
-    @JsonIgnore @Getter @Setter private Long mobilePhoneVerificationCodeCreatedAt;
-    @Getter @Setter private boolean mobilePhoneVerified = false;
-
     public AccountBase setMobilePhone (String mobilePhone) {
         if (this.mobilePhone == null || !this.mobilePhone.equals(mobilePhone)) {
-            mobilePhoneVerified = false;
-            mobilePhoneVerificationCode = null;
-            mobilePhoneVerificationCodeCreatedAt = null;
+            this.authId = null;
             this.mobilePhone = mobilePhone;
         }
         return this;
@@ -118,9 +136,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
 
     public AccountBase setMobilePhoneCountryCode(Integer mobilePhoneCountryCode) {
         if (this.mobilePhoneCountryCode == null || !this.mobilePhoneCountryCode.equals(mobilePhoneCountryCode)) {
-            mobilePhoneVerified = false;
-            mobilePhoneVerificationCode = null;
-            mobilePhoneVerificationCodeCreatedAt = null;
+            this.authId = null;
             this.mobilePhoneCountryCode = mobilePhoneCountryCode;
         }
         return this;
