@@ -131,7 +131,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
         return this;
     }
 
-    @HasValue(message= ERR_MOBILEPHONE_CC_EMPTY)
+    @HasValue(message=ERR_MOBILEPHONE_CC_EMPTY)
     @Getter private Integer mobilePhoneCountryCode;
 
     public AccountBase setMobilePhoneCountryCode(Integer mobilePhoneCountryCode) {
@@ -144,4 +144,20 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
 
     @JsonIgnore @Transient public String getMobilePhoneCountryCodeString() { return mobilePhoneCountryCode == null ? null : mobilePhoneCountryCode.toString(); }
 
+    public AccountBase populate(AccountBase other) {
+        setName(other.getName());
+        setEmail(other.getEmail());
+        setFirstName(other.getFirstName());
+        setLastName(other.getLastName());
+        setMobilePhone(other.getMobilePhone());
+        setMobilePhoneCountryCode(other.getMobilePhoneCountryCode());
+        setAdmin(other.isAdmin());
+        setSuspended(other.isSuspended());
+        setTwoFactor(other.isTwoFactor());
+        setAuthId(other.getAuthId());
+        if (getHashedPassword() != null && other.getHashedPassword() != null) {
+            getHashedPassword().setResetToken(other.getHashedPassword().getResetToken());
+        }
+        return this;
+    }
 }
