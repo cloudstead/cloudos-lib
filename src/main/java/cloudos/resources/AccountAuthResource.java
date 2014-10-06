@@ -8,16 +8,15 @@ import org.cobbzilla.mail.TemplatedMail;
 import org.cobbzilla.mail.service.TemplatedMailService;
 import org.cobbzilla.wizard.resources.ResourceUtil;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public abstract class AccountActivationsResource<A extends AccountBase> {
+public abstract class AccountAuthResource<A extends AccountBase> {
 
+    public static final String EP_ACTIVATE = "/activate";
     public static final String EP_FORGOT_PASSWORD = "/forgot_password";
     public static final String EP_RESET_PASSWORD = "/reset_password";
 
@@ -32,7 +31,8 @@ public abstract class AccountActivationsResource<A extends AccountBase> {
     protected long getVerificationCodeExpiration() { return TimeUnit.DAYS.toMillis(2); }
 
     @GET
-    public Response activate (@QueryParam(PARAM_KEY) String key) {
+    @Path(EP_ACTIVATE+"/{"+PARAM_KEY+"}")
+    public Response activate (@PathParam(PARAM_KEY) String key) {
 
         final AccountBaseDAO<A> accountBaseDAO = getAccountBaseDAO();
         final A found = accountBaseDAO.findByActivationKey(key);
@@ -50,6 +50,9 @@ public abstract class AccountActivationsResource<A extends AccountBase> {
 
         return Response.ok().build();
     }
+
+    // allows subclasses to add params to the forgot-password email
+    protected void addForgotPasswordParams(Map<String, Object> params) {}
 
     @POST
     @Path(EP_FORGOT_PASSWORD)
@@ -70,6 +73,7 @@ public abstract class AccountActivationsResource<A extends AccountBase> {
                 .setTemplateName(TemplatedMailService.T_RESET_PASSWORD)
                 .setParameter(TemplatedMailService.PARAM_ACCOUNT, found)
                 .setParameter(PARAM_RESETPASSWORD_URL, getResetPasswordUrl(token));
+        addForgotPasswordParams(mail.getParameters());
         try {
             getTemplatedMailService().getMailSender().deliverMessage(mail);
         } catch (Exception e) {
