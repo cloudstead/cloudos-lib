@@ -6,6 +6,7 @@ import cloudos.model.auth.ResetPasswordRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.mail.TemplatedMail;
 import org.cobbzilla.mail.service.TemplatedMailService;
+import org.cobbzilla.util.system.CommandShell;
 import org.cobbzilla.wizard.resources.ResourceUtil;
 
 import javax.ws.rs.GET;
@@ -16,8 +17,10 @@ import javax.ws.rs.core.Response;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static org.cobbzilla.mail.service.TemplatedMailService.T_RESET_PASSWORD;
+
 @Slf4j
-public abstract class AccountAuthResource<A extends AccountBase> {
+public abstract class AuthResourceBase<A extends AccountBase> {
 
     public static final String EP_ACTIVATE = "/activate";
     public static final String EP_FORGOT_PASSWORD = "/forgot_password";
@@ -54,6 +57,9 @@ public abstract class AccountAuthResource<A extends AccountBase> {
         return Response.ok().build();
     }
 
+    protected String getFromName(String templateName) { return System.getProperty("user.name") + "@" + CommandShell.hostname(); }
+    protected String getFromEmail(String templateName) { return getFromName(templateName); }
+
     // allows subclasses to add params to the forgot-password email
     protected void addForgotPasswordParams(Map<String, Object> params) {}
 
@@ -73,7 +79,9 @@ public abstract class AccountAuthResource<A extends AccountBase> {
         final TemplatedMail mail = new TemplatedMail()
                 .setToEmail(found.getEmail())
                 .setToName(found.getFullName())
-                .setTemplateName(TemplatedMailService.T_RESET_PASSWORD)
+                .setFromName(getFromName(T_RESET_PASSWORD))
+                .setFromEmail(getFromEmail(T_RESET_PASSWORD))
+                .setTemplateName(T_RESET_PASSWORD)
                 .setParameter(TemplatedMailService.PARAM_ACCOUNT, found)
                 .setParameter(PARAM_RESETPASSWORD_URL, getResetPasswordUrl(token));
         addForgotPasswordParams(mail.getParameters());

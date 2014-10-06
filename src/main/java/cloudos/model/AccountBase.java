@@ -155,6 +155,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
         setSuspended(other.isSuspended());
         setTwoFactor(other.isTwoFactor());
         setAuthId(other.getAuthId());
+        if (other.getLastLogin() != null) setLastLogin(other.getLastLogin());
         if (getHashedPassword() != null && other.getHashedPassword() != null) {
             getHashedPassword().setResetToken(other.getHashedPassword().getResetToken());
         }
