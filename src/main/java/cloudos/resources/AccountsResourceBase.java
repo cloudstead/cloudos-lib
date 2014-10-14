@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public abstract class AccountsResourceBase<A extends AccountBase, R extends AuthResponse> {
 
+    protected void beforeSessionStart(LoginRequest login, A account) throws Exception {}
     protected abstract void afterSuccessfulLogin(LoginRequest login, A account) throws Exception;
     protected abstract R buildAuthResponse(String sessionId, A account);
 
@@ -89,6 +90,7 @@ public abstract class AccountsResourceBase<A extends AccountBase, R extends Auth
                 updateDeviceAuth(account, login.getDeviceId(), login.getDeviceName());
             }
 
+            beforeSessionStart(login, account);
             final String sessionId = sessionDAO.create(account);
             afterSuccessfulLogin(login, account);
 
