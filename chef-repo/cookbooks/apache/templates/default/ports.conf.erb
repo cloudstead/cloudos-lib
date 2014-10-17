@@ -11,7 +11,7 @@
 ServerName <%=@hostname%>
 
 # Redirect all http traffic to https
-Listen 80
+Listen <%=node['ipaddress']%>:80
 <VirtualHost *:80>
   RewriteEngine On
   RewriteCond %{HTTPS} off
@@ -19,15 +19,9 @@ Listen 80
 </VirtualHost>
 
 <IfModule mod_ssl.c>
-    # If you add NameVirtualHost *:443 here, you will also have to change
-    # the VirtualHost statement in /etc/apache2/sites-available/default-ssl
-    # to <VirtualHost *:443>
-    # Server Name Indication for SSL named virtual hosts is currently not
-    # supported by MSIE on Windows XP.
-    NameVirtualHost <%=node['ipaddress']%>:443
-    Listen 443
+    Listen <%=node['ipaddress']%>:443
 </IfModule>
 
 <IfModule mod_gnutls.c>
-    Listen 443
+    Listen <%=node['ipaddress']%>:
 </IfModule>
