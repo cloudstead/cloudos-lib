@@ -20,8 +20,10 @@ Listen <%=node['ipaddress']%>:80
 
 <IfModule mod_ssl.c>
     Listen <%=node['ipaddress']%>:443
+    SSLProtocol All -SSLv2 -SSLv3
 </IfModule>
 
 <IfModule mod_gnutls.c>
-    Listen <%=node['ipaddress']%>:
+    Listen <%=node['ipaddress']%>:443
+    SSLProtocol All -SSLv2 -SSLv3
 </IfModule>
