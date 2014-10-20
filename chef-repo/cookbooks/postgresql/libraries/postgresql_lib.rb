@@ -58,7 +58,11 @@ createdb --encoding=UNICODE --owner=#{dbowner} #{dbname}
   end
 
   def self.table_exists(dbname, dbuser, dbpass, tablename)
-    %x(su - postgres bash -c 'PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -c "select * from pg_tables where tableowner=\\'#{dbuser}\\' and tablename=\\'#{tablename}\\'" #{dbname}').lines.grep(/#{tablename}/).size > 0
+    if tablename
+      %x(su - postgres bash -c 'PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -c "select * from pg_tables where tableowner=\\'#{dbuser}\\' and tablename=\\'#{tablename}\\'" #{dbname}').lines.grep(/#{tablename}/).size > 0
+    else
+      %x(su - postgres bash -c 'PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -c "select count(*) from pg_tables where tableowner=\\'#{dbuser}\\'" #{dbname} | tr '\n' ' ').strip.to_i > 0
+    end
   end
 
   def self.initialize_db(chef, file, dbuser, dbpass, dbname, tablename = nil)
@@ -68,10 +72,7 @@ createdb --encoding=UNICODE --owner=#{dbowner} #{dbname}
       code <<-EOF
 PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -f #{file} #{dbname}
       EOF
-      not_if { tablename.nil? \
-        ? Chef::Recipe::Postgresql.count_tables(dbname, dbuser, dbpass) > 0 \
-        : Chef::Recipe::Postgresql.table_exists(dbname, dbuser, dbpass, tablename)
-      }
+      not_if { Chef::Recipe::Postgresql.table_exists(dbname, dbuser, dbpass, tablename) }
     end
   end
 

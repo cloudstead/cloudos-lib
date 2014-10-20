@@ -36,11 +36,15 @@ echo "CREATE DATABASE #{dbname}" | mysql -u root
   end
 
   def self.table_exists(dbname, dbuser, dbpass, tablename)
-    %x(echo "show tables" | mysql -s -u #{dbuser} #{dbname} | grep #{tablename}).lines.grep(/#{tablename}/).size > 0
+    if tablename
+      %x(echo "show tables" | mysql -s -u #{dbuser} #{dbname} | grep #{tablename}).lines.grep(/#{tablename}/).size > 0
+    else
+      %x(echo "show tables" | mysql -s -u #{dbuser} #{dbname} | wc -l).strip.to_i > 0
+    end
   end
 
   def self.initialize_db(chef, file, dbuser, dbpass, dbname, tablename = nil)
-    run_script chef, file, dbuser, dbpass, dbname if tablename.nil? || !table_exists(dbname, dbuser, dbpass, tablename)
+    run_script chef, file, dbuser, dbpass, dbname unless table_exists(dbname, dbuser, dbpass, tablename)
   end
 
   def self.run_script(chef, script, dbuser, dbpass, dbname)
