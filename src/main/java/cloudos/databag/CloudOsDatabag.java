@@ -12,6 +12,11 @@ public class CloudOsDatabag {
     public String getId() { return "init"; }
     public void setId (String id) { /*noop*/ }
 
+    // UCID: universal cloud identifier, similar to UDID on a mobile device
+    // uniquely identifies the cloud. multiple systems operating in concert may
+    // have different hostnames but will share the same ucid
+    @Getter @Setter private String ucid;
+
     @Getter @Setter private String server_tarball;
     @Getter @Setter private int server_port;
     @Getter @Setter private String run_as;
