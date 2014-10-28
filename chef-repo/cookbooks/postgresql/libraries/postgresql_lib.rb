@@ -61,7 +61,7 @@ createdb --encoding=UNICODE --owner=#{dbowner} #{dbname}
     if tablename
       %x(su - postgres bash -c 'PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -c "select * from pg_tables where tableowner=\\'#{dbuser}\\' and tablename=\\'#{tablename}\\'" #{dbname}').lines.grep(/#{tablename}/).size > 0
     else
-      %x(su - postgres bash -c 'PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -c "select count(*) from pg_tables where tableowner=\\'#{dbuser}\\'" #{dbname} | tr '\n' ' ').strip.to_i > 0
+      count_tables(dbname, dbuser, dbpass) > 0
     end
   end
 
