@@ -1,4 +1,5 @@
 require 'tempfile'
+require 'fileutils'
 require 'digest'
 
 class Chef::Recipe::Postgresql
@@ -85,29 +86,29 @@ PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -f #{file} #{dbname}
     File.open(sql, "w") do |f|
       f.write(insert[:sql])
     end
+    FileUtils.chown 'postgres', nil, sql
 
     check_sql = "/tmp/check_sql_#{hash}.sql"
     File.open(check_sql, "w") do |f|
       f.write(insert[:unless])
     end
+    FileUtils.chown 'postgres', nil, check_sql
 
     chef.bash "insert into #{dbname} DB schema: #{insert[:sql]}" do
       user 'postgres'
       code <<-EOF
-output=$(cat #{sql} | #{PSQL} #{dbname} 2>&1)
-errors=$(echo -n ${output} | grep ERROR | wc -l | tr -d ' ')
-if [ $errors -gt 0 ] ; then
-  echo "Error inserting sql: #{%x(cat #{sql}).strip}: ${output}"
-  exit 1
+found=$(cat #{check_sql} | #{PSQL} #{dbname} | tr -d [:blank:])
+if [[ -z "${found}" || ${found} -eq 0 ]] ; then
+  output=$(cat #{sql} | #{PSQL} #{dbname} 2>&1)
+  errors=$(echo -n ${output} | grep ERROR | wc -l | tr -d ' ')
+  if [ $errors -gt 0 ] ; then
+    echo "Error inserting sql: #{%x(cat #{sql}).strip}: ${output}"
+    exit 1
+  fi
 fi
       EOF
-      not_if {
-        %x(su - postgres bash -c "cat #{check_sql} | #{PSQL} #{dbname}").strip.to_i > 0
-      }
+      not_if { %x(su - postgres bash -c "cat #{check_sql} | #{PSQL} #{dbname}").strip.to_i > 0 }
     end
-
-    # File.delete(sql)
-    # File.delete(check_sql)
   end
 
   def self.run_script(chef, script, dbuser, dbpass, dbname)
