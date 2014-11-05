@@ -74,6 +74,15 @@ cat #{script} | mysql -U #{dbuser} #{dbname}
     chef.bash "insert into #{dbname} DB schema: #{insert[:sql]}" do
       user 'root'
       code <<-EOF
+found=$(cat #{check_sql} | mysql -s -u #{dbuser} #{dbname} | tr -d [:blank:])
+if [[ -z "${found}" || ${found} -eq 0 ]] ; then
+  output=$(cat #{sql} | mysql -u #{dbuser} #{dbname} 2>&1)
+  errors=$(echo -n ${output} | grep ERROR | wc -l | tr -d ' ')
+  if [ $errors -gt 0 ] ; then
+    echo "Error inserting sql: #{%x(cat #{sql}).strip}: ${output}"
+    exit 1
+  fi
+fi
 cat #{sql} | mysql -u #{dbuser} #{dbname} > #{sql}.out
       EOF
       not_if { %x(cat #{check_sql} | mysql -s -u #{dbuser} #{dbname}").strip.to_i > 0 }

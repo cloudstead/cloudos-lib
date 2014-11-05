@@ -113,7 +113,7 @@ t=$(mktemp /tmp/chef-user.XXXXXXX) &&
   cd ~/chef &&
   tar xj &&
   chmod -R 700 data_bags certs &&
-  sudo bash install.sh ;
+  sudo bash install.sh 2>&1 | tee chef.out ;
   sudo rm -rf /tmp/*'
 
 cd ${BASE}

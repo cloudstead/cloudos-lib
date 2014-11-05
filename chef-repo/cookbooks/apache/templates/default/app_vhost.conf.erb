@@ -44,8 +44,13 @@ end
   ProxyPassReverse <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
 <% end %>
 
+<% if @config[:auth] %>
+  ProxyPass <%=@config[:mount]%> http://127.0.0.1:<%=@cloudos_port%>/api/proxy/<%=@app_name%>/
+  ProxyPassReverse <%=@config[:mount]%> http://127.0.0.1:<%=@cloudos_port%>/api/proxy/<%=@app_name%>/
+<% else %>
   ProxyPass <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
   ProxyPassReverse <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
+<% end %>
 
   LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b" common_forwarded
   ErrorLog ${APACHE_LOG_DIR}/<%=server_name%>_error.log
