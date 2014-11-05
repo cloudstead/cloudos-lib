@@ -15,6 +15,24 @@ fi
     end
   end
 
+  def self.new_module (chef, module_name)
+    chef.cookbook_file "/usr/lib/apache2/modules/mod_#{module_name}.so" do
+      owner 'root'
+      group 'root'
+      mode '0644'
+      action :create
+    end
+    chef.template "/etc/apache2/mods-enabled/#{module_name}.load" do
+      source 'module.load'
+      cookbook 'apache'
+      owner 'root'
+      group 'root'
+      mode '0644'
+      variables ({ :module_name => module_name })
+      action :create
+    end
+  end
+
   def self.enable_module (chef, module_name)
     chef.bash "enable Apache module: #{module_name}" do
       user 'root'
