@@ -23,7 +23,7 @@ fi
       action :create
     end
     chef.template "/etc/apache2/mods-enabled/#{module_name}.load" do
-      source 'module.load'
+      source 'module.load.erb'
       cookbook 'apache'
       owner 'root'
       group 'root'
