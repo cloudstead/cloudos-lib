@@ -19,19 +19,21 @@
 # and the value of the ${ROLE} . These are env vars defined in the shell that invokes this script, NOT any env vars
 # found in the files described below.
 #
-# If a java-class is NOT provided, a lot of things happen automatically:
-#   Environment configuration is expected to be in one of the predefined places:
+# Environment configuration may be defined in one of the predefined places:
 #     /etc/acmecorp.env                 # /etc/${PARENT}.env
 #     ${HOME}/.acmecorp.env             # ${HOME}/.${PARENT}.env
 #     ./acmecorp-cool-app.env           # ./${PARENT}-${ROLE}.env
 #     ${HOME}/.acmecorp-cool-app.env    # ${HOME}/.${PARENT}-${ROLE}.env
 #
-#   The env file should be a series of "export ENV_NAME=something" statements.
-#   todo: parse env file, discard anything that's not an export statement.
+# The env file should be a series of "export ENV_NAME=something" statements.
+# If multiple files are found, the first one is used.
+# If no file is found, no environment variables are loaded.
+# todo: parse env file, discard anything that's not an export statement.
 #
-#   The env file is expected to define a DEPLOY_ENV variable.
-#   In the examples below, assume the DEPLOY_ENV is prod
+# The env file is expected to define a DEPLOY_ENV variable.
+# In the examples below, assume the DEPLOY_ENV is prod
 #
+# If a java-class is NOT provided, a lot of things happen automatically:
 #   When the jar is run, the arguments to the Java "main" method will be
 #   a list of YML files, if these exist:
 #      /home/web/acmecorp-cool-app/conf/acmecorp-cool-app-fixed.yml
@@ -95,25 +97,24 @@ APP=$(basename ${APP_BASE})
 APP_PARENT=$(echo $APP | tr '-' ' ' | awk '{print $1}')
 APP_ROLE=$(echo $APP | tr '-' ' ' | awk '{print $2}')
 
+ENV_FILES="/etc/${APP_PARENT}.env ${HOME}/.${APP_PARENT}.env ${APP}.env ${HOME}/.${APP}.env"
+found=0
+for env_file in ${ENV_FILES} ; do
+  if [ -f ${env_file} ] ; then
+  . ${env_file}
+    echo "jrun: Loaded env from ${env_file}"
+    found=1
+  fi
+done
+if [ $found -eq 0 ] ; then
+  echo "jrun: WARNING: No env file found. Looked in: ${ENV_FILES}"
+fi
+
 CONFIGS=""
 if [[ "${JAVA_CLASS}" =~ .+\..+ ]] ; then
   CONFIGS="${CONFIG}"
 
 else
-  ENV_FILES="/etc/${APP_PARENT}.env ${HOME}/.${APP_PARENT}.env ${APP}.env ${HOME}/.${APP}.env"
-  found=0
-  for env_file in ${ENV_FILES} ; do
-    if [ -f ${env_file} ] ; then
-    . ${env_file}
-      echo "jrun: Loaded env from ${env_file}"
-      found=1
-    fi
-  done
-  if [ $found -eq 0 ] ; then
-    echo "jrun: No env file found. Looked in: ${ENV_FILES}"
-    exit 1
-  fi
-
   FIXED_CONFIG=${APP_BASE}/conf/${APP}-fixed.yml
   if [ -f "${FIXED_CONFIG}" ] ; then
     CONFIGS="${CONFIGS} ${FIXED_CONFIG}"
