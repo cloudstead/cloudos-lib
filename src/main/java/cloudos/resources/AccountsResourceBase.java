@@ -9,6 +9,7 @@ import cloudos.model.auth.AuthenticationException;
 import cloudos.model.auth.LoginRequest;
 import cloudos.server.HasTwoFactorAuthConfiguration;
 import cloudos.service.TwoFactorAuthService;
+import com.qmino.miredot.annotations.ReturnType;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.util.time.TimeUtil;
@@ -35,7 +36,15 @@ public abstract class AccountsResourceBase<A extends AccountBase, R extends Auth
 
     protected TwoFactorAuthService getTwoFactorAuthService() { return twoFactorConfig.getTwoFactorAuthService(); }
 
+    /**
+     * Login
+     * @param login The login request
+     * @return An AuthResponse object containing the session ID and the account that logged in
+     * @statuscode 404 If the username, password, or 2-factor token was incorrect
+     * @statuscode 403 If the user is suspended
+     */
     @POST
+    @ReturnType("cloudos.model.auth.AuthResponse")
     public Response login(@Valid LoginRequest login) {
 
         final R authResponse;
@@ -48,7 +57,7 @@ public abstract class AccountsResourceBase<A extends AccountBase, R extends Auth
                 try {
                     getTwoFactorAuthService().verify(account.getAuthIdInt(), login.getSecondFactor());
                 } catch (Exception e) {
-                    return ResourceUtil.invalid();
+                    return ResourceUtil.notFound();
                 }
 
             } else {
@@ -60,7 +69,7 @@ public abstract class AccountsResourceBase<A extends AccountBase, R extends Auth
                         case NOT_FOUND:
                             return ResourceUtil.notFound();
                         case INVALID:
-                            return ResourceUtil.forbidden();
+                            return ResourceUtil.notFound();
                         case BOOTCONFIG_ERROR:
                         default:
                             return Response.serverError().build();
