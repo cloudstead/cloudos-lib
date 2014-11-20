@@ -27,7 +27,7 @@ REQUIRED="${3:?no required specified}"
 COOKBOOK_SOURCES="${4:?no cookbook sources specified}"
 SOLO_JSON="${5}"
 if [ -z "${SOLO_JSON}" ] ; then
-  SOLO_JSON=solo.json
+  SOLO_JSON="${INIT_FILES}/solo.json"
 fi
 
 # The host key might change when we instantiate a new VM, so
