@@ -84,7 +84,7 @@ done
 for f in JSON.sh install.sh solo.rb ; do
   cp ${CLOUDOS_LIB_BASE}/${f} ${TEMP}/
 done
-mv ${SOLO_JSON} ${TEMP}/
+mv ${SOLO_JSON} ${TEMP}/solo.json
 
 # data bags and certs...
 rsync -vac ${INIT_FILES}/* ${TEMP}/
