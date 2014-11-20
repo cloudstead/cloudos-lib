@@ -107,6 +107,7 @@ fi
 # - unpack fresh chef-repo
 # - run chef-solo
 cd ${TEMP} &&  tar cj . | ssh ${SSH_OPTS} -o 'StrictHostKeyChecking no' "$host" '
+start=$(date) &&
 t=$(mktemp /tmp/chef-user.XXXXXXX) &&
   echo $(whoami) > ${t} &&
   sudo cp ${t} /etc/chef-user &&
@@ -116,7 +117,9 @@ t=$(mktemp /tmp/chef-user.XXXXXXX) &&
   cd ~/chef &&
   tar xj &&
   chmod -R 700 data_bags certs &&
-  sudo bash install.sh 2>&1 | tee chef.out ;
+  sudo bash install.sh 2>&1 | tee chef.out &&
+  echo "chef-run started at ${start}" | tee -a chef.out &&
+  echo "chef-run ended   at $(date)"  | tee -a chef.out ;
   sudo rm -rf /tmp/*'
 
 cd ${BASE}
