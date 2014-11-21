@@ -161,5 +161,8 @@ fi
 COMMAND="${COMMAND} ${CONFIGS}"
 LOG="${LOG}.log"
 
+# Recent Ubuntu 14 instances bind to 127.0.0.1 on IPv6, which doesn't work
+export _JAVA_OPTIONS="${_JAVA_OPTIONS} -Djava.net.preferIPv4Stack=true"
+
 echo "jrun: exec: ${COMMAND} (as user $(whoami), logging to ${LOG})"
 exec ${COMMAND} 2>&1 | tee ${LOG}

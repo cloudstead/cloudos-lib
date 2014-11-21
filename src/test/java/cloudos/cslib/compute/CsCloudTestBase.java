@@ -2,6 +2,7 @@ package cloudos.cslib.compute;
 
 import cloudos.cslib.compute.instance.CsInstance;
 import cloudos.cslib.compute.instance.CsInstanceRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
 import org.cobbzilla.util.io.FileUtil;
 import org.junit.After;
@@ -12,9 +13,18 @@ import java.util.Properties;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+@Slf4j
 public abstract class CsCloudTestBase {
 
-    protected static final Properties TEST_PROPERTIES = FileUtil.toPropertiesOrDie(System.getProperty("user.home") + File.separator + ".cslib.config");
+    public static final String TEST_PROPS_PATH = System.getProperty("user.home") + File.separator + ".cslib.config";
+    protected static final Properties TEST_PROPERTIES = initTestProperties();
+
+    private static Properties initTestProperties() {
+        try { return FileUtil.toPropertiesOrDie(TEST_PROPS_PATH); } catch (Exception e) {
+            log.warn("Error initializing properties: "+e);
+        }
+        return new Properties();
+    }
 
     protected static final String CLOUD_USER = System.getProperty("user.name");
     public static final String TEST_DOMAIN = "example.com";
@@ -27,6 +37,10 @@ public abstract class CsCloudTestBase {
     protected abstract CsCloudConfig newCloudConfig();
 
     public void internal_testHost () throws Exception {
+        if (TEST_PROPERTIES.isEmpty()) {
+            log.warn("no test properties found ("+TEST_PROPS_PATH+"), skipping test: "+getClass().getName()+".internal_testHost");
+            return;
+        }
         final CsCloud cloud = getCloud();
         instance = newInstance(cloud);
 

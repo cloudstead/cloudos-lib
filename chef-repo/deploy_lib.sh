@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Usage: deploy.sh [target] [init-files] [required] [cookbook-sources]
+# Usage: deploy.sh [target] [init-files] [required] [cookbook-sources] [solo-json-file]
 #
 # Run this from the chef-repo directory containing the solo.json that will drive the chef run
 #
@@ -9,6 +9,7 @@
 #   init-files:       directory containing init files (data bags and certs)
 #   required:         list of required files in the init-files dir (use quotes). paths are relative to init-files dir.
 #   cookbook-sources: list of directories that contain cookbooks (use quotes)
+#   solo-json-file:   run list to use for chef solo run
 #
 
 function die {
@@ -23,7 +24,11 @@ fi
 host="${1:?no user@host specified}"
 INIT_FILES="${2:?no init-files dir specified}"
 REQUIRED="${3:?no required specified}"
-COOKBOOK_SOURCES="${4}"
+COOKBOOK_SOURCES="${4:?no cookbook sources specified}"
+SOLO_JSON="${5}"
+if [ -z "${SOLO_JSON}" ] ; then
+  SOLO_JSON="${INIT_FILES}/solo.json"
+fi
 
 # The host key might change when we instantiate a new VM, so
 # we remove (-R) the old host key from known_hosts
@@ -79,9 +84,7 @@ done
 for f in JSON.sh install.sh solo.rb ; do
   cp ${CLOUDOS_LIB_BASE}/${f} ${TEMP}/
 done
-for f in solo.json ; do
-  cp ${BASE}/${f} ${TEMP}/
-done
+mv ${SOLO_JSON} ${TEMP}/solo.json
 
 # data bags and certs...
 rsync -vac ${INIT_FILES}/* ${TEMP}/
@@ -104,6 +107,7 @@ fi
 # - unpack fresh chef-repo
 # - run chef-solo
 cd ${TEMP} &&  tar cj . | ssh ${SSH_OPTS} -o 'StrictHostKeyChecking no' "$host" '
+start=$(date) &&
 t=$(mktemp /tmp/chef-user.XXXXXXX) &&
   echo $(whoami) > ${t} &&
   sudo cp ${t} /etc/chef-user &&
@@ -113,7 +117,9 @@ t=$(mktemp /tmp/chef-user.XXXXXXX) &&
   cd ~/chef &&
   tar xj &&
   chmod -R 700 data_bags certs &&
-  sudo bash install.sh 2>&1 | tee chef.out ;
+  sudo bash install.sh 2>&1 | tee chef.out &&
+  echo "chef-run started at ${start}" | tee -a chef.out &&
+  echo "chef-run ended   at $(date)"  | tee -a chef.out ;
   sudo rm -rf /tmp/*'
 
 cd ${BASE}

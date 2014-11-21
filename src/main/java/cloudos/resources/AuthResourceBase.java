@@ -3,6 +3,7 @@ package cloudos.resources;
 import cloudos.dao.AccountBaseDAO;
 import cloudos.model.AccountBase;
 import cloudos.model.auth.ResetPasswordRequest;
+import com.qmino.miredot.annotations.ReturnType;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.mail.TemplatedMail;
 import org.cobbzilla.mail.service.TemplatedMailService;
@@ -36,8 +37,16 @@ public abstract class AuthResourceBase<A extends AccountBase> {
 
     protected long getVerificationCodeExpiration() { return TimeUnit.DAYS.toMillis(2); }
 
+    /**
+     * Activate a user account
+     * @param key The activation key (from email)
+     * @return Just an HTTP status code
+     * @statuscode 404 activation key not found
+     * @statuscode 200 activation successful
+     */
     @GET
     @Path(EP_ACTIVATE+"/{"+PARAM_KEY+"}")
+    @ReturnType("java.lang.Void")
     public Response activate (@PathParam(PARAM_KEY) String key) {
 
         final AccountBaseDAO<A> accountBaseDAO = getAccountBaseDAO();
@@ -63,8 +72,15 @@ public abstract class AuthResourceBase<A extends AccountBase> {
     // allows subclasses to add params to the forgot-password email
     protected void addForgotPasswordParams(Map<String, Object> params) {}
 
+    /**
+     * Forgot password: Send a reset password email
+     * @param name The account name
+     * @return Just an HTTP status code
+     * @statuscode 200 Regardless.
+     */
     @POST
     @Path(EP_FORGOT_PASSWORD)
+    @ReturnType("java.lang.Void")
     public Response forgotPassword (String name) {
 
         final AccountBaseDAO<A> accountBaseDAO = getAccountBaseDAO();
@@ -95,8 +111,16 @@ public abstract class AuthResourceBase<A extends AccountBase> {
         return Response.ok().build();
     }
 
+    /**
+     * Reset a password.
+     * @param request The reset password request
+     * @return Just an HTTP status
+     * @statuscode 422 If the key was valid, but has expired
+     * @statuscode 200 If the key was not valid, or if the password was successfully reset.
+     */
     @POST
     @Path(EP_RESET_PASSWORD)
+    @ReturnType("java.lang.Void")
     public Response resetPassword (ResetPasswordRequest request) {
 
         final AccountBaseDAO<A> accountBaseDAO = getAccountBaseDAO();
