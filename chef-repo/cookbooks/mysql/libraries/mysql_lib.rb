@@ -102,4 +102,21 @@ fi
     end
   end
 
+  def self.dump(chef, dbname, dbuser='root', dumpfile)
+    chef.bash "dumping #{dbname} to #{dumpfile} " do
+      user dbuser
+      code <<-EOF
+mysqldump #{dbname} > #{dumpfile}
+      EOF
+    end
+  end
+
+    def self.drop_db (chef, dbname, dbuser, dbpass)
+        chef.bash "dropping mysql database #{dbname}" do
+          user 'root'
+          code <<-EOF
+mysqladmin -u #{dbuser} -p #{dbpass} drop #{dbname}
+          EOF
+        end
+      end
 end

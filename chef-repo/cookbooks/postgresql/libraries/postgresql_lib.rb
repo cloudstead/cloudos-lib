@@ -144,4 +144,22 @@ fi
     end
   end
 
+  def self.dump(chef, dbname, dbuser = 'postgres', dumpfile)
+    chef.bash "dumping #{dbname} to file #{dumpfile} " do
+      user dbuser
+      code <<-EOF
+pg_dump #{dbname} -f #{dumpfile}
+      EOF
+    end
+  end
+
+  def self.drop_db (chef, dbname, dbuser = 'postgres', dbpass = nil)
+    chef.bash "dropping pgsql database #{dbname}" do
+      user dbuser
+      code <<-EOF
+dropdb #{dbname}
+      EOF
+    end
+  end
+
 end
