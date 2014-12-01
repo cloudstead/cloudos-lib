@@ -37,14 +37,15 @@ public abstract class AccountsResourceBase<A extends AccountBase, R extends Auth
     protected TwoFactorAuthService getTwoFactorAuthService() { return twoFactorConfig.getTwoFactorAuthService(); }
 
     /**
-     * Login
-     * @param login The login request
+     * Login. The login request object can take two forms, one for initial login and the second for 2-factor authentication.
+     * @see <a href="../api-examples/index.html">some API examples illustrating proper usage</a>
+     * @param login The login request.
      * @return An AuthResponse object containing the session ID and the account that logged in
      * @statuscode 404 If the username, password, or 2-factor token was incorrect
      * @statuscode 403 If the user is suspended
      */
     @POST
-    @ReturnType("cloudos.model.auth.AuthResponse")
+    @ReturnType("R")
     public Response login(@Valid LoginRequest login) {
 
         final R authResponse;
