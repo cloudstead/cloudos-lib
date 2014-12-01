@@ -8,7 +8,9 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor @Accessors(chain=true)
 public class PortsDatabag {
 
-    public String getId() { return "ports"; }
+    public static final String ID = "ports";
+
+    public String getId() { return ID; }
     public void setId (String id) { /*noop*/ }
 
     @Getter @Setter private int primary;
