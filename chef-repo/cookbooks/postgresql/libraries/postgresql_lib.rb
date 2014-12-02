@@ -79,6 +79,7 @@ PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -f #{file} #{dbname}
 
   def self.insert(chef, dbuser, dbname, insert)
 
+    base_lib = Chef::Recipe::Base
     sha = Digest::SHA256
     hash = "#{sha.hexdigest(insert[:sql])}_#{sha.hexdigest(insert[:unless])}"
 
@@ -86,13 +87,13 @@ PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -f #{file} #{dbname}
     File.open(sql, "w") do |f|
       f.write(insert[:sql])
     end
-    FileUtils.chown 'postgres', nil, sql
+    base_lib.set_perms(chef, sql, 'postgres', '600')
 
     check_sql = "/tmp/check_sql_#{hash}.sql"
     File.open(check_sql, "w") do |f|
       f.write(insert[:unless])
     end
-    FileUtils.chown 'postgres', nil, check_sql
+    base_lib.set_perms(chef, check_sql, 'postgres', '600')
 
     chef.bash "insert into #{dbname} DB schema: #{insert[:sql]}" do
       user 'postgres'

@@ -130,4 +130,14 @@ fi
     end
   end
 
+  def self.set_perms (chef, path, owner, perms)
+    chef.bash "set_perms: owner=#{owner}, perms=#{perms} for path=#{path}" do
+      user 'root'
+      code <<-EOF
+chown #{owner} #{path} || exit 1
+chmod #{perms} #{path} || exit 1
+      EOF
+    end
+  end
+
 end
