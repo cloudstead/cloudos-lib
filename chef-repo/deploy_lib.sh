@@ -27,7 +27,7 @@ REQUIRED="${3:?no required specified}"
 COOKBOOK_SOURCES="${4:?no cookbook sources specified}"
 SOLO_JSON="${5}"
 if [ -z "${SOLO_JSON}" ] ; then
-  SOLO_JSON="${INIT_FILES}/solo.json"
+  SOLO_JSON="./solo.json"
 fi
 
 # The host key might change when we instantiate a new VM, so
@@ -84,7 +84,7 @@ done
 for f in JSON.sh install.sh solo.rb ; do
   cp ${CLOUDOS_LIB_BASE}/${f} ${TEMP}/
 done
-mv ${SOLO_JSON} ${TEMP}/solo.json
+mv ${SOLO_JSON} ${TEMP}/solo.json || die "ERROR: ${SOLO_JSON} could not be moved to ${TEMP}/solo.json"
 
 # data bags and certs...
 rsync -vac ${INIT_FILES}/* ${TEMP}/
