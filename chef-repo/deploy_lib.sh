@@ -84,7 +84,7 @@ done
 for f in JSON.sh install.sh solo.rb ; do
   cp ${CLOUDOS_LIB_BASE}/${f} ${TEMP}/
 done
-mv ${SOLO_JSON} ${TEMP}/solo.json || die "ERROR: ${SOLO_JSON} could not be moved to ${TEMP}/solo.json"
+cp ${SOLO_JSON} ${TEMP}/solo.json || die "ERROR: ${SOLO_JSON} could not be copied to ${TEMP}/solo.json"
 
 # data bags and certs...
 rsync -vac ${INIT_FILES}/* ${TEMP}/
