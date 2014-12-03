@@ -62,6 +62,7 @@ TEMP=$(mktemp -d ${BASE}/chef-runs/run.$(date +%Y_%m_%d).XXXXXX)
 
 # cookbooks...
 mkdir -p ${TEMP}/cookbooks/
+mkdir -p ${TEMP}/data_bags/
 for cookbook in ${COOKBOOKS} ; do
   found=0
   for source in ${COOKBOOK_SOURCES} ; do
@@ -70,7 +71,15 @@ for cookbook in ${COOKBOOKS} ; do
       continue
     fi
     if [ -d ${source}/${cookbook} ] ; then
+      # Copy cookbook files
       rsync -vac ${source}/${cookbook} ${TEMP}/cookbooks/
+
+      # If there is a manifest in the databags dir, copy that too
+      manifest="${source}/../data_bags/${cookbook}/cloudos-manifest.json"
+      if [ -f ${manifest} ] ; then
+        mkdir -p ${TEMP}/data_bags/${cookbook} && \
+        rsync -vac ${manifest} ${TEMP}/data_bags/${cookbook}/
+      fi
       found=1
     fi
   done
