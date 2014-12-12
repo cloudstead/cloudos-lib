@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.cobbzilla.util.system.PortPicker;
 
 @NoArgsConstructor @Accessors(chain=true)
 public class PortsDatabag {
@@ -17,5 +18,12 @@ public class PortsDatabag {
     @Getter @Setter private int admin;
 
     public PortsDatabag (int port) { this.primary = port; }
+
+    public static PortsDatabag pick() {
+        // pick random ports
+        return new PortsDatabag()
+                .setPrimary(PortPicker.pickOrDie())
+                .setAdmin(PortPicker.pickOrDie());
+    }
 
 }

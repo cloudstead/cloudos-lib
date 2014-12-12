@@ -39,5 +39,11 @@ public class CloudOsDatabag {
         return this;
     }
 
+    @Getter @Setter private ApiConnectionInfo appstore = new ApiConnectionInfo();
+    public CloudOsDatabag setAppstore (String baseUri, String ucid) {
+        setAppstore(new ApiConnectionInfo(baseUri, ucid, null));
+        return this;
+    }
+
     @Getter @Setter private VendorDatabag vendor = new VendorDatabag();
 }
