@@ -93,6 +93,9 @@ done
 for f in JSON.sh install.sh solo.rb ; do
   cp ${CLOUDOS_LIB_BASE}/${f} ${TEMP}/
 done
+for f in ${BASE}/solo*.json  ; do
+  cp ${f} ${TEMP}/
+done
 cp ${SOLO_JSON} ${TEMP}/solo.json || die "ERROR: ${SOLO_JSON} could not be copied to ${TEMP}/solo.json"
 
 # data bags and certs...
