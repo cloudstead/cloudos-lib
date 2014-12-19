@@ -2,9 +2,7 @@
 # Cookbook Name:: base
 # Recipe:: default
 #
-# Copyright 2013, cloudstead
-#
-# All rights reserved - Do Not Redistribute
+# Copyright 2014, cloudstead
 #
 
 require 'securerandom'
