@@ -145,11 +145,14 @@ fi
     end
   end
 
-  def self.dump(chef, dbname, dbuser = 'postgres', dumpfile)
+  def self.dump(chef, dbname, dumpfile, dbuser = 'postgres')
     chef.bash "dumping #{dbname} to file #{dumpfile} " do
-      user dbuser
+      user 'root'
       code <<-EOF
-pg_dump #{dbname} -f #{dumpfile}
+mkdir -p $(dirname #{dumpfile})
+touch #{dumpfile}
+chown #{dbuser} #{dumpfile}
+sudo -u #{dbuser} -H pg_dump #{dbname} > #{dumpfile}
       EOF
     end
   end
