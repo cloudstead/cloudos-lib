@@ -21,6 +21,16 @@ echo "CREATE USER #{dbuser} IDENTIFIED BY '#{dbpass}'" | mysql -u root
     end
   end
 
+  def self.drop_user (chef, dbuser)
+    chef.bash "dropping mysql user #{dbuser}" do
+      user 'root'
+      code <<-EOF
+echo "DELETE USER '#{dbuser}'" | mysql -u root
+      EOF
+      not_if { %x(echo "select count(*) from mysql.user where User='#{dbuser}'" | mysql -s -u root).to_i == 0 }
+    end
+  end
+
   def self.create_db (chef, dbname)
     chef.bash "create mysql database #{dbname}" do
       user 'root'
@@ -111,12 +121,13 @@ mysqldump #{dbname} > #{dumpfile}
     end
   end
 
-    def self.drop_db (chef, dbname, dbuser, dbpass)
-        chef.bash "dropping mysql database #{dbname}" do
-          user 'root'
-          code <<-EOF
+  def self.drop_db (chef, dbname, dbuser, dbpass)
+    chef.bash "dropping mysql database #{dbname}" do
+      user 'root'
+      code <<-EOF
 mysqladmin -u #{dbuser} -p #{dbpass} drop #{dbname}
-          EOF
-        end
-      end
+      EOF
+    end
+  end
+
 end

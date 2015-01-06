@@ -44,6 +44,16 @@ echo "ALTER USER #{dbuser} PASSWORD '#{dbpass}'" | #{PSQL} -U postgres
     end
   end
 
+  def self.drop_user (chef, dbuser)
+    chef.bash "dropping pgsql user #{dbuser}" do
+      user 'postgres'
+      code <<-EOF
+dropuser #{dbuser}
+      EOF
+      not_if { %x(su - postgres bash -c '#{PSQL_COMMAND} "select usename from pg_user"').lines.grep(/#{dbuser}/).size == 0 }
+    end
+  end
+
   def self.create_db (chef, dbname, dbowner = 'postgres')
     chef.bash "create pgsql database #{dbname}" do
       user 'postgres'
@@ -163,6 +173,7 @@ sudo -u #{dbuser} -H pg_dump #{dbname} > #{dumpfile}
       code <<-EOF
 dropdb #{dbname}
       EOF
+      not_if { %x(su - postgres bash -c '#{PSQL_COMMAND} "select datname from pg_database"').lines.grep(/#{dbname}/).size == 0 }
     end
   end
 
