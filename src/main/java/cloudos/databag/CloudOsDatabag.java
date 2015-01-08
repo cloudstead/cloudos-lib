@@ -26,6 +26,7 @@ public class CloudOsDatabag {
     @Getter @Setter private String aws_secret_key;
     @Getter @Setter private String aws_iam_user;
     @Getter @Setter private String s3_bucket;
+    @Getter @Setter private String backup_cron_schedule = "30 4  * * *";
 
     @Getter @Setter private ApiConnectionInfo authy = new ApiConnectionInfo();
     public CloudOsDatabag setAuthy (String baseUri, String apiKey) {
