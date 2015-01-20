@@ -14,11 +14,11 @@ class Chef::Recipe::Base
 
   def self.secret
     if ! File.exists? @CLIENT_SECRET
-      File.open(@CLIENT_SECRET, "wb") { |f| f.write SecureRandom.hex(64) }
+      File.open(@CLIENT_SECRET, 'wb') { |f| f.write SecureRandom.hex(64) }
     end
     %x(chmod 700 #{@CLIENT_SECRET})
 
-    file = File.open(@CLIENT_SECRET, "rb")
+    file = File.open(@CLIENT_SECRET, 'rb')
     contents = file.read
     file.close
 
