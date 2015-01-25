@@ -118,7 +118,7 @@ if [[ -z "${found}" || ${found} -eq 0 ]] ; then
   fi
 fi
       EOF
-      not_if { %x(su - postgres bash -c "cat #{check_sql} | #{PSQL} #{dbname}").strip.to_i > 0 }
+      not_if { %x(chown postgres #{check_sql} && su - postgres bash -c "cat #{check_sql} | #{PSQL} #{dbname}").strip.to_i > 0 }
     end
   end
 

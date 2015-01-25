@@ -39,22 +39,24 @@
 
 umask 007
 
-if [ $(whoami) != "root" ] ; then
-  echo "Not root."
+function die () {
+  echo >&2 "${1}"
   exit 1
+}
+
+if [ $(whoami) != "root" ] ; then
+  die "Not root."
 fi
 
 APP_BASE="$1"
 if [ -z ${APP_BASE} ] ; then
-  echo "No APP_BASE given"
-  exit 1
+  die "No APP_BASE given"
 fi
 shift
 
 RUN_AS_USER="$1"
 if [ -z ${RUN_AS_USER} ] ; then
-  echo "No RUN_AS_USER given"
-  exit 1
+  die "No RUN_AS_USER given"
 fi
 shift
 
@@ -124,6 +126,9 @@ case "$1" in
     fi
 
     RUN_AS_USER_HOME=$(echo $(bash -c "cd ~${RUN_AS_USER} && pwd"))
+    if [ -f "${RUN_AS_USER_HOME}/jrun_prestart.sh" ] ; then
+      bash -c ${RUN_AS_USER_HOME}/jrun_prestart.sh || die "Error running jrun_prestart"
+    fi
     echo "$(date): start: starting ${APP_NAME} as ${RUN_AS_USER}, setting HOME=${RUN_AS_USER_HOME}, was ${HOME}" | tee -a ${CONTROL_LOG}
 
     set -m

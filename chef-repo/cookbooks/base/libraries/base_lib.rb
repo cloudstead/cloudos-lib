@@ -8,8 +8,12 @@ class Chef::Recipe::Base
     %x(sudo cat /etc/chef-user).strip
   end
 
+  def self.user_home(user)
+    %x(echo $(bash -c "cd ~#{user} && pwd")).strip
+  end
+
   def self.chef_user_home
-    %x(echo $(bash -c "cd ~#{chef_user} && pwd")).strip
+    user_home(chef_user)
   end
 
   def self.secret
