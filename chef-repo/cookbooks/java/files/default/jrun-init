@@ -126,8 +126,8 @@ case "$1" in
     fi
 
     RUN_AS_USER_HOME=$(echo $(bash -c "cd ~${RUN_AS_USER} && pwd"))
-    if [ -f "${RUN_AS_USER_HOME}/jrun_prestart.sh" ] ; then
-      bash -c ${RUN_AS_USER_HOME}/jrun_prestart.sh || die "Error running jrun_prestart"
+    if [ -f "${APP_BASE}/jrun_prestart.sh" ] ; then
+      bash -c ${APP_BASE}/jrun_prestart.sh || die "Error running jrun_prestart"
     fi
     echo "$(date): start: starting ${APP_NAME} as ${RUN_AS_USER}, setting HOME=${RUN_AS_USER_HOME}, was ${HOME}" | tee -a ${CONTROL_LOG}
 
