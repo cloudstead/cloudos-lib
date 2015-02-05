@@ -54,11 +54,11 @@ dropuser #{dbuser}
     end
   end
 
-  def self.create_db (chef, dbname, dbowner = 'postgres')
+  def self.create_db (chef, dbname, dbuser = 'postgres')
     chef.bash "create pgsql database #{dbname}" do
       user 'postgres'
       code <<-EOF
-createdb --encoding=UNICODE --owner=#{dbowner} #{dbname}
+createdb --encoding=UNICODE --owner=#{dbuser} #{dbname}
       EOF
       not_if { %x(su - postgres bash -c '#{PSQL_COMMAND} "select datname from pg_database"').lines.grep(/#{dbname}/).size > 0 }
     end

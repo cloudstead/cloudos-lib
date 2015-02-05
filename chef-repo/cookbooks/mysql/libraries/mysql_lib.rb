@@ -31,11 +31,12 @@ echo "DELETE USER '#{dbuser}'" | mysql -u root
     end
   end
 
-  def self.create_db (chef, dbname)
+  def self.create_db (chef, dbname, dbuser)
     chef.bash "create mysql database #{dbname}" do
       user 'root'
       code <<-EOF
-echo "CREATE DATABASE #{dbname}" | mysql -u root
+echo "CREATE DATABASE #{dbname}" | mysql -u root && \
+echo "GRANT ALL ON #{dbname}.* TO '#{dbuser}'" | mysql -u root
       EOF
       not_if { %x(echo "show databases" | mysql -s -u root).lines.grep(/#{dbname}/).size > 0 }
     end
@@ -47,9 +48,9 @@ echo "CREATE DATABASE #{dbname}" | mysql -u root
 
   def self.table_exists(dbname, dbuser, dbpass, tablename)
     if tablename
-      %x(echo "show tables" | mysql -s -u #{dbuser} #{dbname} | grep #{tablename}).lines.grep(/#{tablename}/).size > 0
+      %x(echo "show tables" | mysql -s -u #{dbuser} -p#{dbpass} #{dbname} | grep #{tablename}).lines.grep(/#{tablename}/).size > 0
     else
-      %x(echo "show tables" | mysql -s -u #{dbuser} #{dbname} | wc -l).strip.to_i > 0
+      %x(echo "show tables" | mysql -s -u #{dbuser} -p#{dbpass} #{dbname} | wc -l).strip.to_i > 0
     end
   end
 
@@ -61,7 +62,7 @@ echo "CREATE DATABASE #{dbname}" | mysql -u root
     chef.bash "running #{script} against #{dbname} " do
       user 'root'
       code <<-EOF
-cat #{script} | mysql -U #{dbuser} #{dbname}
+cat #{script} | mysql -u #{dbuser} -p#{dbpass} #{dbname}
       EOF
     end
   end
@@ -95,7 +96,6 @@ if [[ -z "${found}" || ${found} -eq 0 ]] ; then
     exit 1
   fi
 fi
-cat #{sql} | #{mysql} > #{sql}.out
       EOF
       not_if { %x(cat #{check_sql} | #{mysql}").strip.to_i > 0 }
     end
