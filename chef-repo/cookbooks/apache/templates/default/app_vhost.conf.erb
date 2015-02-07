@@ -6,7 +6,7 @@ cert_name = @config[:cert_name]
 if @config[:server_name]
     server_name = @config[:server_name]
 
-elsif @config[:mode] == :proxy_root
+elsif @config[:mode] == :proxy_root || @config[:mode] == :vhost_root
     server_name = @hostname
 else
     server_name = "#{@app_name}-#{@hostname}"
@@ -35,18 +35,18 @@ end
   RequestHeader set X_FORWARDED_PROTO 'https'
   ProxyPreserveHost On
 
-<% if @config[:mode] == :proxy_root %>
+  <% if @config[:mode] == :proxy_root %>
   IncludeOptional https-services-enabled/
-<% end %>
+  <% end %>
 
-<% if @cloudos_port %>
+  <% if @cloudos_port %>
   ProxyPass <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
   ProxyPassReverse <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
-<% end %>
+  <% end %>
 
-<% if @config[:auth] %>
+  <% if @config[:auth] %>
   AuthenicateCookieName __cloudos_http_auth
-<% end %>
+  <% end %>
   ProxyPass <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
   ProxyPassReverse <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
 
@@ -57,6 +57,11 @@ end
   CustomLog ${APACHE_LOG_DIR}/<%=server_name%>.log combined
 
 <% else %>
+
+  <% if @config[:mode] == :vhost_root %>
+  IncludeOptional https-services-enabled/
+  <% end %>
+
   DocumentRoot <%=@config[:doc_root]%>
 
   ErrorLog ${APACHE_LOG_DIR}/<%=server_name%>_error.log

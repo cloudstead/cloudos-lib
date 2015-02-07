@@ -70,7 +70,7 @@ a2enmod #{module_name}
       m = config[:mode]
         if m == :service || m == :proxy_service
           self.define_service(chef, scope)
-        elsif m == :vhost || m == :proxy || m == :proxy_root
+        elsif m == :vhost || m == :vhost_root || m == :proxy || m == :proxy_root
           self.define_vhost(chef, scope)
         else
           raise "Unknown mode: #{config[:mode]}"
