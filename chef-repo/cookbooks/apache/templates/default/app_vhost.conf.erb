@@ -59,10 +59,14 @@ end
 <% else %>
 
   <% if @config[:mode] == :vhost_root %>
+  RewriteEngine on
   IncludeOptional https-services-enabled/
-  <% end %>
+  RewriteCond expr true
+  RewriteRule ^(.*)$ /<%=File.basename(@config[:doc_root])%>/$1
 
+  <% else %>
   DocumentRoot <%=@config[:doc_root]%>
+  <% end %>
 
   ErrorLog ${APACHE_LOG_DIR}/<%=server_name%>_error.log
   CustomLog ${APACHE_LOG_DIR}/<%=server_name%>_access.log combined env=!dontlog
