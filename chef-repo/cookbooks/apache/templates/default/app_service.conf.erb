@@ -1,7 +1,5 @@
 <% apache = Chef::Recipe::Apache %>
 
-RewriteCond expr "! %{REQUEST_URI} -strmatch '/<%=File.basename(@config[:doc_root])%>/*'"
-
 <% if @config[:vhost] %>
   IncludeOptional apps/<%=@app_name%>/vhost.conf
 <% end %>

@@ -158,6 +158,7 @@ a2enmod #{module_name}
     write_vhost_template(app_name, chef, config, scope)
 
     self.subst_template(chef, 'app_service.conf.erb', "/etc/apache2/https-services-available/#{app_name}", scope, 'apache')
+    self.subst_template(chef, 'app_service_rewrite.conf.erb', "/etc/apache2/rewrite-rules-available/#{app_name}", scope, 'apache')
 
     define_dir_configs(app_name, chef, config, scope) if config[:dir]
     define_location_configs(app_name, chef, config, scope) if config[:location]
@@ -201,6 +202,7 @@ a2dissite #{site_name} || true
       cwd '/tmp'
       code <<-EOH
 ln -sf /etc/apache2/https-services-available/#{service_name} /etc/apache2/https-services-enabled/#{service_name}
+ln -sf /etc/apache2/rewrite-rules-available/#{service_name} /etc/apache2/rewrite-rules-enabled/#{service_name}
       EOH
     end
   end

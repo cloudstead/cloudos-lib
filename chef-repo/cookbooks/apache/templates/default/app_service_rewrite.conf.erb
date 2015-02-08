@@ -1,0 +1,2 @@
+
+RewriteCond expr "! %{REQUEST_URI} -strmatch '/<%=File.basename(@config[:doc_root])%>/*'"
