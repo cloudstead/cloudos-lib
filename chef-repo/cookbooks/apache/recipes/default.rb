@@ -14,8 +14,8 @@
   end
 end
 
-%w( /etc/apache2/https-services-available /etc/apache2/https-services-enabled ).each do |dir|
-  directory dir do
+%w( https-services-available https-services-enabled rewrite-rules-available rewrite-rules-enabled ).each do |dir|
+  directory "/etc/apache2/#{dir}" do
     owner 'root'
     group 'root'
     mode '0644'
