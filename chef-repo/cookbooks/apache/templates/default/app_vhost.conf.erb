@@ -59,10 +59,12 @@ end
 <% else %>
 
   <% if @config[:mode] == :vhost_root %>
-  RewriteEngine on
   IncludeOptional https-services-enabled/
+
+  RewriteEngine on
+  IncludeOptional rewrite-rules-enabled/
   RewriteCond expr true
-  RewriteRule ^(.*)$ /<%=File.basename(@config[:doc_root])%>/$1
+  RewriteRule ^(.*)$ /<%=File.basename(@config[:doc_root])%>$1
 
   <% else %>
   DocumentRoot <%=@config[:doc_root]%>

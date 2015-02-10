@@ -1,2 +1,10 @@
-
-RewriteCond expr "! %{REQUEST_URI} -strmatch '/<%=File.basename(@config[:doc_root])%>/*'"
+<%
+path = @config[:mount]
+if path.nil? || path.empty? || path == '/'
+  # default mount, simply use basename of doc_root
+  path = File.basename(@config[:doc_root])
+end
+path = "/#{path}" unless path.start_with? '/'
+path = "#{path}/" unless path.end_with? '/'
+%>
+RewriteCond expr "! %{REQUEST_URI} -strmatch '<%=path%>*'"
