@@ -40,8 +40,8 @@ end
   <% end %>
 
   <% if @cloudos_port %>
-  ProxyPass <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
-  ProxyPassReverse <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+  ProxyPass /__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+  ProxyPassReverse /__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
   <% end %>
 
   <% if @config[:auth] %>
@@ -49,6 +49,10 @@ end
   <% end %>
   ProxyPass <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
   ProxyPassReverse <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
+  <% unless @config[:mount] == '/' %>
+  ProxyPass / http://127.0.0.1:<%=@config[:port]%>/
+  ProxyPassReverse / http://127.0.0.1:<%=@config[:port]%>/
+  <% end %>
 
   LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b" common_forwarded
   ErrorLog ${APACHE_LOG_DIR}/<%=server_name%>_error.log
@@ -60,6 +64,15 @@ end
 
   <% if @config[:mode] == :vhost_root %>
   IncludeOptional https-services-enabled/
+
+    <% if @cloudos_port %>
+  ProxyPass <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+  ProxyPassReverse <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+      <% unless @config[:mount] == '/' %>
+  ProxyPass /__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+  ProxyPassReverse /__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+      <% end %>
+    <% end %>
 
   RewriteEngine on
   IncludeOptional rewrite-rules-enabled/
