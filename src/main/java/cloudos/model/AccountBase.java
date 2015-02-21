@@ -48,6 +48,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
     public static final int LASTNAME_MAXLEN = 25;
     public static final int FIRSTNAME_MAXLEN = 25;
     public static final int MOBILEPHONE_MAXLEN = 30;
+    public static final int MOBILEPHONE_MINLEN = 8;
     public static final int PRIMARY_GROUP_MAXLEN = 100;
 
     @Getter @Setter @Embedded
@@ -120,7 +121,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
         return this;
     }
 
-    @Size(max=MOBILEPHONE_MAXLEN, message=ERR_MOBILEPHONE_LENGTH)
+    @Size(min=MOBILEPHONE_MINLEN, max=MOBILEPHONE_MAXLEN, message=ERR_MOBILEPHONE_LENGTH)
     @HasValue(message=ERR_MOBILEPHONE_EMPTY)
     @Getter private String mobilePhone;
     public AccountBase setMobilePhone (String mobilePhone) {
