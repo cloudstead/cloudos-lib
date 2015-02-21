@@ -61,10 +61,9 @@ a2enmod #{module_name}
       recursive true
     end
 
-    # normalize mount -- ensure it begins and ends with a slash
-    config[:mount] ||= '/'
-    config[:mount] = "/#{config[:mount]}" unless config[:mount].start_with? '/'
-    config[:mount] = "#{config[:mount]}/" unless config[:mount].end_with? '/'
+    # normalize mount and local_mount -- ensure it begins with a slash and does not end with a slash (unless it is just /)
+    config[:mount] = normalize_mount(config[:mount])
+    config[:local_mount] = normalize_mount(config[:local_mount])
 
     if defined? config[:mode]
       m = config[:mode]
@@ -89,6 +88,13 @@ a2enmod #{module_name}
       self.subst_template(chef, "#{app_name}.conf.erb", "/etc/apache2/sites-available/#{app_name}.conf", scope, 'apache')
       self.enable_site(chef, app_name)
     end
+  end
+
+  def self.normalize_mount(mount)
+    # ensure it begins with a slash and does not end with a slash (unless it is the single-char '/')
+    mount ||= '/'
+    mount = "/#{mount}" unless mount.start_with? '/'
+    (mount.end_with? '/' && mount != '/') ? mount[0 .. -2] : mount
   end
 
   def self.dir_base (dir)

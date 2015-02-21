@@ -1,6 +1,6 @@
 <%
 apache = Chef::Recipe::Apache
-
+re_prefix = 'regex:'
 cert_name = @config[:cert_name]
 
 if @config[:server_name]
@@ -44,15 +44,23 @@ end
   ProxyPassReverse /__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
   <% end %>
 
+  <% if @config[:filters] %>
+    <% @config[:filters].each do |filter| %>
+      <% if filter.start_with? re_prefix %>
+  ProxyPassMatch ^<%=@config[:mount]%>/(<%=filter[re_prefix.length .. -1]%>) http://127.0.0.1:<%=@cloudos_port%>/api/app/filter/<%=@app_name%>/$1
+      <% else %>
+  ProxyPass <%=@config[:mount]%>/<%=filter%> http://127.0.0.1:<%=@cloudos_port%>/api/app/filter/<%=@app_name%>/<%=filter%>
+  ProxyPassReverse <%=@config[:mount]%>/<%=filter%> http://127.0.0.1:<%=@cloudos_port%>/api/app/filter/<%=@app_name%>/<%=filter%>
+      <% end %>
+    <% end %>
+  <% end %>
+
   <% if @config[:auth] %>
   AuthenicateCookieName __cloudos_http_auth
   <% end %>
-  ProxyPass <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
-  ProxyPassReverse <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
-  <% unless @config[:mount] == '/' %>
-  ProxyPass / http://127.0.0.1:<%=@config[:port]%>/
-  ProxyPassReverse / http://127.0.0.1:<%=@config[:port]%>/
-  <% end %>
+
+  ProxyPass <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%><%=@config[:local_mount]%>
+  ProxyPassReverse <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%><%=@config[:local_mount]%>
 
   LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b" common_forwarded
   ErrorLog ${APACHE_LOG_DIR}/<%=server_name%>_error.log
@@ -66,8 +74,8 @@ end
   IncludeOptional https-services-enabled/
 
     <% if @cloudos_port %>
-  ProxyPass <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
-  ProxyPassReverse <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+  ProxyPass <%=@config[:mount]%>/__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+  ProxyPassReverse <%=@config[:mount]%>/__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
       <% unless @config[:mount] == '/' %>
   ProxyPass /__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
   ProxyPassReverse /__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/

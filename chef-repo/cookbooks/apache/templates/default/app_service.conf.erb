@@ -1,4 +1,7 @@
-<% apache = Chef::Recipe::Apache %>
+<%
+apache = Chef::Recipe::Apache
+re_prefix = 'regex:'
+%>
 
 <% if @config[:vhost] %>
   IncludeOptional apps/<%=@app_name%>/vhost.conf
@@ -9,13 +12,24 @@
   RequestHeader set X_FORWARDED_PROTO 'https'
   ProxyPreserveHost On
 
+  <% if @config[:filters] %>
+    <% @config[:filters].each do |filter| %>
+      <% if filter.start_with? re_prefix  %>
+  ProxyPassMatch ^<%=@config[:mount]%>/(<%=filter[re_prefix.length .. -1]%>) http://127.0.0.1:<%=@cloudos_port%>/api/app/filter/<%=@app_name%>/$1
+      <% else %>
+  ProxyPass <%=@config[:mount]%>/<%=filter%> http://127.0.0.1:<%=@cloudos_port%>/api/app/filter/<%=@app_name%>/<%=filter%>
+  ProxyPassReverse <%=@config[:mount]%>/<%=filter%> http://127.0.0.1:<%=@cloudos_port%>/api/app/filter/<%=@app_name%>/<%=filter%>
+      <% end %>
+    <% end %>
+  <% end %>
+
   <% if @cloudos_port %>
   ProxyPass <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
   ProxyPassReverse <%=@config[:mount]%>__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
   <% end %>
 
-  ProxyPass <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
-  ProxyPassReverse <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%>/
+  ProxyPass <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%><%=@config[:local_mount]%>
+  ProxyPassReverse <%=@config[:mount]%> http://127.0.0.1:<%=@config[:port]%><%=@config[:local_mount]%>
 
 <% else %>
   ProxyPass /<%=%x(basename #{@config[:doc_root]}).strip%> !
