@@ -4,7 +4,7 @@
 #
 # Usage:
 #
-#    jrun [debug] <app-base-dir> [java-class] [config-file]
+#    jrun [debug [debug-port]] <app-base-dir> [java-class] [config-file]
 #
 # If "debug" is the first argument, the JVM listens on port 5005 at startup,
 # and resumes when a debugger connects.
@@ -72,8 +72,17 @@ umask 007
 DEBUG="${1}"
 DEBUG_OPTS=""
 if [ ! -z ${DEBUG} ] && [ ${DEBUG} = "debug" ] ; then
-  DEBUG_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"
   shift
+  ARG_LEN=$(echo -n "${1}" | wc -c)
+  ARG_NUMERIC_LEN=$(echo -n "${1}" | tr -dc [:digit:] | wc -c)  # strip all non-digits
+  if [ ${ARG_LEN} -eq ${ARG_NUMERIC_LEN} ] ; then
+    # Second arg is the debug port
+    DEBUG_PORT="${1}"
+    shift
+  else
+    DEBUG_PORT=5005
+  fi
+  DEBUG_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=${DEBUG_PORT}"
 fi
 
 APP_BASE="${1}"
