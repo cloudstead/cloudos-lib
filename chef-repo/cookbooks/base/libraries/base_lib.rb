@@ -33,6 +33,10 @@ class Chef::Recipe::Base
     Digest::SHA256.hexdigest("#{service}_#{secret}")
   end
 
+  def self.sha_file(file)
+    Digest::SHA256.file(file).hexdigest
+  end
+
   def self.logrotate(chef, path)
     chef.template path do
       source 'log_rotate.erb'
