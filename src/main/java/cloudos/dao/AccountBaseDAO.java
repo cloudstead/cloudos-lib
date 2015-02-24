@@ -5,6 +5,8 @@ import cloudos.model.auth.AuthenticationException;
 import cloudos.model.auth.LoginRequest;
 import org.cobbzilla.wizard.dao.UniquelyNamedEntityDAO;
 
+import java.util.List;
+
 public abstract class AccountBaseDAO<T extends AccountBase> extends UniquelyNamedEntityDAO<T>  {
 
     public abstract T authenticate(LoginRequest loginRequest) throws AuthenticationException;
@@ -19,4 +21,5 @@ public abstract class AccountBaseDAO<T extends AccountBase> extends UniquelyName
         update(account);
     }
 
+    public List<T> findAdmins() { return findByField("admin", true); }
 }
