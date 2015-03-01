@@ -12,6 +12,14 @@ class Chef::Recipe::Base
     %x(echo $(bash -c "cd ~#{user} && pwd")).strip
   end
 
+  def self.chef_dir
+    File.absolute_path("#{File.dirname(__FILE__)}/../../..")
+  end
+
+  def self.chef_files(cookbook)
+    "#{chef_dir}/cookbooks/#{cookbook}/files/default"
+  end
+
   def self.chef_user_home
     user_home(chef_user)
   end
