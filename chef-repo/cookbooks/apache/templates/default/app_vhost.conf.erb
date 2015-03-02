@@ -45,6 +45,7 @@ end
   <% end %>
 
   <% if @config[:filters] %>
+  # Filter these URLs through CloudOs; rules defined in the app manifest
     <% @config[:filters].each do |filter| %>
       <% if filter.start_with? re_prefix %>
   ProxyPassMatch ^<%=@config[:mount]%>/(<%=filter[re_prefix.length .. -1]%>) http://127.0.0.1:<%=@cloudos_port%>/api/app/filter/<%=@app_name%>/$1
