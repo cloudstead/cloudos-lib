@@ -12,6 +12,8 @@ import org.cobbzilla.util.http.ApiConnectionInfo;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+
 @AllArgsConstructor @Slf4j
 public class TwoFactorAuthService {
 
@@ -25,13 +27,13 @@ public class TwoFactorAuthService {
 
     public int addUser(String email, String phone, String countrycode) {
         final User user = getClient().getUsers().createUser(email, phone, countrycode);
-        if (!user.isOk()) throw new IllegalStateException("Error creating authy user: "+user.getError());
+        if (!user.isOk()) die("Error creating authy user: "+user.getError());
         return user.getId();
     }
 
     public void verify(int authId, String userToken) {
         final Token token = getClient().getTokens().verify(authId, userToken);
-        if (!token.isOk()) throw new IllegalStateException("Error verifying authy user: "+token.getError());
+        if (!token.isOk()) die("Error verifying authy user: "+token.getError());
     }
 
     public void sendSms (int authId) {
@@ -39,7 +41,7 @@ public class TwoFactorAuthService {
         options.put("force", "true");
         final Hash hash = getClient().getUsers().requestSms(authId, options);
         // todo: fix authy-java library so that isOk returns true here (it should but doesn't)
-        if (!hash.isSuccess()) throw new IllegalStateException("Error sending SMS token: "+hash.getError());
+        if (!hash.isSuccess()) die("Error sending SMS token: "+hash.getError());
     }
 
     public void deleteUser(Integer authId) {

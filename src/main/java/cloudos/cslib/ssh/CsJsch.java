@@ -10,6 +10,8 @@ import org.cobbzilla.util.string.StringUtil;
 
 import java.io.*;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.string.StringUtil.UTF8;
 
 // some code borrowed from examples on http://www.jcraft.com/jsch/
@@ -88,7 +90,7 @@ public class CsJsch {
         checkAck(in);
 
         // send "C0644 filesize filename", where filename should not include '/'
-        final String localPath = local.getAbsolutePath();
+        final String localPath = abs(local);
         long filesize = local.length();
         String command = "C0644 "+filesize+" ";
         if (localPath.lastIndexOf('/') > 0){
@@ -134,10 +136,10 @@ public class CsJsch {
         while (!channel.isClosed() && !isTimedOut(start, timeout)) {
             Thread.sleep(100);
         }
-        if (!channel.isClosed()) throw new IllegalStateException("Output completed but channel still open, command="+command+", output="+out.toString(UTF8));
+        if (!channel.isClosed()) die("Output completed but channel still open, command="+command+", output="+out.toString(UTF8));
 
         int exitStatus = channel.getExitStatus();
-        if (exitStatus != 0) throw new IllegalStateException("Error executing command ("+command+"): exit status "+exitStatus+" (output="+out.toString(UTF8)+")");
+        if (exitStatus != 0) die("Error executing command ("+command+"): exit status "+exitStatus+" (output="+out.toString(UTF8)+")");
 
         return out.toString(UTF8);
     }
@@ -153,7 +155,7 @@ public class CsJsch {
         //          2 for fatal error,
         //          -1
         if (b==0) return b;
-        if (b==-1) throw new IllegalStateException("checkAckFailed ("+b+")");
+        if (b==-1) die("checkAckFailed ("+b+")");
 
         StringBuilder sb = new StringBuilder();
         int c;
@@ -162,10 +164,10 @@ public class CsJsch {
             sb.append((char)c);
         } while (c != '\n');
         if (b==1){ // error
-            throw new IllegalStateException("checkAck failed ("+b+"): "+ sb.toString());
+            die("checkAck failed ("+b+"): "+ sb.toString());
         }
         // fatal error
-        throw new IllegalStateException("checkAck failed ("+b+"): "+ sb.toString());
+        return die("checkAck failed ("+b+"): "+ sb.toString());
     }
 
     public boolean ssh(long timeout) throws Exception {
