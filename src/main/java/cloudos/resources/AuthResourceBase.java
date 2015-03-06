@@ -15,10 +15,12 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
+import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.mail.service.TemplatedMailService.T_RESET_PASSWORD;
+import static org.cobbzilla.util.string.StringUtil.empty;
 
 @Slf4j
 public abstract class AuthResourceBase<A extends AccountBase> {
@@ -36,6 +38,8 @@ public abstract class AuthResourceBase<A extends AccountBase> {
     protected abstract String getResetPasswordUrl(String token);
 
     protected long getVerificationCodeExpiration() { return TimeUnit.DAYS.toMillis(2); }
+
+    protected String getActivationSuccessRedirect() { return null; }
 
     /**
      * Activate a user account
@@ -63,6 +67,9 @@ public abstract class AuthResourceBase<A extends AccountBase> {
             }
         }
 
+        if (!empty(getActivationSuccessRedirect())) {
+            Response.temporaryRedirect(URI.create(getActivationSuccessRedirect()));
+        }
         return Response.ok().build();
     }
 

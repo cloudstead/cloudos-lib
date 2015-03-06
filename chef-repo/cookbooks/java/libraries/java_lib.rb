@@ -64,6 +64,7 @@ yes" | keytool -import -alias #{name.downcase} -keypass changeit -keystore #{cac
       action [ :enable, :start ]
     end
 
+    { :service_name => svc, :proc_pattern => proc_pattern }
   end
 
 end

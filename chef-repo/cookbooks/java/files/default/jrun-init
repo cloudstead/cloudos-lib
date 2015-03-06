@@ -130,12 +130,16 @@ case "$1" in
 
     RUN_AS_USER_HOME=$(echo $(bash -c "cd ~${RUN_AS_USER} && pwd"))
     if [ -f "${APP_BASE}/jrun_prestart.sh" ] ; then
-      PRESTART_OUTPUT=$(bash -c ${APP_BASE}/jrun_prestart.sh 2>&1)
-      if [ -f ${APP_BASE}/.jrun_prestart_ignore_errors ] ; then
-        echo "Error running jrun_prestart (but continuing anyway): ${PRESTART_OUTPUT}" | tee -a ${CONTROL_LOG}
-      else
-        die "Error running jrun_prestart: ${PRESTART_OUTPUT}"
-      fi
+        echo "Running prestart script: ${APP_BASE}/jrun_prestart.sh" | tee -a ${CONTROL_LOG}
+        bash -c ${APP_BASE}/jrun_prestart.sh 2>&1 | tee -a ${CONTROL_LOG}
+        rval=$?
+        if [ ${rval} -ne 0 ] ; then
+            if [ -f ${APP_BASE}/.jrun_prestart_ignore_errors ] ; then
+                echo "Error running jrun_prestart (exited with status=${rval} but continuing anyway)" | tee -a ${CONTROL_LOG}
+            else
+                die "Error running jrun_prestart"
+            fi
+        fi
     fi
     echo "$(date): start: starting ${APP_NAME} as ${RUN_AS_USER}, setting HOME=${RUN_AS_USER_HOME}, was ${HOME}" | tee -a ${CONTROL_LOG}
 

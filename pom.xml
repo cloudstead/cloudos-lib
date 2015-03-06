@@ -25,6 +25,16 @@ For commercial use, please contact cloudstead.io
             <artifactId>rooty-toots</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.cobbzilla</groupId>
+            <artifactId>wizard-server</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.cobbzilla</groupId>
+            <artifactId>wizard-client</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
 
         <!-- 2-factor authentication -->
         <dependency>

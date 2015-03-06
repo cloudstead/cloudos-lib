@@ -59,9 +59,13 @@ dropuser #{dbuser}
       user 'postgres'
       code <<-EOF
 createdb --encoding=UNICODE --owner=#{dbuser} #{dbname}
-      EOF
-      not_if { %x(su - postgres bash -c '#{PSQL_COMMAND} "select datname from pg_database"').lines.grep(/#{dbname}/).size > 0 }
+EOF
+      not_if { db_exists(dbname) }
     end
+  end
+
+  def self.db_exists(dbname)
+    %x(su - postgres bash -c '#{PSQL_COMMAND} "select datname from pg_database"').lines.grep(/#{dbname}/).size > 0
   end
 
   def self.count_tables(dbname, dbuser, dbpass)

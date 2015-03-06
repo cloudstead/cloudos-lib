@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.wizard.filters.Scrubbable;
 import org.cobbzilla.wizard.filters.ScrubbableField;
 import org.cobbzilla.wizard.model.HashedPassword;
@@ -19,6 +18,7 @@ import javax.persistence.Transient;
 import javax.validation.constraints.Size;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+import static org.cobbzilla.util.string.StringUtil.empty;
 
 @MappedSuperclass @Accessors(chain=true)
 public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
@@ -43,6 +43,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
     public static final String ERR_MOBILEPHONE_EMPTY = "{err.mobilePhone.empty}";
     public static final String ERR_MOBILEPHONE_CC_EMPTY = "{err.mobilePhoneCountryCode.empty}";
     public static final String ERR_PRIMARY_GROUP_LENGTH = "{err.primaryGroup.length}";
+    public static final String ERR_LOCALE_LENGTH = "{err.locale.length}";
     public static final int EMAIL_MAXLEN = 255;
     public static final int VERIFY_CODE_MAXLEN = 100;
     public static final int LASTNAME_MAXLEN = 25;
@@ -50,6 +51,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
     public static final int MOBILEPHONE_MAXLEN = 30;
     public static final int MOBILEPHONE_MINLEN = 8;
     public static final int PRIMARY_GROUP_MAXLEN = 100;
+    public static final int LOCALE_MAXLEN = 40;
 
     @Getter @Setter @Embedded
     @JsonIgnore private HashedPassword hashedPassword;
@@ -57,7 +59,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
     @Size(max=30, message=ERR_AUTHID_LENGTH)
     @Getter @Setter private String authId = null;
 
-    public boolean hasAuthId() { return !StringUtil.empty(authId); }
+    public boolean hasAuthId() { return !empty(authId); }
 
     @JsonIgnore @Transient public Integer getAuthIdInt() { return authId == null ? null : Integer.valueOf(authId); }
     public AccountBase setAuthIdInt(int authId) { setAuthId(String.valueOf(authId)); return this; }
@@ -145,6 +147,10 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
 
     @JsonIgnore @Transient public String getMobilePhoneCountryCodeString() { return mobilePhoneCountryCode == null ? null : mobilePhoneCountryCode.toString(); }
 
+    @Size(max=LOCALE_MAXLEN, message=ERR_LOCALE_LENGTH)
+    @Getter @Setter private String locale;
+    @JsonIgnore public boolean hasLocale () { return !empty(locale); }
+
     public AccountBase populate(AccountBase other) {
         setName(other.getName());
         setEmail(other.getEmail());
@@ -160,6 +166,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
         if (getHashedPassword() != null && other.getHashedPassword() != null) {
             getHashedPassword().setResetToken(other.getHashedPassword().getResetToken());
         }
+        setLocale(other.getLocale());
         return this;
     }
 }

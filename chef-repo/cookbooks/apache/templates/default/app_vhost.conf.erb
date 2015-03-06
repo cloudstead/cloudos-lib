@@ -3,14 +3,7 @@ apache = Chef::Recipe::Apache
 re_prefix = 'regex:'
 cert_name = @config[:cert_name]
 
-if @config[:server_name]
-    server_name = @config[:server_name]
-
-elsif @config[:mode] == :proxy_root || @config[:mode] == :vhost_root
-    server_name = @hostname
-else
-    server_name = "#{@app_name}-#{@hostname}"
-end
+server_name = apache.get_server_name(@config[:server_name], @config[:mode], @hostname, @app_name)
 %>
 
 <IfModule mod_ssl.c>

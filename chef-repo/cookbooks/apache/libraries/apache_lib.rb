@@ -2,9 +2,10 @@ require 'securerandom'
 
 class Chef::Recipe::Apache
 
-  def self.reload(chef)
-    chef.bash "restart Apache" do
-      user "root"
+  def self.reload(chef, reason = nil)
+    reason = reason.to_s.empty? ? '' : "(#{reason})"
+    chef.bash "restart Apache #{reason}" do
+      user 'root'
       code <<-EOH
 if [[ "$(service apache2 status)" =~ "not running" ]] ; then
   service apache2 start
@@ -13,6 +14,11 @@ else
 fi
       EOH
     end
+  end
+
+  def self.get_server_name (preset, mode, hostname, app_name)
+    return preset if preset
+    (mode == :proxy_root || :mode == :vhost_root) ? hostname : "#{app_name}-#{hostname}"
   end
 
   def self.new_module (chef, module_name)
@@ -64,6 +70,7 @@ a2enmod #{module_name}
     # normalize mount and local_mount -- ensure it begins with a slash and does not end with a slash (unless it is just /)
     config[:mount] = normalize_mount(config[:mount])
     config[:local_mount] = normalize_mount(config[:local_mount])
+    config[:local_mount] = '' if config[:local_mount] == '/' # a lone slash for local_mount should be removed
 
     if defined? config[:mode]
       m = config[:mode]
@@ -87,6 +94,35 @@ a2enmod #{module_name}
     else
       self.subst_template(chef, "#{app_name}.conf.erb", "/etc/apache2/sites-available/#{app_name}.conf", scope, 'apache')
       self.enable_site(chef, app_name)
+    end
+  end
+
+  def self.uninstall_app (chef, app_name, config = nil)
+    if defined? config[:mode]
+      m = config[:mode]
+      if m == :service || m == :proxy_service
+        self.disable_service chef, scope
+
+      elsif m == :vhost || m == :vhost_root || m == :proxy || m == :proxy_root
+        self.disable_site chef, app_name
+
+      else
+        raise "Unknown mode: #{config[:mode]}"
+      end
+
+    else
+      self.disable_site chef, app_name
+    end
+
+    apps_dir="/etc/apache2/apps/#{app_name}"
+    if File.exist? apps_dir
+      chef.bash "removing apache apps dir: #{apps_dir}" do
+        user 'root'
+        cwd '/tmp'
+        code <<-EOH
+rm -rf #{apps_dir}
+        EOH
+      end
     end
   end
 
@@ -209,6 +245,17 @@ a2dissite #{site_name} || true
       code <<-EOH
 ln -sf /etc/apache2/https-services-available/#{service_name} /etc/apache2/https-services-enabled/#{service_name}
 ln -sf /etc/apache2/rewrite-rules-available/#{service_name} /etc/apache2/rewrite-rules-enabled/#{service_name}
+      EOH
+    end
+  end
+
+  def self.disable_service(chef, service_name)
+    chef.bash "disable Apache service: #{service_name}" do
+      user 'root'
+      cwd '/tmp'
+      code <<-EOH
+rm -f /etc/apache2/https-services-enabled/#{service_name}
+rm -f /etc/apache2/rewrite-rules-enabled/#{service_name}
       EOH
     end
   end

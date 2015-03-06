@@ -156,4 +156,23 @@ chmod #{perms} #{path} || exit 1
     end
   end
 
+  def self.remove_from_file (chef, file, data)
+    chef.bash "remove #{data} from #{file}" do
+      user 'root'
+      cwd '/var/vmail'
+      code <<-EOF
+found=$(cat #{file} | grep -- "#{data}" | wc -l | tr -d ' ')
+if [ $found ] ; then
+  temp=$(mktemp /tmp/remove_from_file.XXXXXXX)
+  cat #{file} | grep -v -- "#{data}" > ${temp}
+  if [[ $(stat --printf="%s" ${temp} -gt 0 ]] ; then
+    cp #{file} $(mktemp $(dirname #{file})/$(basename #{file}).$(date +%Y-%m-%d_%H-%M-%S).XXXXX) && \
+    cat ${temp} > #{file} && rm -f ${temp}
+  fi
+fi
+EOF
+      not_if { File.readlines(file).grep(/Regexp.escape(data)/).empty? }
+    end
+  end
+
 end

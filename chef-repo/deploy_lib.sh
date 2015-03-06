@@ -134,8 +134,13 @@ t=$(mktemp /tmp/chef-user.XXXXXXX) &&
   echo "chef-run started at ${start}" | tee -a chef.out &&
   echo "chef-run ended   at $(date)"  | tee -a chef.out ;
   sudo rm -rf /tmp/*'
+rval=$?
 
 cd ${BASE}
 rm -rf ${TEMP}
 # if you want to keep chef run dirs, comment out the line above, and uncomment the line below
 # echo "chef run is in ${TEMP}"
+
+if [ ${rval} -ne ] ; then
+    die "Error running chef: exit code ${rval}"
+fi

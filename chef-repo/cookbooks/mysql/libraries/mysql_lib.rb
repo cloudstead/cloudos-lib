@@ -123,11 +123,11 @@ mysqldump #{dbname} > #{dumpfile}
     end
   end
 
-  def self.drop_db (chef, dbname, dbuser, dbpass)
+  def self.drop_db (chef, dbname, dbuser = 'root', dbpass = nil)
     chef.bash "dropping mysql database #{dbname}" do
       user 'root'
       code <<-EOF
-mysqladmin -u #{dbuser} -p #{dbpass} drop #{dbname}
+mysqladmin -u #{dbuser} #{dbpass ? "-p #{dbpass}" : ''} drop #{dbname}
       EOF
     end
   end
