@@ -183,28 +183,33 @@ dropdb #{dbname}
     end
   end
 
-  def self.create_metadata_table(chef, dbname, dbuser, dbpass)
+  def self.create_metadata_table(chef, schema_name, schema_version, dbname, dbuser, dbpass)
     lib = self
-    chef.bash "initialize #{dbname} DB schema metadata" do
+    chef.bash "initialize #{dbname} DB schema metadata with version #{schema_name}/#{schema_version}" do
       user 'postgres'
       code <<-EOF
 echo "
 CREATE TABLE __cloudos_metadata__ (m_category varchar(255), m_name varchar(255), m_value varchar(255), m_time timestamp with time zone);
+INSERT INTO __cloudos_metadata__ (m_category, m_name, m_value, m_time) VALUES ('schema_version', '#{schema_name}', '#{schema_version}', now());
 " \
-  | PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 #{dbname}
+  | PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 --single-transaction #{dbname}
 EOF
       not_if { lib.table_exists(dbname, dbuser, dbpass, '__cloudos_metadata__') }
     end
   end
 
-  def self.set_schema_version(chef, dbname, dbuser, dbpass, schema_name, schema_version)
+  def self.update_schema(chef, schema_name, schema_version, schema_file, dbname, dbuser, dbpass)
     chef.bash "update #{dbname} DB schema metadata with version: #{schema_name}/#{schema_version}" do
-      user 'postgres'
+      user 'root'
       code <<-EOF
+temp=$(mktemp /tmp/update_schema.XXXXXX.sql)
+echo "-- SQL file: #{schema_file}" >> ${temp} && \
+cat #{schema_file} >> ${temp} && \
 echo "
 INSERT INTO __cloudos_metadata__ (m_category, m_name, m_value, m_time) VALUES ('schema_version', '#{schema_name}', '#{schema_version}', now());
-" \
-  | PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 #{dbname} 2>&1 | tee -a /tmp/pgsql_set_schema.out
+" >> ${temp} && \
+PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -f ${temp} --single-transaction #{dbname}
+
 EOF
     end
   end

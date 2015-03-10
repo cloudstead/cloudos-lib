@@ -137,13 +137,14 @@ mysqladmin -u #{dbuser} #{dbpass ? "-p #{dbpass}" : ''} drop #{dbname}
     end
   end
 
-  def self.create_metadata_table(chef, dbname, dbuser, dbpass)
+  def self.create_metadata_table(chef, schema_name, schema_version, dbname, dbuser, dbpass)
     lib = self
-    chef.bash "initialize #{dbname} DB schema metadata" do
+    chef.bash "initialize #{dbname} DB schema metadata with version #{schema_name}/#{schema_version}" do
       user 'root'
       code <<-EOF
 echo "
 CREATE TABLE __cloudos_metadata__ (m_category varchar(255), m_name varchar(255), m_value varchar(255), m_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);
+INSERT INTO __cloudos_metadata__ (m_category, m_name, m_value) VALUES ('schema_version', '#{schema_name}', '#{schema_version}');
 " \
   | mysql -u root #{dbname}
       EOF
@@ -151,14 +152,19 @@ CREATE TABLE __cloudos_metadata__ (m_category varchar(255), m_name varchar(255),
     end
   end
 
-  def self.set_schema_version(chef, dbname, dbuser, dbpass, schema_name, schema_version)
+  def self.update_schema(chef, schema_name, schema_version, schema_file, dbname, dbuser, dbpass)
     chef.bash "update #{dbname} DB schema metadata with version: #{schema_name}/#{schema_version}" do
       user 'root'
       code <<-EOF
+temp=$(mktemp /tmp/update_schema.XXXXXX.sql)
+echo "START TRANSACTION WITH CONSISTENT SNAPSHOT; SET autocommit=0;" >> ${temp}
+cat #{schema_file} >> ${temp}
 echo "
 INSERT INTO __cloudos_metadata__ (m_category, m_name, m_value) VALUES ('schema_version', '#{schema_name}', '#{schema_version}');
-" \
-  | mysql -u root #{dbname}
+" >> ${temp}
+echo "COMMIT;" >> ${temp}
+
+cat ${temp} | mysql -u root #{dbname}
       EOF
     end
   end
