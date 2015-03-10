@@ -142,9 +142,9 @@ mysqladmin -u #{dbuser} #{dbpass ? "-p #{dbpass}" : ''} drop #{dbname}
     chef.bash "initialize #{dbname} DB schema metadata" do
       user 'root'
       code <<-EOF
-echo '
+echo "
 CREATE TABLE __cloudos_metadata__ (m_category varchar(255), m_name varchar(255), m_value varchar(255), m_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);
-' \
+" \
   | mysql -u root #{dbname}
       EOF
       not_if { lib.table_exists(dbname, dbuser, dbpass, '__cloudos_metadata__') }
@@ -155,9 +155,9 @@ CREATE TABLE __cloudos_metadata__ (m_category varchar(255), m_name varchar(255),
     chef.bash "update #{dbname} DB schema metadata with version: #{schema_name}/#{schema_version}" do
       user 'root'
       code <<-EOF
-echo '
+echo "
 INSERT INTO __cloudos_metadata__ (m_category, m_name, m_value) VALUES ('schema_version', '#{schema_name}', '#{schema_version}');
-' \
+" \
   | mysql -u root #{dbname}
       EOF
     end

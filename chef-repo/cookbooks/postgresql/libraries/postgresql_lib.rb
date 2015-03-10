@@ -188,11 +188,11 @@ dropdb #{dbname}
     chef.bash "initialize #{dbname} DB schema metadata" do
       user 'postgres'
       code <<-EOF
-echo '
+echo "
 CREATE TABLE __cloudos_metadata__ (m_category varchar(255), m_name varchar(255), m_value varchar(255), m_time timestamp with time zone);
-' \
+" \
   | PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 #{dbname}
-      EOF
+EOF
       not_if { lib.table_exists(dbname, dbuser, dbpass, '__cloudos_metadata__') }
     end
   end
@@ -201,11 +201,11 @@ CREATE TABLE __cloudos_metadata__ (m_category varchar(255), m_name varchar(255),
     chef.bash "update #{dbname} DB schema metadata with version: #{schema_name}/#{schema_version}" do
       user 'postgres'
       code <<-EOF
-echo '
+echo "
 INSERT INTO __cloudos_metadata__ (m_category, m_name, m_value, m_time) VALUES ('schema_version', '#{schema_name}', '#{schema_version}', now());
-' \
-  | PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 #{dbname}
-      EOF
+" \
+  | PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 #{dbname} 2>&1 | tee -a /tmp/pgsql_set_schema.out
+EOF
     end
   end
 
