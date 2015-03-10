@@ -11,35 +11,27 @@ import java.io.InputStream;
 @Slf4j
 public class MockCloud extends CsCloudBase {
 
-    @Override
-    public void init(CsCloudConfig config) {
-        log.info("init: "+config);
+    @Override public void init(CsCloudConfig config) {
         this.config = config;
     }
 
-
-    @Override
-    public CsInstance newInstance(CsInstanceRequest request) throws Exception {
+    @Override public CsInstance newInstance(CsInstanceRequest request) throws Exception {
         return new MockCsInstance(this, request);
     }
 
-    @Override
-    public boolean teardown(CsInstance instance) throws Exception {
+    @Override public boolean teardown(CsInstance instance) throws Exception {
         return true;
     }
 
-    @Override
-    public String execute(CsInstance instance, String command) throws Exception {
+    @Override public String execute(CsInstance instance, String command) throws Exception {
         return null;
     }
 
-    @Override
-    public boolean scp(CsInstance instance, InputStream in, String remotePath) throws Exception {
+    @Override public boolean scp(CsInstance instance, InputStream in, String remotePath) throws Exception {
         return true;
     }
 
-    @Override
-    public boolean ssh(CsInstance instance) throws Exception {
+    @Override public boolean ssh(CsInstance instance) throws Exception {
         return true;
     }
 }
