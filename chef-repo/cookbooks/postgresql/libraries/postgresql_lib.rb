@@ -54,18 +54,19 @@ dropuser #{dbuser}
     end
   end
 
+  def self.db_exists(dbname)
+    %x(su - postgres bash -c '#{PSQL_COMMAND} "select datname from pg_database"').lines.grep(/#{dbname}/).size > 0
+  end
+
   def self.create_db (chef, dbname, dbuser = 'postgres')
+    lib = self
     chef.bash "create pgsql database #{dbname}" do
       user 'postgres'
       code <<-EOF
 createdb --encoding=UNICODE --owner=#{dbuser} #{dbname}
 EOF
-      not_if { db_exists(dbname) }
+      not_if { lib.db_exists(dbname) }
     end
-  end
-
-  def self.db_exists(dbname)
-    %x(su - postgres bash -c '#{PSQL_COMMAND} "select datname from pg_database"').lines.grep(/#{dbname}/).size > 0
   end
 
   def self.count_tables(dbname, dbuser, dbpass)
