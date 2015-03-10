@@ -210,7 +210,7 @@ EOF
   end
 
   def self.get_schema_version(chef, dbname, dbuser, dbpass, schema_name)
-    %x(echo "SELECT m_value FROM __cloudos_metadata__ WHERE m_category='schema_version' AND m_name='#{schema_name}' ORDER BY m_time DESC LIMIT 1" | PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 #{dbname}' | tee /tmp/pgsql_sv.#{dbname}).strip
+    %x(echo "SELECT m_value FROM __cloudos_metadata__ WHERE m_category='schema_version' AND m_name='#{schema_name}' ORDER BY m_time DESC LIMIT 1" | PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 #{dbname}).strip
   end
 
 end

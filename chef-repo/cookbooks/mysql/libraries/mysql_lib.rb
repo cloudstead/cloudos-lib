@@ -164,7 +164,7 @@ INSERT INTO __cloudos_metadata__ (m_category, m_name, m_value) VALUES ('schema_v
   end
 
   def self.get_schema_version(chef, dbname, dbuser, dbpass, schema_name)
-    %x(echo "SELECT m_value FROM __cloudos_metadata__ WHERE m_category='schema_version' AND m_name='#{schema_name}' ORDER BY m_time DESC LIMIT 1" | mysql -u root #{dbname}' | tee /tmp/myql_sv.#{dbname}).strip
+    %x(echo "SELECT m_value FROM __cloudos_metadata__ WHERE m_category='schema_version' AND m_name='#{schema_name}' ORDER BY m_time DESC LIMIT 1" | mysql -u root #{dbname}).strip
   end
 
 end
