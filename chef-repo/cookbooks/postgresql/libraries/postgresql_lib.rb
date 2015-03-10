@@ -82,13 +82,14 @@ EOF
   end
 
   def self.initialize_db(chef, file, dbuser, dbpass, dbname, tablename = nil)
+    lib = self
     set_script_perms(chef, dbname, file)
     chef.bash "initialize #{dbname} DB schema: #{file}" do
       user 'postgres'
       code <<-EOF
 PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -f #{file} #{dbname}
       EOF
-      not_if { Chef::Recipe::Postgresql.table_exists(dbname, dbuser, dbpass, tablename) }
+      not_if { lib.table_exists(dbname, dbuser, dbpass, tablename) }
     end
   end
 
@@ -180,6 +181,36 @@ dropdb #{dbname}
       EOF
       not_if { %x(su - postgres bash -c '#{PSQL_COMMAND} "select datname from pg_database"').lines.grep(/#{dbname}/).size == 0 }
     end
+  end
+
+  def self.create_metadata_table(chef, dbname, dbuser, dbpass)
+    lib = self
+    chef.bash "initialize #{dbname} DB schema metadata" do
+      user 'postgres'
+      code <<-EOF
+echo '
+CREATE TABLE __cloudos_metadata__ (m_category varchar(255), m_name varchar(255), m_value varchar(255), m_time timestamp with time zone);
+' \
+  | PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 #{dbname}
+      EOF
+      not_if { lib.table_exists(dbname, dbuser, dbpass, '__cloudos_metadata__') }
+    end
+  end
+
+  def self.set_schema_version(chef, dbname, dbuser, dbpass, schema_name, schema_version)
+    chef.bash "update #{dbname} DB schema metadata with version: #{schema_name}/#{schema_version}" do
+      user 'postgres'
+      code <<-EOF
+echo '
+INSERT INTO __cloudos_metadata__ (m_category, m_name, m_value, m_time) VALUES ('schema_version', '#{schema_name}', '#{schema_version}', now());
+' \
+  | PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 #{dbname}
+      EOF
+    end
+  end
+
+  def self.get_schema_version(chef, dbname, dbuser, dbpass, schema_name)
+    %x(echo "SELECT m_value FROM __cloudos_metadata__ WHERE m_category='schema_version' AND m_name='#{schema_name}' ORDER BY m_time DESC LIMIT 1" | PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 #{dbname}' | tee /tmp/pgsql_sv.#{dbname}).strip
   end
 
 end

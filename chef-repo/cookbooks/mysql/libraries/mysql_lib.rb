@@ -31,14 +31,19 @@ echo "DELETE USER '#{dbuser}'" | mysql -u root
     end
   end
 
+  def self.db_exists (dbname)
+    %x(echo "show databases" | mysql -s -u root).lines.grep(/#{dbname}/).size > 0
+  end
+
   def self.create_db (chef, dbname, dbuser)
+    lib = self
     chef.bash "create mysql database #{dbname}" do
       user 'root'
       code <<-EOF
 echo "CREATE DATABASE #{dbname}" | mysql -u root && \
 echo "GRANT ALL ON #{dbname}.* TO '#{dbuser}'" | mysql -u root
       EOF
-      not_if { %x(echo "show databases" | mysql -s -u root).lines.grep(/#{dbname}/).size > 0 }
+      not_if { lib.db_exists dbname }
     end
   end
 
@@ -130,6 +135,36 @@ mysqldump #{dbname} > #{dumpfile}
 mysqladmin -u #{dbuser} #{dbpass ? "-p #{dbpass}" : ''} drop #{dbname}
       EOF
     end
+  end
+
+  def self.create_metadata_table(chef, dbname, dbuser, dbpass)
+    lib = self
+    chef.bash "initialize #{dbname} DB schema metadata" do
+      user 'root'
+      code <<-EOF
+echo '
+CREATE TABLE __cloudos_metadata__ (m_category varchar(255), m_name varchar(255), m_value varchar(255), m_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);
+' \
+  | mysql -u root #{dbname}
+      EOF
+      not_if { lib.table_exists(dbname, dbuser, dbpass, '__cloudos_metadata__') }
+    end
+  end
+
+  def self.set_schema_version(chef, dbname, dbuser, dbpass, schema_name, schema_version)
+    chef.bash "update #{dbname} DB schema metadata with version: #{schema_name}/#{schema_version}" do
+      user 'root'
+      code <<-EOF
+echo '
+INSERT INTO __cloudos_metadata__ (m_category, m_name, m_value) VALUES ('schema_version', '#{schema_name}', '#{schema_version}');
+' \
+  | mysql -u root #{dbname}
+      EOF
+    end
+  end
+
+  def self.get_schema_version(chef, dbname, dbuser, dbpass, schema_name)
+    %x(echo "SELECT m_value FROM __cloudos_metadata__ WHERE m_category='schema_version' AND m_name='#{schema_name}' ORDER BY m_time DESC LIMIT 1" | mysql -u root #{dbname}' | tee /tmp/myql_sv.#{dbname}).strip
   end
 
 end
