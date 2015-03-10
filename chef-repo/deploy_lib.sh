@@ -141,6 +141,6 @@ rm -rf ${TEMP}
 # if you want to keep chef run dirs, comment out the line above, and uncomment the line below
 # echo "chef run is in ${TEMP}"
 
-if [ ${rval} -ne ] ; then
+if [ ${rval} -ne 0 ] ; then
     die "Error running chef: exit code ${rval}"
 fi
