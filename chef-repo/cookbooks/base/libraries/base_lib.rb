@@ -20,6 +20,10 @@ class Chef::Recipe::Base
     "#{chef_dir}/cookbooks/#{cookbook}/files/default"
   end
 
+  def self.chef_databags(cookbook)
+    "#{chef_dir}/data_bags/#{cookbook}"
+  end
+
   def self.chef_user_home
     user_home(chef_user)
   end
@@ -39,6 +43,11 @@ class Chef::Recipe::Base
 
   def self.password(service)
     Digest::SHA256.hexdigest("#{service}_#{secret}")
+  end
+
+  # Returns a random hexadecimal string of arbitrary size.
+  def self.random_password(size=8)
+    SecureRandom.hex[0..size]
   end
 
   def self.sha_file(file)
@@ -152,14 +161,14 @@ fi
       code <<-EOF
 chown #{owner} #{path} || exit 1
 chmod #{perms} #{path} || exit 1
-      EOF
+EOF
     end
   end
 
   def self.remove_from_file (chef, file, data)
     chef.bash "remove #{data} from #{file}" do
       user 'root'
-      cwd '/var/vmail'
+      cwd '/tmp'
       code <<-EOF
 found=$(cat #{file} | grep -- "#{data}" | wc -l | tr -d ' ')
 if [ $found ] ; then
