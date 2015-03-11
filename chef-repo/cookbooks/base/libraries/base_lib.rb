@@ -1,4 +1,5 @@
 require 'securerandom'
+require 'json'
 
 class Chef::Recipe::Base
 
@@ -26,6 +27,66 @@ class Chef::Recipe::Base
 
   def self.chef_user_home
     user_home(chef_user)
+  end
+
+  def self.ports_databag(chef, app)
+    ports = nil
+    begin
+      ports = chef.data_bag_item(app, 'ports')
+    rescue => e
+      puts "No ports databag found for #{app}, creating one"
+      ports = { 'id' => 'ports', 'primary' => 'pick', 'admin' => 'pick' }
+    end
+
+    writeback = false
+    if ports['primary'] == 'pick'
+      ports['primary'] = pick_port
+      writeback = true
+    end
+    if ports['admin'] == 'pick'
+      ports['admin'] = pick_port
+      writeback = true
+    end
+
+    if writeback
+      file = "#{chef_databags(app)}/ports.json"
+      File.open(file, 'w') {|f| f.write(ports.to_json) }
+      %x(chown #{chef_user} #{file} && chmod 600 #{file})
+    end
+
+    # Now this had better work...
+    chef.data_bag_item(app, 'ports')
+  end
+
+  def self.pick_port
+    port = 5000 + rand(26000)
+    until port_available(port)
+      port += 1
+      break if port > 32768
+    end
+    raise 'Could not find an open port!' if port > 32768
+    port
+  end
+
+  def self.port_available(port)
+    raise 'port_available: port was nil or empty' if port.to_s.empty?
+    raise "invalid port: #{port}" unless port.to_s =~ /^\d+$/
+    port_check_output=%x(
+      port=#{port}
+      for addr in $(ifconfig | grep 'inet addr' | tr ':' ' ' | awk '{print $3}') ; do
+        if nc -z ${addr} ${port} ; then
+          echo "listening on ${addr}"
+        fi
+      done
+    )
+    return false if port_check_output.to_s.include? 'listening'
+
+    %w(primary admin).each do |type|
+      assigned=%x(find #{chef_dir}/data_bags -type f -name ports.json | xargs egrep '"#{type}"[[:space:]]*:[[:space:]]*#{port}')
+      return false unless assigned.to_s.strip.empty?
+    end
+
+    true
   end
 
   def self.secret
