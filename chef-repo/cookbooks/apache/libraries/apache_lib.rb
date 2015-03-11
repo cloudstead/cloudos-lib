@@ -70,7 +70,9 @@ a2enmod #{module_name}
     # normalize mount and local_mount -- ensure it begins with a slash and does not end with a slash (unless it is just /)
     config[:mount] = normalize_mount(config[:mount])
     config[:local_mount] = normalize_mount(config[:local_mount])
-    config[:local_mount] = '' if config[:local_mount] == '/' # a lone slash for local_mount should be removed
+    if config[:mount].end_with? '/'
+      config[:local_mount] += '/' unless config[:local_mount].end_with? '/'
+    end
 
     if defined? config[:mode]
       m = config[:mode]
