@@ -54,7 +54,7 @@ if [ ${NUM_BASE_DATABAGS} -eq 1 ] ; then
     # needed for first-time run, so sudo commands do not print errors.
     # the chef run will overwrite /etc/hosts when the app with the base.json databag is installed
     IP=$(ifconfig | grep -A 3 eth0 | grep "inet addr:" | tr ':' ' ' | awk '{print $3}')
-    if [ -z ${IP} ] ; then
+    if [ -z "${IP}" ] ; then
       die "Error determining IP address"
     fi
     echo "${IP} ${NEW_HOSTNAME}" >> /etc/hosts
