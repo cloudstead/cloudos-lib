@@ -117,7 +117,7 @@ PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -f #{file} #{dbname}
 found=$(cat #{check_sql} | #{PSQL} #{dbname} | tr -d [:blank:])
 if [[ -z "${found}" || ${found} -eq 0 ]] ; then
   output=$(cat #{sql} | #{PSQL} #{dbname} 2>&1)
-  errors=$(echo -n ${output} | grep ERROR | wc -l | tr -d ' ')
+  errors=$(echo -n "${output}" | grep ERROR | wc -l | tr -d ' ')
   if [ $errors -gt 0 ] ; then
     echo "Error inserting sql: #{%x(cat #{sql}).strip}: ${output}"
     exit 1
