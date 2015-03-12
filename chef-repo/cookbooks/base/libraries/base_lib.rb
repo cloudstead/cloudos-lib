@@ -21,6 +21,10 @@ class Chef::Recipe::Base
     "#{chef_dir}/cookbooks/#{cookbook}/files/default"
   end
 
+  def self.chef_templates(cookbook)
+    "#{chef_dir}/cookbooks/#{cookbook}/templates/default"
+  end
+
   def self.chef_databags(cookbook)
     "#{chef_dir}/data_bags/#{cookbook}"
   end
