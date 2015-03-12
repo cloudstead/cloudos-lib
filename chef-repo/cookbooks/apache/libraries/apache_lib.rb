@@ -211,7 +211,7 @@ rm -rf #{apps_dir}
   end
 
   def self.write_vhost_template(app_name, chef, config, scope)
-    if config[:vhost] # todo: simply check if the vhost.conf file exists, if it does, write it. then we can save on a setting.
+    if config[:vhost]
       dest = "/etc/apache2/apps/#{app_name}/vhost.conf"
       src = 'apache_vhost.conf.erb'
       self.subst_template(chef, src, dest, scope)
