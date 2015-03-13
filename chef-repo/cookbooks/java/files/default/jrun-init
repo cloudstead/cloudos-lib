@@ -167,8 +167,9 @@ case "$1" in
           sleep 2s
         fi
       done
-      echo "$(date): stop: timeout: ${APP_NAME} server did not stop" | tee -a ${CONTROL_LOG}
-      exit 1
+      echo "$(date): stop: timeout: ${APP_NAME} server did not stop, killing it" | tee -a ${CONTROL_LOG}
+      kill -9 ${pid}
+      exit 2
     fi
   ;;
 
@@ -182,8 +183,7 @@ case "$1" in
   ;;
 
   restart)
-    $0 ${APP_BASE} ${RUN_AS_USER} ${JAVA_CLASS} ${CONFIG} stop && \
-    sleep 2 && \
+    $0 ${APP_BASE} ${RUN_AS_USER} ${JAVA_CLASS} ${CONFIG} stop
     $0 ${APP_BASE} ${RUN_AS_USER} ${JAVA_CLASS} ${CONFIG} start
   ;;
 
