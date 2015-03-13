@@ -154,14 +154,21 @@ case "$1" in
       echo "$(date): stop: ${APP_NAME} server not running" | tee -a ${CONTROL_LOG}
     else
       echo "$(date): stop: stopping ${APP_NAME} server (pid=${pid})..." | tee -a ${CONTROL_LOG}
-      kill ${pid} && sleep 5s
-      is_running "${PROC_SIG}"
-      if [ $? -eq 0 ] ; then
-        echo "$(date): stop: ${APP_NAME} server stopped" | tee -a ${CONTROL_LOG}
-      else
-        echo "$(date): stop: ${APP_NAME} server didn't stop (pid=${pid})" | tee -a ${CONTROL_LOG}
-        exit 1
-      fi
+      kill ${pid}
+      start=$(date +%s)
+      stop_timeout=30
+      while [ $(expr $(date +%s) - ${start}) -lt ${stop_timeout} ] ; do
+        is_running "${PROC_SIG}"
+        if [ $? -eq 0 ] ; then
+          echo "$(date): stop: ${APP_NAME} server stopped" | tee -a ${CONTROL_LOG}
+          exit 0
+        else
+          echo "$(date): stop: ${APP_NAME} still running, waiting (will timeout in $(expr ${stop_timeout} - $(expr $(date +%s) - ${start}))  seconds)" | tee -a ${CONTROL_LOG}
+          sleep 2s
+        fi
+      done
+      echo "$(date): stop: timeout: ${APP_NAME} server did not stop" | tee -a ${CONTROL_LOG}
+      exit 1
     fi
   ;;
 
