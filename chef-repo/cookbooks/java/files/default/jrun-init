@@ -163,7 +163,7 @@ case "$1" in
           echo "$(date): stop: ${APP_NAME} server stopped" | tee -a ${CONTROL_LOG}
           exit 0
         else
-          echo "$(date): stop: ${APP_NAME} still running, waiting (will timeout in $(expr ${stop_timeout} - $(expr $(date +%s) - ${start}))  seconds)" | tee -a ${CONTROL_LOG}
+          echo "$(date): stop: ${APP_NAME} still running, waiting (will timeout in $(expr ${stop_timeout} - $(expr $(date +%s) - ${start})) seconds)" | tee -a ${CONTROL_LOG}
           sleep 2s
         fi
       done
