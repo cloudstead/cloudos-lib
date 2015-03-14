@@ -15,8 +15,8 @@ sudo -u #{run_as} -H chmod 644 #{known_hosts}
     end
   end
 
-  def self.clone (chef, repo, branch, run_as, cwd, to_dir = nil)
-    dir = to_dir || base_name(repo)
+  def self.clone (chef, repo, branch, run_as, cwd, dir = nil)
+    dir ||= base_name(repo)
     chef.bash "clone repository #{repo} on branch #{branch} into dir #{dir}" do
       user 'root'
       cwd cwd
