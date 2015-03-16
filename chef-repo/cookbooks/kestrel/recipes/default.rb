@@ -37,7 +37,7 @@ end
 
 remote_file '/tmp/kestrel-2.4.1.zip' do
   action :create_if_missing
-  source 'http://robey.github.com/kestrel/download/kestrel-2.4.1.zip'
+  source 'http://cloudstead.io/downloads/kestrel-2.4.1.zip'
 end
 
 bash 'install kestrel' do
