@@ -29,7 +29,7 @@ yes" | keytool -import -alias #{name.downcase} -keypass changeit -keystore #{cac
     svc = Pathname.new(base_dir).basename.to_s
 
     if java_class.nil? || java_class.strip.empty?
-      proc_pattern = "-jar target/#{svc}-"
+      proc_pattern = "-jar (.*/)?target/#{svc}-"
     else
       simple_classname = java_class.partition('.').last
       if config.nil? || config.strip.empty?
