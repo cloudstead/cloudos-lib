@@ -62,6 +62,7 @@ class Chef::Recipe::Base
     chef.data_bag_item(app, 'ports')
   end
 
+  # Note: this runs at compile time, so the ports picked can be written to databags referenced at chef-time
   def self.pick_port
     port = 5000 + rand(26000)
     until port_available(port)
@@ -72,9 +73,10 @@ class Chef::Recipe::Base
     port
   end
 
+  # Note: this runs at compile time, so the ports picked can be written to databags referenced at chef-time
   def self.port_available(port)
     raise 'port_available: port was nil or empty' if port.to_s.empty?
-    raise "invalid port: #{port}" unless port.to_s =~ /^\d+$/
+    raise "port_available: invalid port: #{port}" unless port.to_s =~ /^\d+$/
     port_check_output=%x(
       port=#{port}
       for addr in $(ifconfig | grep 'inet addr' | tr ':' ' ' | awk '{print $3}') ; do
@@ -91,6 +93,28 @@ class Chef::Recipe::Base
     end
 
     true
+  end
+
+  # Note: this method runs at chef-time, because it is used in validating apps are running
+  # whereas port_available runs at compile-time, because it is used to generate ports that will used at chef-time
+  def self.restart_unless_port(chef, port, service)
+    raise 'restart_unless_port: port was nil or empty' if port.to_s.empty?
+    raise "restart_unless_port: invalid port: #{port}" unless port.to_s =~ /^\d+$/
+    chef.bash "checking port #{port} at #{Time.now} and restarting #{service} if not bound" do
+      user 'root'
+      cwd '/tmp'
+      code <<-EOF
+port=#{port}
+for addr in $(ifconfig | grep 'inet addr' | tr ':' ' ' | awk '{print $3}') ; do
+  if nc -z ${addr} ${port} ; then
+    echo "listening on ${addr}"
+    exit 0
+  fi
+done
+echo "Nothing was not listening on #{port}, restarting #{service}"
+service #{service} restart
+      EOF
+    end
   end
 
   def self.secret
