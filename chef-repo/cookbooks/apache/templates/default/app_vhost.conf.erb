@@ -83,6 +83,11 @@ server_name = apache.get_server_name(@config[:server_name], @config[:mode], @hos
 
   <% else %>
   DocumentRoot <%=@config[:doc_root]%>
+
+      <% if @cloudos_port %>
+  ProxyPass /__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+  ProxyPassReverse /__cloudos__/ http://127.0.0.1:<%=@cloudos_port%>/
+      <% end %>
   <% end %>
 
   ErrorLog ${APACHE_LOG_DIR}/<%=server_name%>_error.log
