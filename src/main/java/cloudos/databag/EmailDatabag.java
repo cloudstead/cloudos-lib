@@ -14,9 +14,14 @@ public class EmailDatabag {
 
     @Getter @Setter private ConnectionInfo smtp_relay = new ConnectionInfo();
     @Getter @Setter private VendorDatabag vendor = new VendorDatabag();
+    @Getter @Setter private String vmail_user = "vmail";
+    @Getter @Setter private String postmaster_user = "postmaster";
 
     public EmailDatabag setSmtpRelay (String username, String password, String host, int port) {
-        setSmtp_relay(new ConnectionInfo(host, port, username, password));
-        return this;
+        return setSmtp_relay(new ConnectionInfo(host, port, username, password));
+    }
+
+    public EmailDatabag setSmtpRelay (ConnectionInfo connection) {
+        return setSmtp_relay(connection);
     }
 }

@@ -113,6 +113,7 @@ for addr in $(ifconfig | grep 'inet addr' | tr ':' ' ' | awk '{print $3}') ; do
 done
 echo "Nothing was not listening on #{port}, restarting #{service}"
 service #{service} restart
+sleep 5s
       EOF
     end
   end
