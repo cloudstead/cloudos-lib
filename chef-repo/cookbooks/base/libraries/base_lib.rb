@@ -274,4 +274,8 @@ EOF
     end
   end
 
+  def self.user_exists (user)
+    %x(sudo -u #{user} -H pwd ; echo $?).strip.to_i == 0
+  end
+
 end
