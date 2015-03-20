@@ -278,8 +278,8 @@ echo "#{key}=#{value}" > #{php_ini}
     chef.directory File.dirname(destination) do
       owner 'www-data'
       group 'www-data'
-      mode '0644'
-      recursive true
+      mode '0755'
+      recursive false
       action :create
     end
 
