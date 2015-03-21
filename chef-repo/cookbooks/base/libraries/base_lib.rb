@@ -53,9 +53,11 @@ class Chef::Recipe::Base
     end
 
     if writeback
-      file = "#{chef_databags(app)}/ports.json"
+      databags = chef_databags(app)
+      file = "#{databags}/ports.json"
+      Dir.mkdir(databags) unless File.exist? databags
       File.open(file, 'w') {|f| f.write(ports.to_json) }
-      %x(chown #{chef_user} #{file} && chmod 600 #{file})
+      %x(chown -R #{chef_user} #{databags} && chmod 600 #{file})
     end
 
     # Now this had better work...
