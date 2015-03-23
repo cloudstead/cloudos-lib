@@ -280,4 +280,17 @@ EOF
     %x(sudo -u #{user} -H pwd ; echo $?).strip.to_i == 0
   end
 
+  def self.sysctl (setting, min_value)
+    chef.bash "ensure sysctl.#{setting} is at least #{min_value}" do
+      user 'root'
+      code <<-EOF
+sysctl -w #{setting}=#{min_value}
+echo "
+#{setting}=#{min_value}
+" >> /etc/sysctl.conf
+      EOF
+      only_if { %x(sysctl #{setting} | awk -F '=' '{print $2}').to_i < min_value }
+    end
+  end
+
 end
