@@ -12,8 +12,3 @@
     action :install
   end
 end
-
-# set sql_mode=STRICT_ALL_TABLES in /etc/mysql/my.cnf
-
-
-# elsewhere: set date.timezone=America/Los_Angeles in /etc/php5/apache2/php.ini
