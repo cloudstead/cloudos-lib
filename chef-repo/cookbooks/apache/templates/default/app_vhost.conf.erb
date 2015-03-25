@@ -24,6 +24,9 @@ server_name = apache.get_server_name(@config[:server_name], @config[:mode], @hos
   ServerSignature Off
   Header add Strict-Transport-Security: "max-age=15768000;includeSubdomains"
 
+  IncludeOptional mixins/*.conf
+  IncludeOptional mixins/<%=@app_name%>/*.conf
+
 <% if (@config[:mode] == :proxy || @config[:mode] == :proxy_root) && @config[:port] %>
   RequestHeader set X_FORWARDED_PROTO 'https'
   ProxyPreserveHost On

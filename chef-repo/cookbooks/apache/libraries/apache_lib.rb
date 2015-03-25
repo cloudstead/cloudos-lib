@@ -59,12 +59,14 @@ a2enmod #{module_name}
         :config => config
     }
 
-    chef.directory "/etc/apache2/apps/#{app_name}" do
-      owner 'www-data'
-      group 'www-data'
-      mode '0755'
-      action :create
-      recursive true
+    [ "/etc/apache2/apps/#{app_name}", "/etc/apache2/mixins/#{app_name}" ].each do |dir|
+      chef.directory dir do
+        owner 'www-data'
+        group 'www-data'
+        mode '0755'
+        action :create
+        recursive true
+      end
     end
 
     # normalize mount and local_mount -- ensure it begins with a slash and does not end with a slash (unless it is just /)
@@ -89,6 +91,15 @@ a2enmod #{module_name}
         config[:htaccess].each do |htaccess|
           dest = "#{htaccess.sub('@doc_root', config[:doc_root])}/.htaccess"
           src = "apache_htaccess_#{htaccess.sub('@doc_root', 'doc_root').sub('/', '_')}.conf.erb"
+          self.subst_template(chef, src, dest, scope)
+        end
+      end
+
+      # any mode may have mixins
+      if config[:mixins]
+        config[:mixins].each do |mixin|
+          dest = "/etc/apache2/mixins/#{File.basename mixin}"
+          src = "#{mixin}.erb"
           self.subst_template(chef, src, dest, scope)
         end
       end
