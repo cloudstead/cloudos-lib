@@ -273,13 +273,16 @@ rm -f /etc/apache2/rewrite-rules-enabled/#{service_name}
     end
   end
 
-  def self.set_php_ini(chef, key, value)
+  def self.set_php_ini(chef, key, value, replace = false)
     value_hash = Digest::SHA256.hexdigest(value)
     php_ini = "/etc/php5/apache2/conf.d/50-#{key}-#{value_hash}.ini"
 
-    chef.bash "setting #{key}=#{value} in #{php_ini}" do
+    chef.bash "setting #{key}=#{value} in #{php_ini} (replace=#{replace})" do
       user 'root'
       code <<-EOH
+if [ "#{replace}" = "true" ] ; then
+  rm -f /etc/php5/apache2/conf.d/50-#{key}-*.ini
+fi
 echo "#{key}=#{value}" > #{php_ini}
       EOH
     end
