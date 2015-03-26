@@ -31,6 +31,9 @@ server_name = apache.get_server_name(@config[:server_name], @config[:mode], @hos
   RequestHeader set X_FORWARDED_PROTO 'https'
   ProxyPreserveHost On
 
+  # Allows piwik filter mixin to work properly (if the proxied response is compressed, we cannot substitute for </body>)
+  RequestHeader unset Accept-Encoding
+
   <% if @config[:mode] == :proxy_root %>
   IncludeOptional https-services-enabled/
   <% end %>

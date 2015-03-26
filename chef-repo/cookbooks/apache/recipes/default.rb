@@ -50,3 +50,28 @@ end
 # Disable default sites. CloudOs will enable default-ssl on a new site name
 Apache.disable_site(self, 'default-ssl')
 Apache.disable_site(self, 'default')
+
+# Enable GeoIP if one or more databases is provided
+geo_db_dir = '/opt/cloudos/geoip'
+unless %x(find #{geo_db_dir}/ -type f -name "Geo*2-*.mmdb").strip.empty?
+
+  bash 'ensure maxmind PPA is setup and libmaxminddb is installed' do
+    user 'root'
+    code <<-EOF
+if [ $(dpkg -l | grep libmaxminddb | wc -l | tr -d ' ') -eq 0 ] ; then
+  echo | add-apt-repository ppa:maxmind/ppa
+  apt-get update
+  apt-get install libmaxminddb0 libmaxminddb-dev mmdb-bin -y
+fi
+EOF
+  end
+
+  Apache.new_module(self, 'maxminddb')
+  template '/etc/apache2/mixins/maxmind.conf' do
+    owner 'root'
+    group 'root'
+    mode '0644'
+    action :create
+    variables ({ :geo_db_dir => geo_db_dir })
+  end
+end

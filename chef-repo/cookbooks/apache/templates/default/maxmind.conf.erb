@@ -1,0 +1,21 @@
+<IfModule mod_maxminddb.c>
+
+MaxMindDBEnable On
+
+<% if File.exist? "#{@geo_db_dir}/GeoLite2-Country.mmdb" %>
+MaxMindDBFile COUNTRY_DB /opt/cloudos/geoip/GeoLite2-Country.mmdb
+
+MaxMindDBEnv MM_COUNTRY_CODE DB/country/iso_code
+<% end %>
+
+<% if File.exist? "#{@geo_db_dir}/GeoLite2-City.mmdb" %>
+MaxMindDBFile CITY_DB    /opt/cloudos/geoip/GeoLite2-City.mmdb
+
+MaxMindDBEnv MM_COUNTRY_CODE CITY_DB/country/iso_code
+MaxMindDBEnv MM_COUNTRY_NAME CITY_DB/country/names/en
+MaxMindDBEnv MM_CITY_NAME CITY_DB/city/names/en
+MaxMindDBEnv MM_LONGITUDE CITY_DB/location/longitude
+MaxMindDBEnv MM_LATITUDE CITY_DB/location/latitude
+<% end %>
+
+</IfModule>

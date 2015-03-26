@@ -225,6 +225,11 @@ rsync -cv #{ssl_key_src} #{ssl_key_dest} && chmod 600 #{ssl_key_dest}
     matches ? matches[1] : nil
   end
 
+  def self.local_data_files(app)
+    # thankfully %x will return the empty string (and this method will return an empty array) if the dir does not exist
+    %x(ls -1 #{chef_user_home}/chef/data_files/#{app}).split
+  end
+
   def self.set_hostname(chef, fqdn)
     chef.bash "set hostname to #{fqdn}" do
       user 'root'

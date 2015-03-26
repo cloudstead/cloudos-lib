@@ -13,7 +13,7 @@ execute 'apt-get update' do
 end
 
 # every system needs these
-%w( openntpd ).each do |pkg|
+%w( openntpd safe-rm ).each do |pkg|
   package pkg do
     action :install
   end
@@ -58,4 +58,21 @@ ln -s #{startcom_ca_cert} #{startcom_ca_cert_name}.pem && \
 ln -s #{startcom_ca_cert_name}.pem #{startcom_ca_cert_hash}
   EOF
   not_if { File.exists? "#{ca_cert_dir}/#{startcom_ca_cert_hash}" }
+end
+
+base_lib = Chef::Recipe::Base
+bash 'install data_files' do
+  user 'root'
+  code <<-EOF
+DATA_DIR="/opt/cloudos"
+DATA_FILES="#{base_lib.chef_dir}/data_files"
+mkdir -p ${DATA_DIR} && chown root.root ${DATA_DIR} && chmod 755 ${DATA_DIR}
+if [ $(find ${DATA_FILES} -type f 2> /dev/null | wc -l | tr -d ' ') -gt 0 ] ; then
+  rsync -avzc ${DATA_FILES}/* ${DATA_DIR}/
+  for f in $(find ${DATA_DIR} -type f -name "*.gz") ; do
+    gunzip ${f}
+  done
+  chmod -R 755 ${DATA_DIR}
+fi
+EOF
 end

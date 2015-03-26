@@ -6,7 +6,7 @@
 #
 # Arguments:
 #   target:           the user@host to deploy to
-#   init-files:       directory containing init files (data bags and certs)
+#   init-files:       directory containing init files (dirs should be data_bags, data_files and certs)
 #   required:         list of required files in the init-files dir (use quotes). paths are relative to init-files dir.
 #   cookbook-sources: list of directories that contain cookbooks (use quotes)
 #   solo-json-file:   run list to use for chef solo run
@@ -98,9 +98,13 @@ for f in ${BASE}/solo*.json  ; do
 done
 cp ${SOLO_JSON} ${TEMP}/solo.json || die "ERROR: ${SOLO_JSON} could not be copied to ${TEMP}/solo.json"
 
-# data bags and certs...
+# data_bags, data and certs...
 rsync -vac ${INIT_FILES}/* ${TEMP}/
-chmod -R 700 ${TEMP}/data_bags ${TEMP}/certs
+for dir in data_bags data certs ; do
+  if [ -d ${TEMP}/${dir} ] ; then
+    chmod -R 700 ${TEMP}/${dir}
+  fi
+done
 
 if [ -z ${SSH_KEY} ] ; then
   SSH_OPTS=""
@@ -128,7 +132,7 @@ t=$(mktemp /tmp/chef-user.XXXXXXX) &&
   mkdir ~/chef &&
   cd ~/chef &&
   tar xj &&
-  chmod -R 700 data_bags certs &&
+  chmod -R 700 data_bags data_files certs &&
   sudo sed -i "s/mirrors.digitalocean.com/mirror.math.ucdavis.edu/g" /etc/apt/sources.list &&
   sudo bash install.sh 2>&1 | tee chef.out &&
   echo "chef-run started at ${start}" | tee -a chef.out &&
