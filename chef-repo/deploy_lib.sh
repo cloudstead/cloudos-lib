@@ -81,6 +81,7 @@ for cookbook in ${COOKBOOKS} ; do
         rsync -vac ${manifest} ${TEMP}/data_bags/${cookbook}/
       fi
       found=1
+      break
     fi
   done
 
