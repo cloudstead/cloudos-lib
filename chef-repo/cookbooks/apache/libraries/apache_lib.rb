@@ -17,8 +17,8 @@ fi
   end
 
   def self.get_server_name (preset, mode, hostname, app_name)
-    return preset if preset
-    (mode == :proxy_root || :mode == :vhost_root) ? hostname : "#{app_name}-#{hostname}"
+    return preset unless preset.to_s.empty?
+    (mode == :proxy_root || mode == :vhost_root) ? hostname : "#{app_name}-#{hostname}"
   end
 
   def self.new_module (chef, module_name)
@@ -72,8 +72,12 @@ a2enmod #{module_name}
     # normalize mount and local_mount -- ensure it begins with a slash and does not end with a slash (unless it is just /)
     config[:mount] = normalize_mount(config[:mount])
     config[:local_mount] = normalize_mount(config[:local_mount])
+
+    # Ensure trailing slash of local_mount matches mount
     if config[:mount].end_with? '/'
       config[:local_mount] += '/' unless config[:local_mount].end_with? '/'
+    else
+      config[:local_mount] = config[:local_mount].chomp('/') if config[:local_mount].end_with? '/'
     end
 
     if defined? config[:mode]
@@ -177,6 +181,13 @@ rm -rf #{apps_dir}
     write_vhost_template(app_name, chef, config, scope)
 
     subst_template(chef, 'app_vhost.conf.erb', "/etc/apache2/sites-available/#{app_name}.conf", scope, 'apache')
+    chef.cookbook_file "#{config[:doc_root]}/robots.txt" do
+      owner 'www-data'
+      group 'www-data'
+      mode '0644'
+      action :create
+      cookbook 'apache'
+    end
     enable_site(chef, app_name)
 
     define_dir_configs(app_name, chef, config, scope) if config[:dir]
