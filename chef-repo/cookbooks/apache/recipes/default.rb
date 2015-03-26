@@ -63,6 +63,12 @@ if [ $(dpkg -l | grep libmaxminddb | wc -l | tr -d ' ') -eq 0 ] ; then
   apt-get update
   apt-get install libmaxminddb0 libmaxminddb-dev mmdb-bin -y
 fi
+
+# Hacky, but some things expect the legacy databases to have a certain name
+if [[ -f #{geo_db_dir}/GeoLiteCity.dat && ! -e #{geo_db_dir}/GeoIPCity.dat ]] ; then
+    ln -s #{geo_db_dir}/GeoLiteCity.dat #{geo_db_dir}/GeoIPCity.dat
+fi
+
 EOF
   end
 
