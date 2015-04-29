@@ -35,6 +35,10 @@ echo "DELETE USER '#{dbuser}'" | mysql -u root
     %x(echo "show databases" | mysql -s -u root).lines.grep(/#{dbname}/).size > 0
   end
 
+  def self.find_matching_databases (match)
+    %x(echo "show databases" | mysql -s -u root).lines.grep(/#{match}/).collect { |db| db.chop }
+  end
+
   def self.create_db (chef, dbname, dbuser)
     lib = self
     chef.bash "create mysql database #{dbname}" do

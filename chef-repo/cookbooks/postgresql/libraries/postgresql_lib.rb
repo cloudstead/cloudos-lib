@@ -58,6 +58,10 @@ dropuser #{dbuser}
     %x(su - postgres bash -c '#{PSQL_COMMAND} "select datname from pg_database"').lines.grep(/#{dbname}/).size > 0
   end
 
+  def self.find_matching_databases (match)
+    %x(sudo -u postgres -H bash -c "echo 'select datname from pg_database' | #{PSQL_COMMAND} template1").lines.grep(/#{match}/).collect { |db| db.chop }
+  end
+
   def self.create_db (chef, dbname, dbuser = 'postgres')
     lib = self
     chef.bash "create pgsql database #{dbname}" do
