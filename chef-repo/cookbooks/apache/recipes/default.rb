@@ -55,7 +55,7 @@ Apache.disable_site(self, 'default')
 geo_db_dir = '/opt/cloudos/geoip'
 unless %x(find #{geo_db_dir}/ -type f -name "Geo*2-*.mmdb").strip.empty?
 
-  bash 'ensure maxmind PPA is setup and libmaxminddb is installed' do
+  self.bash 'ensure maxmind PPA is setup and libmaxminddb is installed' do
     user 'root'
     code <<-EOF
 if [ $(dpkg -l | grep libmaxminddb | wc -l | tr -d ' ') -eq 0 ] ; then
