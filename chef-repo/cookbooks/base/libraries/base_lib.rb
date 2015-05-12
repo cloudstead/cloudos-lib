@@ -33,6 +33,15 @@ class Chef::Recipe::Base
     user_home(chef_user)
   end
 
+  def self.primary_port(chef, app)
+    begin
+      chef.data_bag_item(app, 'ports')['primary']
+    rescue => e
+      puts "No ports databag found for #{app}, returning nil"
+      nil
+    end
+  end
+
   def self.ports_databag(chef, app)
     ports = nil
     begin

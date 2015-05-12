@@ -24,7 +24,7 @@ yes" | keytool -import -alias #{name.downcase} -keypass changeit -keystore #{cac
     end
   end
 
-  def self.define_service (chef, base_dir, run_as_user, java_class = '', config = '')
+  def self.declare_service (base_dir, java_class = '', config = '')
 
     svc = Pathname.new(base_dir).basename.to_s
 
@@ -42,8 +42,13 @@ yes" | keytool -import -alias #{name.downcase} -keypass changeit -keystore #{cac
       end
     end
 
-    chef.template svc do
-      path "/etc/init.d/#{svc}"
+    { :service_name => svc, :proc_pattern => proc_pattern }
+  end
+
+  def self.create_service(chef, base_dir, run_as_user, java_class = '', config = '')
+    svc = declare_service(base_dir, java_class, config)
+    chef.template svc[:service_name] do
+      path "/etc/init.d/#{svc[:service_name]}"
       source 'java-service-init.erb'
       owner 'root'
       group 'root'
@@ -58,13 +63,11 @@ yes" | keytool -import -alias #{name.downcase} -keypass changeit -keystore #{cac
       action :create
     end
 
-    chef.service svc do
-      pattern proc_pattern
+    chef.service svc[:service_name] do
+      pattern svc[:proc_pattern]
       supports [ :start => true, :stop => true, :restart => true, :status => true ]
       action [ :enable, :start ]
     end
-
-    { :service_name => svc, :proc_pattern => proc_pattern }
   end
 
 end

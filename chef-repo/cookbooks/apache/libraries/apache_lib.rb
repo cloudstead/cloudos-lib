@@ -61,7 +61,6 @@ a2enmod #{module_name}
 
     [ "/etc/apache2/apps/#{app_name}", "/etc/apache2/mixins/#{app_name}" ].each do |dir|
       chef.directory dir do
-        owner 'www-data'
         group 'www-data'
         mode '0755'
         action :create
@@ -181,8 +180,13 @@ rm -rf #{apps_dir}
     write_vhost_template(app_name, chef, config, scope)
 
     subst_template(chef, 'app_vhost.conf.erb', "/etc/apache2/sites-available/#{app_name}.conf", scope, 'apache')
+    chef.directory config[:doc_root] do
+      group 'www-data'
+      mode '0755'
+      recursive true
+      action :create
+    end
     chef.cookbook_file "#{config[:doc_root]}/robots.txt" do
-      owner 'www-data'
       group 'www-data'
       mode '0644'
       action :create
@@ -301,7 +305,6 @@ echo "#{key}=#{value}" > #{php_ini}
 
   def self.subst_template(chef, source, destination, scope = {}, cb = nil)
     chef.directory File.dirname(destination) do
-      owner 'www-data'
       group 'www-data'
       mode '0755'
       recursive false
@@ -318,7 +321,6 @@ echo "#{key}=#{value}" > #{php_ini}
       source source unless source.start_with? '/'
       local source if source.start_with? '/'
       cookbook cb
-      owner 'www-data'
       group 'www-data'
       mode '0644'
       variables (scope)

@@ -29,12 +29,16 @@ echo "
   end
 
   def self.create_user (chef, dbuser, dbpass, allow_create_db = false)
-    chef.bash "create pgsql user #{dbuser}" do
+    chef.bash "create pgsql user #{dbuser} at #{Time.now}" do
       user 'postgres'
       code <<-EOF
-createuser #{allow_create_db ? '--create-db' : '--no-createdb'} --no-createrole --no-superuser #{dbuser}
+EXISTS=$(#{PSQL_COMMAND} "select usename from pg_user" | grep #{dbuser} | wc -l | tr -d ' ')
+if [ ${EXISTS} -gt 0 ] ; then
+  echo "User already exists: #{dbuser}"
+else
+  createuser #{allow_create_db ? '--create-db' : '--no-createdb'} --no-createrole --no-superuser #{dbuser}
+fi
       EOF
-      not_if { %x(su - postgres bash -c '#{PSQL_COMMAND} "select usename from pg_user"').lines.grep(/#{dbuser}/).size > 0 }
     end
     chef.bash "set password for pgsql user #{dbuser}" do
       user 'postgres'
@@ -62,19 +66,31 @@ dropuser #{dbuser}
     %x(sudo -u postgres -H bash -c "echo 'select datname from pg_database' | #{PSQL_COMMAND} template1").lines.grep(/#{match}/).collect { |db| db.chop }
   end
 
-  def self.create_db (chef, dbname, dbuser = 'postgres')
-    lib = self
-    chef.bash "create pgsql database #{dbname}" do
+  def self.create_db (chef, dbname, dbuser = 'postgres', force = false)
+    chef.bash "create pgsql database #{dbname} at #{Time.now}" do
       user 'postgres'
       code <<-EOF
-createdb --encoding=UNICODE --owner=#{dbuser} #{dbname}
+EXISTS=$(#{PSQL_COMMAND} "select datname from pg_database" | grep #{dbname} | wc -l | tr -d ' ')
+if [ ${EXISTS} -gt 0 ] ; then
+  if [ "#{force}" = "true" ] ; then
+    dropdb #{dbname}
+    createdb --encoding=UNICODE --owner=#{dbuser} #{dbname}
+  else
+    echo "Database already exists: #{dbname}"
+  fi
+else
+  createdb --encoding=UNICODE --owner=#{dbuser} #{dbname}
+fi
 EOF
-      not_if { lib.db_exists(dbname) }
     end
   end
 
   def self.count_tables(dbname, dbuser, dbpass)
     %x(su - postgres bash -c 'PGPASSWORD="#{dbpass}" #{PSQL} -U #{dbuser} -h 127.0.0.1 -c "select tableowner from pg_tables" #{dbname}').lines.grep(/#{dbuser}/).size
+  end
+
+  def self.has_tables(dbname, dbuser, dbpass)
+    count_tables(dbname, dbuser, dbpass) > 0
   end
 
   def self.table_exists(dbname, dbuser, dbpass, tablename)
@@ -177,13 +193,14 @@ sudo -u #{dbuser} -H pg_dump #{dbname} > #{dumpfile}
     end
   end
 
-  def self.drop_db (chef, dbname, dbuser = 'postgres', dbpass = nil)
-    chef.bash "dropping pgsql database #{dbname}" do
-      user dbuser
+  def self.drop_db (chef, dbname)
+    exists = db_exists dbname
+    chef.bash "dropping pgsql database #{dbname} at #{Time.now}" do
+      user 'postgres'
       code <<-EOF
 dropdb #{dbname}
       EOF
-      not_if { %x(su - postgres bash -c '#{PSQL_COMMAND} "select datname from pg_database"').lines.grep(/#{dbname}/).size == 0 }
+      only_if { exists }
     end
   end
 

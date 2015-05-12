@@ -12,12 +12,16 @@ echo "[#{group}]
   end
 
   def self.create_user (chef, dbuser, dbpass, allow_create_db = nil)
-    chef.bash "create mysql user #{dbuser}" do
+    chef.bash "create mysql user #{dbuser} at #{Time.now}" do
       user 'root'
       code <<-EOF
-echo "CREATE USER #{dbuser} IDENTIFIED BY '#{dbpass}'" | mysql -u root
+EXISTS=$(echo "select count(*) from mysql.user where User='#{dbuser}'" | mysql -s -u root | tr -d ' ')
+if [ ${EXISTS} -gt 0 ] ; then
+  echo "User already exists: #{dbuser}"
+else
+  echo "CREATE USER #{dbuser} IDENTIFIED BY '#{dbpass}'" | mysql -u root
+fi
       EOF
-      not_if { %x(echo "select count(*) from mysql.user where User='#{dbuser}'" | mysql -s -u root).to_i > 0 }
     end
   end
 
@@ -39,20 +43,46 @@ echo "DELETE USER '#{dbuser}'" | mysql -u root
     %x(echo "show databases" | mysql -s -u root).lines.grep(/#{match}/).collect { |db| db.chop }
   end
 
-  def self.create_db (chef, dbname, dbuser)
-    lib = self
-    chef.bash "create mysql database #{dbname}" do
+  def self.create_db (chef, dbname, dbuser, force = false)
+    force_clause = force ? "|| echo 'Error creating database #{dbname}'" : ''
+    chef.bash "create mysql database #{dbname} at #{Time.now}" do
       user 'root'
       code <<-EOF
-echo "CREATE DATABASE #{dbname}" | mysql -u root && \
-echo "GRANT ALL ON #{dbname}.* TO '#{dbuser}'" | mysql -u root
+EXISTS=$(echo "show databases" | mysql -s -u root | grep #{dbname} | wc -l | tr -d ' ')
+if [ ${EXISTS} -gt 0 ] ; then
+  if [ -z "#{force_clause}" ] ; then
+    echo "Database already exists: #{dbname}"
+  else
+    echo "DROP DATABASE #{dbname}" | mysql -u root #{force_clause}
+    echo "CREATE DATABASE #{dbname}" | mysql -u root #{force_clause}
+  fi
+else
+  echo "CREATE DATABASE #{dbname}" | mysql -u root #{force_clause}
+fi
       EOF
-      not_if { lib.db_exists dbname }
+    end
+    grant_access chef, dbname, dbuser, force
+  end
+
+  def self.grant_access (chef, dbname, dbuser, force = false)
+    force_clause = force ? "|| echo 'Error granting #{dbuser} access to #{dbname}'" : ''
+    chef.bash "grant #{dbuser} access to mysql database #{dbname} at #{Time.now}" do
+      user 'root'
+      code <<-EOF
+EXISTS=$(echo "show grants" | mysql -u #{dbuser} | grep "GRANT ALL PRIVILEGES ON \\`#{dbname}\\`.* TO '#{dbuser}'@'%'" | wc -l | tr -d ' ')
+if [ ${EXISTS} -eq 0 ] ; then
+  echo "GRANT ALL ON #{dbname}.* TO '#{dbuser}'" | mysql -u root #{force_clause}
+fi
+      EOF
     end
   end
 
   def self.count_tables(dbname, dbuser, dbpass)
-    %x(echo "show tables" | mysql -s -u #{dbuser} #{dbname}).lines.grep(/#{dbname}/).size
+    %x(echo "show tables" | mysql -s -u root #{dbname}).lines.grep(/#{dbname}/).size
+  end
+
+  def self.has_tables(dbname, dbuser, dbpass)
+    count_tables(dbname, dbuser, dbpass) > 0
   end
 
   def self.table_exists(dbname, dbuser, dbpass, tablename)
@@ -71,7 +101,7 @@ echo "GRANT ALL ON #{dbname}.* TO '#{dbuser}'" | mysql -u root
     chef.bash "running #{script} against #{dbname} " do
       user 'root'
       code <<-EOF
-cat #{script} | mysql -u #{dbuser} -p#{dbpass} #{dbname}
+cat #{script} | mysql -u #{dbuser} -p#{dbpass} -h 127.0.0.1 #{dbname}
       EOF
     end
   end
@@ -132,12 +162,14 @@ mysqldump #{dbname} > #{dumpfile}
     end
   end
 
-  def self.drop_db (chef, dbname, dbuser = 'root', dbpass = nil)
-    chef.bash "dropping mysql database #{dbname}" do
+  def self.drop_db (chef, dbname)
+    exists = db_exists dbname
+    chef.bash "dropping mysql database #{dbname} at #{Time.now}" do
       user 'root'
       code <<-EOF
-mysqladmin -u #{dbuser} #{dbpass ? "-p #{dbpass}" : ''} drop #{dbname}
-      EOF
+yes | mysqladmin -u root drop #{dbname}
+EOF
+      only_if { exists }
     end
   end
 

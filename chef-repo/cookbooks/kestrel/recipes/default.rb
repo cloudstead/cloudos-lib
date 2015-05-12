@@ -64,4 +64,4 @@ chown -R #{kestrel_user} #{kestrel_home}
   EOH
 end
 
-Chef::Recipe::Java.define_service(self, kestrel_home, kestrel_user)
+Chef::Recipe::Java.create_service self, kestrel_home, kestrel_user
