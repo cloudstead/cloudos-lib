@@ -2,10 +2,9 @@ package cloudos.cslib.compute.aws;
 
 import cloudos.cslib.compute.CsCloudConfig;
 import cloudos.cslib.compute.JcloudTestBase;
-import cloudos.cslib.compute.jclouds.JcloudBase;
 import org.junit.Test;
 
-public class AwsCloudTest extends JcloudTestBase {
+public class AwsCloudTest extends JcloudTestBase<AwsCloudType> {
 
     protected static final String ACCESS_KEY = TEST_PROPERTIES.getProperty("access_key");
     protected static final String SECRET_KEY = TEST_PROPERTIES.getProperty("secret_key");
@@ -17,14 +16,14 @@ public class AwsCloudTest extends JcloudTestBase {
 
     @Override
     protected CsCloudConfig newCloudConfig() {
-        return super.newCloudConfig()
-                .setAccountId(ACCESS_KEY)
-                .setAccountSecret(SECRET_KEY)
-                .setRegion(TEST_REGION)
-                .setInstanceSize(TEST_SIZE);
+        final CsCloudConfig cloudConfig = super.newCloudConfig();
+        cloudConfig.setAccountId(ACCESS_KEY);
+        cloudConfig.setAccountSecret(SECRET_KEY);
+        cloudConfig.setRegion(TEST_REGION);
+        cloudConfig.setInstanceSize(TEST_SIZE);
+        return cloudConfig;
     }
 
-    @Override protected String getProvider() { return JcloudBase.PROVIDER_AWS_EC2; }
-    @Override protected String getCloudClass() { return AwsCloud.class.getName(); }
+    @Override protected AwsCloudType getProvider() { return AwsCloudType.TYPE; }
 
 }

@@ -1,17 +1,18 @@
 package cloudos.cslib.compute;
 
-public abstract class JcloudTestBase extends CsCloudTestBase {
+import cloudos.cslib.compute.meta.CsCloudType;
+
+public abstract class JcloudTestBase<T extends CsCloudType> extends CsCloudTestBase {
 
     private static final String TEST_PREFIX = "cslib-test-";
 
     protected CsCloudConfig newCloudConfig() {
-        return new CsCloudConfig()
-                .setProvider(getProvider())
-                .setGroupPrefix(TEST_PREFIX)
-                .setCloudClass(getCloudClass());
+        final CsCloudConfig cloudConfig = new CsCloudConfig();
+        cloudConfig.setType(getProvider());
+        cloudConfig.setGroupPrefix(TEST_PREFIX);
+        return cloudConfig;
     }
 
-    protected abstract String getProvider();
-    protected abstract String getCloudClass();
+    protected abstract T getProvider();
 
 }

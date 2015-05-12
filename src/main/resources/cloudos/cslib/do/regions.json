@@ -1,0 +1,12 @@
+[
+    { "name": "ams1", "country": "NL", "region": "Amsterdam (1)" },
+    { "name": "ams2", "country": "NL", "region": "Amsterdam (2)" },
+    { "name": "ams3", "country": "NL", "region": "Amsterdam (3)" },
+    { "name": "fra1", "country": "DE", "region": "Frankfurt" },
+    { "name": "lon1", "country": "UK", "region": "London" },
+    { "name": "nyc1", "country": "US", "region": "New York (1)" },
+    { "name": "nyc2", "country": "US", "region": "New York (2)" },
+    { "name": "nyc3", "country": "US", "region": "New York (3)" },
+    { "name": "sfo1", "country": "US", "region": "San Francisco" },
+    { "name": "sgp1", "country": "SG", "region": "Singapore" }
+]

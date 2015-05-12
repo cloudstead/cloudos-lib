@@ -11,7 +11,6 @@ import com.google.inject.Module;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
-import org.cobbzilla.util.io.FileUtil;
 import org.jclouds.ContextBuilder;
 import org.jclouds.apis.ApiMetadata;
 import org.jclouds.apis.Apis;
@@ -20,7 +19,6 @@ import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
-import org.jclouds.domain.LoginCredentials;
 import org.jclouds.enterprise.config.EnterpriseConfigurationModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.providers.ProviderMetadata;
@@ -44,9 +42,6 @@ import static org.jclouds.compute.predicates.NodePredicates.inGroup;
 
 @Slf4j
 public class JcloudBase extends CsCloudBase {
-
-    public static final String PROVIDER_AWS_EC2 = "aws-ec2";
-    public static final String PROVIDER_DIGITALOCEAN = "digitalocean";
 
     public static final Map<String, ApiMetadata> allApis = Maps.uniqueIndex(Apis.viewableAs(ComputeServiceContext.class),
             Apis.idFunction());
@@ -110,10 +105,6 @@ public class JcloudBase extends CsCloudBase {
         instance.setGroup(groupName);
         instance.setPublicAddresses(node.getPublicAddresses());
         instance.setPrivateAddresses(node.getPrivateAddresses());
-        instance.setRegion(config.getRegion());
-        instance.setZone(config.getZone());
-        instance.setImage(config.getImage());
-        instance.setInstanceSize(config.getInstanceSize());
 
         return instance;
     }
@@ -134,12 +125,12 @@ public class JcloudBase extends CsCloudBase {
                 new SLF4JLoggingModule(),
                 new EnterpriseConfigurationModule());
 
-        ContextBuilder builder = ContextBuilder.newBuilder(config.getProvider())
+        ContextBuilder builder = ContextBuilder.newBuilder(config.getType().getProviderName())
                 .credentials(config.getAccountId(), config.getAccountSecret())
                 .modules(modules)
                 .overrides(properties);
 
-        System.out.printf(">> initializing %s%n", builder.getApiMetadata());
+        log.info(">> initializing " + builder.getApiMetadata());
 
         ComputeServiceContext context = builder.buildView(ComputeServiceContext.class);
         return context;

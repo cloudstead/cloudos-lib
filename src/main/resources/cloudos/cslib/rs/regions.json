@@ -1,0 +1,8 @@
+[
+  { "name": "dfw", "country": "US", "region": "Dallas-Fort Worth" },
+  { "name": "ord", "country": "US", "region": "Chicago" },
+  { "name": "iad", "country": "US", "region": "N. Virginia" },
+  { "name": "lon", "country": "UK", "region": "London" },
+  { "name": "syd", "country": "AU", "region": "Sydney" },
+  { "name": "hkg", "country": "HK", "region": "Hong Kong" }
+]

@@ -2,10 +2,9 @@ package cloudos.cslib.compute.digitalocean;
 
 import cloudos.cslib.compute.CsCloudConfig;
 import cloudos.cslib.compute.JcloudTestBase;
-import cloudos.cslib.compute.jclouds.JcloudBase;
 import org.junit.Test;
 
-public class DigitalOceanCloudTest extends JcloudTestBase {
+public class DigitalOceanCloudTest extends JcloudTestBase<DigitalOceanCloudType> {
 
     protected static final String ACCESS_KEY = TEST_PROPERTIES.getProperty("do_client_id");
     protected static final String SECRET_KEY = TEST_PROPERTIES.getProperty("do_api_key");
@@ -17,15 +16,15 @@ public class DigitalOceanCloudTest extends JcloudTestBase {
 
     @Override
     protected CsCloudConfig newCloudConfig() {
-        return super.newCloudConfig()
-                .setAccountId(ACCESS_KEY)
-                .setAccountSecret(SECRET_KEY)
-                .setRegion(TEST_REGION)
-                .setInstanceSize(TEST_SIZE)
-                .setImage(TEST_IMAGE);
+        final CsCloudConfig cloudConfig = super.newCloudConfig();
+        cloudConfig.setAccountId(ACCESS_KEY);
+        cloudConfig.setAccountSecret(SECRET_KEY);
+        cloudConfig.setRegion(TEST_REGION);
+        cloudConfig.setInstanceSize(TEST_SIZE);
+        cloudConfig.setImage(TEST_IMAGE);
+        return cloudConfig;
     }
 
-    @Override protected String getProvider() { return JcloudBase.PROVIDER_DIGITALOCEAN; }
-    @Override protected String getCloudClass() { return DigitalOceanCloud.class.getName(); }
+    @Override protected DigitalOceanCloudType getProvider() { return DigitalOceanCloudType.TYPE; }
 
 }

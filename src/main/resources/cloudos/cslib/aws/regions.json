@@ -1,0 +1,11 @@
+[
+    { "name":"us-east-1", "country":"US", "region":"N. Virginia" },
+    { "name": "us-west-1", "country": "US", "region": "N. California" },
+    { "name": "us-west-2", "country": "US", "region": "Oregon" },
+    { "name": "ap-northeast-1", "country": "JP", "region": "Tokyo" },
+    { "name": "ap-southeast-1", "country": "SG", "region": "Singapore" },
+    { "name": "ap-southeast-2", "country": "AU", "region": "Sydney" },
+    { "name": "eu-central-1", "country": "DE", "region": "Frankfurt" },
+    { "name": "eu-west-1", "country": "IE", "region": "Ireland" },
+    { "name": "sa-east-1", "country": "BR", "region": "São Paulo" }
+]

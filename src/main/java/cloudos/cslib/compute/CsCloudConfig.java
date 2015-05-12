@@ -1,28 +1,34 @@
 package cloudos.cslib.compute;
 
+import cloudos.cslib.compute.meta.CsCloudType;
+import cloudos.cslib.compute.meta.CsCloudTypeFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.Accessors;
-import org.cobbzilla.util.string.StringUtil;
 
-@Accessors(chain=true)
+import static org.cobbzilla.util.string.StringUtil.empty;
+
 public class CsCloudConfig {
 
-    @Getter @Setter private String cloudClass;
+    @Getter @Setter private CsCloudType<? extends CsCloud> type;
+
+    // For yaml-style constructors
+    public void setProvider (String name) {
+        type = CsCloudTypeFactory.instance.fromType(name);
+    }
 
     @Getter @Setter private String user;
-    public boolean hasUser () { return !StringUtil.empty(user); }
+    public boolean hasUser () { return !empty(user); }
 
     @Getter @Setter private String domain;
-    public boolean hasDomain () { return !StringUtil.empty(domain); }
+    public boolean hasDomain () { return !empty(domain); }
 
     public String getFqdn(String host) { return host + "." + domain; }
 
     @Getter @Setter private String accountId;
     @Getter @Setter private String accountSecret;
     @Getter @Setter private String groupPrefix = "";
-    @Getter @Setter private String provider;
+
     @Getter @Setter private String image;
     @Getter @Setter private String region;
     @Getter @Setter private String zone;
@@ -30,11 +36,11 @@ public class CsCloudConfig {
 
     @JsonIgnore public boolean isValid() {
         return hasUser() && hasDomain()
-                && !StringUtil.empty(accountId)
-                && !StringUtil.empty(accountSecret)
-                && !StringUtil.empty(provider)
-                && !StringUtil.empty(region)
-                && !StringUtil.empty(instanceSize);
+                && !empty(accountId)
+                && !empty(accountSecret)
+                && !empty(type)
+                && !empty(region)
+                && !empty(instanceSize);
     }
 
 }

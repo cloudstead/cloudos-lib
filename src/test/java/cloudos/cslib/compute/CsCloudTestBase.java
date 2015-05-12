@@ -65,8 +65,7 @@ public abstract class CsCloudTestBase {
         return instance;
     }
 
-    @After
-    public void teardownInstance () throws Exception {
+    @After public void teardownInstance () throws Exception {
         if (instance != null) cloud.teardown(instance);
     }
 

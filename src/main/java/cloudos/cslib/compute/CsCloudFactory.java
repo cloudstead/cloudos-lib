@@ -1,21 +1,25 @@
 package cloudos.cslib.compute;
 
+import cloudos.cslib.compute.meta.CsCloudType;
 import lombok.NoArgsConstructor;
 import org.cobbzilla.util.string.StringUtil;
+
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 
 @NoArgsConstructor
 public class CsCloudFactory {
 
     public CsCloud buildCloud(CsCloudConfig config) throws Exception {
 
-        final String cloudClass = config.getCloudClass();
-        if (StringUtil.empty(cloudClass)) throw new IllegalArgumentException("config.cloudClass was missing");
+        final CsCloudType cloudType = config.getType();
+        final Class<? extends CsCloud> cloudClass = cloudType.getCloudClass();
+        if (StringUtil.empty(cloudClass)) die("config.cloudClass was missing");
 
         final CsCloud cloud;
         try {
-            cloud = (CsCloud) Class.forName(cloudClass).newInstance();
+            cloud = cloudClass.newInstance();
         } catch (Exception e) {
-            throw new IllegalArgumentException("Error instantiating cloud ("+cloudClass+"): "+e, e);
+            return die("Error instantiating cloud (" + cloudType.getCloudClassName() + "): " + e, e);
         }
         cloud.init(config);
         return cloud;

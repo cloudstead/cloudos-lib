@@ -19,10 +19,6 @@ public class CsInstance {
     @Getter @Setter private String group;
 
     @Getter @Setter private String vendorId;
-    @Getter @Setter private String image;
-    @Getter @Setter private String region;
-    @Getter @Setter private String zone;
-    @Getter @Setter private String instanceSize;
 
     @Getter @Setter private Set<String> publicAddresses;
     @Getter @Setter private Set<String> privateAddresses;

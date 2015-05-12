@@ -1,0 +1,11 @@
+[
+  { "name": "1gb", "memory": 1, "vcpu": 1, "storage": 30, "storage_medium": "ssd" },
+  { "name": "2gb", "memory": 2, "vcpu": 2, "storage": 40, "storage_medium": "ssd" },
+  { "name": "4gb", "memory": 4, "vcpu": 2, "storage": 60, "storage_medium": "ssd" },
+  { "name": "8gb", "memory": 8, "vcpu": 4, "storage": 80, "storage_medium": "ssd" },
+
+  { "name": "16gb", "memory": 16, "vcpu": 8, "storage": 160, "storage_medium": "ssd" },
+  { "name": "32gb", "memory": 32, "vcpu": 12, "storage": 320, "storage_medium": "ssd" },
+  { "name": "48gb", "memory": 48, "vcpu": 16, "storage": 480, "storage_medium": "ssd" },
+  { "name": "64gb", "memory": 64, "vcpu": 20, "storage": 640, "storage_medium": "ssd" }
+]

@@ -24,6 +24,22 @@ public class CsJsch {
     private static final byte[] NULL_TERMINATOR = {0};
     public static final JSch JSCH = new JSch();
 
+    static {
+        JSch.setLogger(new Logger() {
+            @Override public boolean isEnabled(int i) { return true; }
+            @Override public void log(int level, String message) {
+                switch (level) {
+                    case DEBUG: log.debug(message); break;
+                    case INFO: log.info(message); break;
+                    case WARN: log.warn(message); break;
+                    case ERROR: log.error(message); break;
+                    case FATAL: log.error("(FATAL): "+message); break;
+                    default: log.error("(UNKNOWN LEVEL: "+level+"): "+message); break;
+                }
+            }
+        });
+    }
+
     private CsJschConnectionInfo identity;
     private Session session;
 
