@@ -309,8 +309,7 @@ echo "
 
   def self.bcrypt (password, rounds = nil)
     rounds ||= 10
-    val=%x(echo '#{password}' | /usr/bin/bcrypt-password #{rounds}).strip
-    %x(echo 'returning val=#{val} for pass=#{password}, rounds=#{rounds}' >> /tmp/bc.log)
+    %x(echo '#{password}' | /usr/bin/bcrypt-password #{rounds}).strip
   end
 
 end
