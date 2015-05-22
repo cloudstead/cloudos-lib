@@ -7,6 +7,7 @@ import com.qmino.miredot.annotations.ReturnType;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.mail.TemplatedMail;
 import org.cobbzilla.mail.service.TemplatedMailService;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.system.CommandShell;
 import org.cobbzilla.wizard.resources.ResourceUtil;
 
@@ -20,7 +21,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.mail.service.TemplatedMailService.T_RESET_PASSWORD;
-import static org.cobbzilla.util.string.StringUtil.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @Slf4j
 public abstract class AuthResourceBase<A extends AccountBase> {

@@ -4,10 +4,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.cobbzilla.util.string.StringUtil;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @NoArgsConstructor @Accessors(chain=true)
 public class CsResourceOption {
@@ -28,7 +30,7 @@ public class CsResourceOption {
         this.choices = option.choices == null ? null : new ArrayList<>(option.choices);
     }
 
-    public boolean hasDefaultValue () { return !StringUtil.empty(defaultValue); }
+    public boolean hasDefaultValue () { return !empty(defaultValue); }
 
     public CsResourceOption freeze () {
         return new CsImmutableResourceOption(this);

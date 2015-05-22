@@ -18,7 +18,7 @@ import javax.persistence.Transient;
 import javax.validation.constraints.Size;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-import static org.cobbzilla.util.string.StringUtil.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @MappedSuperclass @Accessors(chain=true)
 public class AccountBase extends UniquelyNamedEntity implements Scrubbable {

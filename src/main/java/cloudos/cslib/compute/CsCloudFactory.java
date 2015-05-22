@@ -2,9 +2,9 @@ package cloudos.cslib.compute;
 
 import cloudos.cslib.compute.meta.CsCloudType;
 import lombok.NoArgsConstructor;
-import org.cobbzilla.util.string.StringUtil;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @NoArgsConstructor
 public class CsCloudFactory {
@@ -13,7 +13,7 @@ public class CsCloudFactory {
 
         final CsCloudType cloudType = config.getType();
         final Class<? extends CsCloud> cloudClass = cloudType.getCloudClass();
-        if (StringUtil.empty(cloudClass)) die("config.cloudClass was missing");
+        if (empty(cloudClass)) die("config.cloudClass was missing");
 
         final CsCloud cloud;
         try {

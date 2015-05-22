@@ -11,7 +11,6 @@ import cloudos.server.HasTwoFactorAuthConfiguration;
 import cloudos.service.TwoFactorAuthService;
 import com.qmino.miredot.annotations.ReturnType;
 import lombok.extern.slf4j.Slf4j;
-import org.cobbzilla.util.string.StringUtil;
 import org.cobbzilla.util.time.TimeUtil;
 import org.cobbzilla.wizard.dao.AbstractSessionDAO;
 import org.cobbzilla.wizard.resources.ResourceUtil;
@@ -21,6 +20,8 @@ import javax.validation.Valid;
 import javax.ws.rs.POST;
 import javax.ws.rs.core.Response;
 import java.util.concurrent.TimeUnit;
+
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @Slf4j
 public abstract class AccountsResourceBase<A extends AccountBase, R extends AuthResponse> {
@@ -120,13 +121,13 @@ public abstract class AccountsResourceBase<A extends AccountBase, R extends Auth
     public static final long DEVICE_TIMEOUT = TimeUnit.DAYS.toMillis(30);
 
     private boolean deviceIsAuthorized(A account, String deviceId) {
-        if (StringUtil.empty(deviceId)) return false;
+        if (empty(deviceId)) return false;
         final AccountDevice accountDevice = deviceDAO.findByAccountAndDevice(account.getAccountName(), deviceId);
         return accountDevice != null && accountDevice.isAuthYoungerThan(DEVICE_TIMEOUT);
     }
 
     protected void updateDeviceAuth(A account, String deviceId, String deviceName) {
-        if (StringUtil.empty(deviceId)) return;
+        if (empty(deviceId)) return;
         final AccountDevice accountDevice = deviceDAO.findByAccountAndDevice(account.getAccountName(), deviceId);
         if (accountDevice == null) {
             deviceDAO.create(new AccountDevice()

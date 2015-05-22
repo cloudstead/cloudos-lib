@@ -8,6 +8,7 @@ import cloudos.model.CsInstanceType;
 import cloudos.model.CsPlatform;
 import edu.emory.mathcs.backport.java.util.Arrays;
 import lombok.Getter;
+import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.io.StreamUtil;
 import org.cobbzilla.util.json.JsonUtil;
 
@@ -18,7 +19,7 @@ import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
-import static org.cobbzilla.util.string.StringUtil.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 public abstract class CsCloudTypeBase<T extends CsCloud> implements CsCloudType<T> {
 
