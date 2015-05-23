@@ -60,6 +60,13 @@ ln -s #{startcom_ca_cert_name}.pem #{startcom_ca_cert_hash}
   not_if { File.exists? "#{ca_cert_dir}/#{startcom_ca_cert_hash}" }
 end
 
+# required for bcrypt installation
+%w( make unzip gcc ).each do |pkg|
+  package pkg do
+    action :install
+  end
+end
+
 bash 'setup bcrypt' do
   user 'root'
   code <<-EOF
