@@ -1,5 +1,6 @@
 package cloudos.model;
 
+import cloudos.cslib.compute.CsCloud;
 import cloudos.cslib.compute.meta.CsCloudType;
 import cloudos.cslib.compute.meta.CsCloudTypeFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -8,7 +9,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.cobbzilla.wizard.validation.HasValue;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
 
 @NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
@@ -23,15 +26,25 @@ public class CsGeoRegion {
         this.setVendor(parsed.getVendor());
     }
 
-    @JsonIgnore @Getter @Setter private CsCloudType cloudVendor;
+    @HasValue(message="{err.geoRegion.vendor.empty}")
+    @JsonIgnore @Getter @Setter private CsCloudType<? extends CsCloud> cloudVendor;
 
     public String getVendor () { return cloudVendor.getName(); }
     public void setVendor (String name) { setCloudVendor(CsCloudTypeFactory.instance.fromType(name)); }
 
+    @HasValue(message="{err.geoRegion.name.empty}")
     @Getter @Setter private String name;
     @Getter @Setter private String country;
     @Getter @Setter private String region;
 
     public String getImage(CsPlatform platform) { return cloudVendor.getImage(platform, name); }
+
+    @JsonIgnore public boolean isValid() {
+        if (empty(cloudVendor) || empty(name)) return false;
+        for (CsGeoRegion r : cloudVendor.getRegions()) {
+            if (r.getName().equals(name)) return true;
+        }
+        return false;
+    }
 
 }

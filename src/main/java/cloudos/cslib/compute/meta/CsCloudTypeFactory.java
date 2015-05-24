@@ -6,6 +6,7 @@ import cloudos.cslib.compute.digitalocean.DigitalOceanCloudType;
 import cloudos.cslib.compute.mock.MockCloudType;
 import cloudos.cslib.compute.rackspace.RackspaceCloudType;
 import cloudos.model.CsGeoRegion;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.HashMap;
@@ -23,10 +24,20 @@ public class CsCloudTypeFactory {
     public static final RackspaceCloudType RS = RackspaceCloudType.TYPE;
     public static final MockCloudType MOCK = MockCloudType.TYPE;
 
-    private static final CsCloudType[] TYPES = new CsCloudType[] { EC2, DO, RS, MOCK };
+    public static final CsCloudType[] TYPES = new CsCloudType[] { EC2, DO, RS, MOCK };
+
+    public static final String[] PROVIDER_NAMES
+            = { EC2.getProviderName(), DO.getProviderName(), RS.getProviderName(), MOCK.getProviderName() };
+
+    @AllArgsConstructor
+    public enum Type {
+        ec2 (EC2), doc (DO), rs (RS);
+        @Getter private CsCloudType type;
+    }
 
     public CsCloudType<? extends CsCloud> fromType(String name) {
         for (CsCloudType t : TYPES) if (t.getName().equals(name)) return t;
+        for (CsCloudType t : TYPES) if (t.getProviderName().equals(name)) return t;
         return die("No such cloud type: "+name);
     }
 
