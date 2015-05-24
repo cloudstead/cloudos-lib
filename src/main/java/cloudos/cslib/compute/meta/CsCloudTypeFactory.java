@@ -24,7 +24,7 @@ public class CsCloudTypeFactory {
     public static final RackspaceCloudType RS = RackspaceCloudType.TYPE;
     public static final MockCloudType MOCK = MockCloudType.TYPE;
 
-    public static final CsCloudType[] TYPES = new CsCloudType[] { EC2, DO, RS, MOCK };
+    public static final CsCloudType<? extends CsCloud>[] TYPES = new CsCloudType[] { EC2, DO, RS, MOCK };
 
     public static final String[] PROVIDER_NAMES
             = { EC2.getProviderName(), DO.getProviderName(), RS.getProviderName(), MOCK.getProviderName() };
@@ -32,7 +32,7 @@ public class CsCloudTypeFactory {
     @AllArgsConstructor
     public enum Type {
         ec2 (EC2), doc (DO), rs (RS);
-        @Getter private CsCloudType type;
+        @Getter private CsCloudType<? extends CsCloud> type;
     }
 
     public CsCloudType<? extends CsCloud> fromType(String name) {
@@ -44,7 +44,7 @@ public class CsCloudTypeFactory {
     @Getter(lazy=true) private final Map<String, List<CsGeoRegion>> regionsByCloud = initRegionsByCloud();
     private Map<String, List<CsGeoRegion>> initRegionsByCloud () {
         final Map<String, List<CsGeoRegion>> map = new HashMap<>();
-        for (CsCloudType t : TYPES) {
+        for (CsCloudType<? extends CsCloud> t : TYPES) {
             map.put(t.getName(), t.getRegions());
         }
         return map;
