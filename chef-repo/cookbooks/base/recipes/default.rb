@@ -60,29 +60,6 @@ ln -s #{startcom_ca_cert_name}.pem #{startcom_ca_cert_hash}
   not_if { File.exists? "#{ca_cert_dir}/#{startcom_ca_cert_hash}" }
 end
 
-# required for bcrypt installation
-%w( make unzip gcc ).each do |pkg|
-  package pkg do
-    action :install
-  end
-end
-
-bash 'setup bcrypt' do
-  user 'root'
-  code <<-EOF
-yes | cpan App::cpanminus && \
-cpanm --notest Crypt::Random && \
-cpanm --notest Crypt::Eksblowfish
-EOF
-end
-
-cookbook_file '/usr/bin/bcrypt-password' do
-  owner 'root'
-  group 'root'
-  mode '0755'
-  action :create
-end
-
 base_lib = Chef::Recipe::Base
 bash 'install data_files' do
   user 'root'
