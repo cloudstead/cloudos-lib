@@ -134,7 +134,6 @@ t=$(mktemp /tmp/chef-user.XXXXXXX) &&
   cd ~/chef &&
   tar xj &&
   chmod -R 700 data_bags data_files certs &&
-  sudo sed -i "s/mirrors.digitalocean.com/mirror.math.ucdavis.edu/g" /etc/apt/sources.list &&
   sudo bash install.sh 2>&1 | tee chef.out &&
   echo "chef-run started at ${start}" | tee -a chef.out &&
   echo "chef-run ended   at $(date)"  | tee -a chef.out ;
