@@ -5,18 +5,16 @@ import cloudos.cslib.compute.meta.CsCloudTypeFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
-import org.cobbzilla.util.daemon.ZillaRuntime;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 public class CsCloudConfig {
 
-    @Getter @Setter private CsCloudType<? extends CsCloud> type;
+    @JsonIgnore @Getter @Setter private CsCloudType<? extends CsCloud> type;
 
-    // For yaml-style constructors
-    public void setProvider (String name) {
-        type = CsCloudTypeFactory.instance.fromType(name);
-    }
+    // For yaml/json constructors, so they don't have to deal with the "type" variable directly
+    public String getProvider () { return type.getProviderName(); }
+    public void setProvider (String name) { type = CsCloudTypeFactory.instance.fromType(name); }
 
     @Getter @Setter private String user;
     public boolean hasUser () { return !empty(user); }
