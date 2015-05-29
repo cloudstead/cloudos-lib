@@ -1,4 +1,13 @@
 #!/bin/bash
+#
+# Usage:
+#   bash install.sh [run-list.json|cookbook-name]
+#
+# If neither run-list.json nor cookbook-name are provided, the default behavior is to install using solo.json as the run list
+#
+# If a run-list.json is provided, it will be used.
+# If a cookbook-name is provided, only that cookbook will be installed (it need not be present in the default solo.json)
+#
 
 # This runs as root on the server
 CHEF_PACKAGE="chef_11.10.4-1.ubuntu.12.04_amd64.deb"
@@ -28,7 +37,15 @@ if [ -z "${RUN_LIST}" ] ; then
   RUN_LIST=solo.json
 
 elif [ ! -f "${RUN_LIST}" ] ; then
-  die "run-list not found: ${RUN_LIST}"
+  SINGLE_COOKBOOK="${RUN_LIST}"
+  if [ ! -f ${THISDIR}/cookbooks/${SINGLE_COOKBOOK}/recipes/default.rb ] ; then
+    die "Not a valid run-list or cookbook: ${SINGLE_COOKBOOK}"
+  fi
+  RUN_LIST=solo.json
+fi
+
+if [ -z ${SINGLE_COOKBOOK} ] ; then
+  SINGLE_COOKBOOK="${2}"
 fi
 
 # If a databag exists in base/init.json, and it includes a hostname and parent domain,
@@ -75,12 +92,8 @@ if ! test -f "${chef_binary}"; then
 fi &&
 
 # If we are only being asked to install a single cookbook, create a custom run-list file just for that
-SINGLE_COOKBOOK="${2}"
 if [ ! -z ${SINGLE_COOKBOOK} ] ; then
-  if [ ! -f ${THISDIR}/cookbooks/${SINGLE_COOKBOOK}/recipes/default.rb ] ; then
-    die "Not a valid cookbook: ${SINGLE_COOKBOOK}"
-  fi
-  SC_RUN_LIST="solo-${SINGLE_COOKBOOK}.json"
+  SC_RUN_LIST="${THISDIR}/solo-${SINGLE_COOKBOOK}.json"
 
   # header
   echo "{ \"run_list\": [ " > ${SC_RUN_LIST}
