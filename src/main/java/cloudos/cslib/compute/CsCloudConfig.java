@@ -25,6 +25,8 @@ public class CsCloudConfig {
     public String getFqdn(String host) { return host + "." + domain; }
 
     @Getter @Setter private String accountId;
+    public boolean hasAccountId () { return !empty(accountId); }
+
     @Getter @Setter private String accountSecret;
     @Getter @Setter private String groupPrefix = "";
 
