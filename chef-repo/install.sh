@@ -4,6 +4,7 @@
 CHEF_PACKAGE="chef_11.10.4-1.ubuntu.12.04_amd64.deb"
 CHEF_PACKAGE_URL="https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/12.04/x86_64/${CHEF_PACKAGE}"
 THISDIR=$(pwd)
+JSON=${THISDIR}/JSON.sh
 
 chef_binary=/usr/bin/chef-solo
 
@@ -15,7 +16,7 @@ function die {
 function value_from_databag {
   databag=$1
   field=$2
-  value=$(cat ${databag} | ${THISDIR}/JSON.sh | grep '\["'${field}'"\]' | head -n 1 | tr -d '"[]' | awk '{print $2}' | tr -d ' ')
+  value=$(cat ${databag} | ${JSON} | grep '\["'${field}'"\]' | head -n 1 | tr -d '"[]' | awk '{print $2}' | tr -d ' ')
   if [ -z "${value}" ] ; then
     die "Field ${field} not found in databag ${databag}"
   fi
@@ -72,5 +73,35 @@ if ! test -f "${chef_binary}"; then
     cd /tmp && curl -O ${CHEF_PACKAGE_URL} &&
     if [ $(dpkg -l | grep chef | grep -v chef-server | wc -l) -eq 0 ] ; then sudo dpkg -i ${CHEF_PACKAGE} ;  fi
 fi &&
+
+# If we are only being asked to install a single cookbook, create a custom run-list file just for that
+SINGLE_COOKBOOK="${2}"
+if [ ! -z ${SINGLE_COOKBOOK} ] ; then
+  if [ ! -f ${THISDIR}/cookbooks/${SINGLE_COOKBOOK}/recipes/default.rb ] ; then
+    die "Not a valid cookbook: ${SINGLE_COOKBOOK}"
+  fi
+  SC_RUN_LIST="solo-${SINGLE_COOKBOOK}.json"
+
+  # header
+  echo "{ \"run_list\": [ " > ${SC_RUN_LIST}
+
+  # add all lib recipes
+  for lib in $(cat ${RUN_LIST} | ${JSON} | grep "\"run_list\"," | grep ::lib | awk '{print $2}') ; do
+    echo -n "${lib}, " >> ${SC_RUN_LIST}
+  done
+
+  # add the single default recipe
+  echo -n "\"recipe[${SINGLE_COOKBOOK}]\"" >> ${SC_RUN_LIST}
+
+  # add validate recipe if it exists
+  if [ -f ${THISDIR}/cookbooks/${SINGLE_COOKBOOK}/recipes/validate.rb ] ; then
+    echo -n ", \"recipe[${SINGLE_COOKBOOK}::validate]\" " >> ${SC_RUN_LIST}
+  fi
+
+  # footer
+  echo "] }" >> ${SC_RUN_LIST}
+
+  RUN_LIST="${SC_RUN_LIST}"
+fi
 
 cd ${THISDIR} && "${chef_binary}" -c solo.rb -j ${RUN_LIST} -l debug
