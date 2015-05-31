@@ -25,10 +25,7 @@ host="${1:?no user@host specified}"
 INIT_FILES="${2:?no init-files dir specified}"
 REQUIRED="${3:?no required specified}"
 COOKBOOK_SOURCES="${4:?no cookbook sources specified}"
-SOLO_JSON="${5}"
-if [ -z "${SOLO_JSON}" ] ; then
-  SOLO_JSON="./solo.json"
-fi
+SOLO_JSON="${5:-./solo.json}"
 
 # The host key might change when we instantiate a new VM, so
 # we remove (-R) the old host key from known_hosts
