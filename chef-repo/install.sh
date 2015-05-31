@@ -99,7 +99,7 @@ if [ ! -z ${SINGLE_COOKBOOK} ] ; then
   echo "{ \"run_list\": [ " > ${SC_RUN_LIST}
 
   # add all lib recipes
-  for lib in $(cat ${RUN_LIST} | ${JSON} | grep "\"run_list\"," | grep ::lib | awk '{print $2}') ; do
+  for lib in $(cat ${RUN_LIST} | egrep -v '^[[:space:]]*//' | ${JSON} | grep "\"run_list\"," | grep ::lib | awk '{print $2}') ; do
     echo -n "${lib}, " >> ${SC_RUN_LIST}
   done
 
