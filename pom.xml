@@ -218,12 +218,6 @@ For commercial use, please contact cloudstead.io
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <dependency>
-            <groupId>org.cobbzilla</groupId>
-            <artifactId>wizard-server</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
 </project>
