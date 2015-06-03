@@ -1,24 +1,24 @@
 [
-  { "name": "1 GB General Purpose v1", "memory": 1, "vcpu": 1, "storage": 0, "storage_medium": "block", "network_bandwidth": 200 },
-  { "name": "2 GB General Purpose v1", "memory": 2, "vcpu": 2, "storage": 0, "storage_medium": "block", "network_bandwidth": 400 },
-  { "name": "4 GB General Purpose v1", "memory": 4, "vcpu": 4, "storage": 0, "storage_medium": "block", "network_bandwidth": 800 },
-  { "name": "8 GB General Purpose v1", "memory": 8, "vcpu": 8, "storage": 0, "storage_medium": "block", "network_bandwidth": 1600 },
+  { "name": "general1-1", "memory": 1, "vcpu": 1, "storage": 0, "storage_medium": "block", "network_bandwidth": 200 },
+  { "name": "general1-2", "memory": 2, "vcpu": 2, "storage": 0, "storage_medium": "block", "network_bandwidth": 400 },
+  { "name": "general1-4", "memory": 4, "vcpu": 4, "storage": 0, "storage_medium": "block", "network_bandwidth": 800 },
+  { "name": "general1-8", "memory": 8, "vcpu": 8, "storage": 0, "storage_medium": "block", "network_bandwidth": 1600 },
 
-  { "name": "3.75 GB Compute v1",  "memory": 3.75, "vcpu": 2,  "storage": 0, "storage_medium": "block", "network_bandwidth": 312.5 },
-  { "name": "7.5 GB Compute v1",   "memory": 7.5,  "vcpu": 4,  "storage": 0, "storage_medium": "block", "network_bandwidth": 625 },
-  { "name": "15 GB Compute v1",    "memory": 15,   "vcpu": 8,  "storage": 0, "storage_medium": "block", "network_bandwidth": 1250 },
-  { "name": "30 GB Compute v1",    "memory": 30,   "vcpu": 16, "storage": 0, "storage_medium": "block", "network_bandwidth": 2500 },
-  { "name": "60 GB Compute v1",    "memory": 60,   "vcpu": 32, "storage": 0, "storage_medium": "block", "network_bandwidth": 5000 },
+  { "name": "compute1-4",  "memory": 3.75, "vcpu": 2,  "storage": 0, "storage_medium": "block", "network_bandwidth": 312.5 },
+  { "name": "compute1-8",   "memory": 7.5,  "vcpu": 4,  "storage": 0, "storage_medium": "block", "network_bandwidth": 625 },
+  { "name": "compute1-15",    "memory": 15,   "vcpu": 8,  "storage": 0, "storage_medium": "block", "network_bandwidth": 1250 },
+  { "name": "compute1-30",    "memory": 30,   "vcpu": 16, "storage": 0, "storage_medium": "block", "network_bandwidth": 2500 },
+  { "name": "compute1-60",    "memory": 60,   "vcpu": 32, "storage": 0, "storage_medium": "block", "network_bandwidth": 5000 },
 
-  { "name": "15 GB I/O v1",  "memory": 15,  "vcpu": 4,  "system_storage": 40, "storage": 150, "storage_medium": "ssd", "storage_geometry": "150x1", "network_bandwidth": 1250 },
-  { "name": "30 GB I/O v1",  "memory": 30,  "vcpu": 8,  "system_storage": 40, "storage": 300, "storage_medium": "ssd", "storage_geometry": "300x1", "network_bandwidth": 2500 },
-  { "name": "60 GB I/O v1",  "memory": 60,  "vcpu": 16, "system_storage": 40, "storage": 600, "storage_medium": "ssd", "storage_geometry": "300x2", "network_bandwidth": 5000 },
-  { "name": "90 GB I/O v1",  "memory": 90,  "vcpu": 24, "system_storage": 40, "storage": 900, "storage_medium": "ssd", "storage_geometry": "300x3", "network_bandwidth": 7500 },
-  { "name": "120 GB I/O v1", "memory": 120, "vcpu": 32, "system_storage": 40, "storage": 1200, "storage_medium": "ssd", "storage_geometry": "300x4", "network_bandwidth": 10000 },
+  { "name": "io1-15",  "memory": 15,  "vcpu": 4,  "system_storage": 40, "storage": 150, "storage_medium": "ssd", "storage_geometry": "150x1", "network_bandwidth": 1250 },
+  { "name": "io1-30",  "memory": 30,  "vcpu": 8,  "system_storage": 40, "storage": 300, "storage_medium": "ssd", "storage_geometry": "300x1", "network_bandwidth": 2500 },
+  { "name": "io1-60",  "memory": 60,  "vcpu": 16, "system_storage": 40, "storage": 600, "storage_medium": "ssd", "storage_geometry": "300x2", "network_bandwidth": 5000 },
+  { "name": "io1-90",  "memory": 90,  "vcpu": 24, "system_storage": 40, "storage": 900, "storage_medium": "ssd", "storage_geometry": "300x3", "network_bandwidth": 7500 },
+  { "name": "io1-120", "memory": 120, "vcpu": 32, "system_storage": 40, "storage": 1200, "storage_medium": "ssd", "storage_geometry": "300x4", "network_bandwidth": 10000 },
 
-  { "name": "15 GB Memory v1",  "memory": 15,  "vcpu": 2,  "storage": 0, "storage_medium": "block", "network_bandwidth": 625 },
-  { "name": "30 GB Memory v1",  "memory": 30,  "vcpu": 4,  "storage": 0, "storage_medium": "block", "network_bandwidth": 1250 },
-  { "name": "60 GB Memory v1",  "memory": 60,  "vcpu": 8,  "storage": 0, "storage_medium": "block", "network_bandwidth": 2500 },
-  { "name": "90 GB Memory v1",  "memory": 120, "vcpu": 16, "storage": 0, "storage_medium": "block", "network_bandwidth": 5000 },
-  { "name": "120 GB Memory v1", "memory": 240, "vcpu": 32, "storage": 0, "storage_medium": "block", "network_bandwidth": 10000 }
+  { "name": "memory1-15",  "memory": 15,  "vcpu": 2,  "storage": 0, "storage_medium": "block", "network_bandwidth": 625 },
+  { "name": "memory1-30",  "memory": 30,  "vcpu": 4,  "storage": 0, "storage_medium": "block", "network_bandwidth": 1250 },
+  { "name": "memory1-60",  "memory": 60,  "vcpu": 8,  "storage": 0, "storage_medium": "block", "network_bandwidth": 2500 },
+  { "name": "memory1-90",  "memory": 120, "vcpu": 16, "storage": 0, "storage_medium": "block", "network_bandwidth": 5000 },
+  { "name": "memory1-120", "memory": 240, "vcpu": 32, "storage": 0, "storage_medium": "block", "network_bandwidth": 10000 }
 ]

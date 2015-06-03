@@ -80,6 +80,7 @@ public abstract class CsCloudTypeBase<T extends CsCloud> implements CsCloudType<
         }
         return die("No such instance type: '"+name+"'");
     }
+    public CsInstanceType type(String name) { return getInstanceType(name); }
 
     public List<String> getInstanceTypeNames () {
         final List<String> names = new ArrayList<>();
