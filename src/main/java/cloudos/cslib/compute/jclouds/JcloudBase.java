@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Iterables.getOnlyElement;
+import static org.jclouds.compute.config.ComputeServiceProperties.SOCKET_FINDER_ALLOWED_INTERFACES;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_SCRIPT_COMPLETE;
 import static org.jclouds.compute.options.TemplateOptions.Builder.runScript;
 import static org.jclouds.compute.predicates.NodePredicates.TERMINATED;
@@ -121,7 +122,8 @@ public class JcloudBase extends CsCloudBase {
 //        properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id=137112412989;architecture=x86_64;state=available;image-type=machine");
 //        properties.setProperty(PROPERTY_EC2_CC_AMI_QUERY, "");
         long scriptTimeout = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
-        properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, scriptTimeout + "");
+        properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, String.valueOf(scriptTimeout));
+        properties.setProperty(SOCKET_FINDER_ALLOWED_INTERFACES, "PUBLIC");
 
         // example of injecting a ssh implementation
         Iterable<Module> modules = ImmutableSet.<Module> of(
