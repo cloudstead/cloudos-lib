@@ -14,8 +14,7 @@ public class AwsCloudTest extends JcloudTestBase<AwsCloudType> {
 
     @Test public void testHost () throws Exception { internal_testHost(); }
 
-    @Override
-    protected CsCloudConfig newCloudConfig() {
+    @Override protected CsCloudConfig newCloudConfig() {
         final CsCloudConfig cloudConfig = super.newCloudConfig();
         cloudConfig.setAccountId(ACCESS_KEY);
         cloudConfig.setAccountSecret(SECRET_KEY);

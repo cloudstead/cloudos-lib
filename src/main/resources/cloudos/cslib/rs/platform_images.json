@@ -1,3 +1,4 @@
 [
-  { "region": "*", "platform": "ubuntu_14_lts", "image": "?" }
+  // Note: this may not work for LON and ORD, they don't appear in the rackspace image list
+  { "region": "*", "platform": "ubuntu_14_lts", "image": "c11e2d37-bd93-44f0-b17e-bb87d1022975" }
 ]

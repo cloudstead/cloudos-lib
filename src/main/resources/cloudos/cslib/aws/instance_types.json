@@ -1,7 +1,7 @@
 [
- { "name": "t2.micro", "memory": 1, "vcpu": 1, "storage": 0, "storage_medium": "ebs", "networking": "low" },
- { "name": "t2.small", "memory": 2, "vcpu": 1, "storage": 0, "storage_medium": "ebs", "networking": "low" },
- { "name": "t2.medium", "memory": 4, "vcpu": 2, "storage": 0, "storage_medium": "ebs", "networking": "low" },
+ { "name": "t2.micro", "memory": 1, "vcpu": 1, "storage": 0, "storage_medium": "block", "networking": "low" },
+ { "name": "t2.small", "memory": 2, "vcpu": 1, "storage": 0, "storage_medium": "block", "networking": "low" },
+ { "name": "t2.medium", "memory": 4, "vcpu": 2, "storage": 0, "storage_medium": "block", "networking": "low" },
 
  { "name": "m3.medium", "memory": 3.75, "vcpu": 1, "storage": 4, "storage_geometry": "1x4", "storage_medium": "ssd", "networking": "moderate" },
  { "name": "m3.large", "memory": 7.5, "vcpu": 2, "storage": 32, "storage_geometry": "1x32", "storage_medium": "ssd", "networking": "moderate" },
@@ -14,11 +14,11 @@
  { "name": "c3.4xlarge", "memory": 30, "vcpu": 16, "storage": 320, "storage_geometry": "2x160", "storage_medium": "ssd", "networking": "high" },
  { "name": "c3.8xlarge", "memory": 60, "vcpu": 32, "storage": 640, "storage_geometry": "2x320", "storage_medium": "ssd", "networking": "ten_gigabit" },
 
- { "name": "c4.large", "memory": 3.75, "vcpu": 2, "storage": 0, "storage_bandwidth": 500, "storage_medium": "ebs", "networking": "moderate" },
- { "name": "c4.xlarge", "memory": 7.5, "vcpu": 4, "storage": 0, "storage_bandwidth": 750, "storage_medium": "ebs", "networking": "high" },
- { "name": "c4.2xlarge", "memory": 15, "vcpu": 8, "storage": 0, "storage_bandwidth": 1000, "storage_medium": "ebs", "networking": "high" },
- { "name": "c4.4xlarge", "memory": 30, "vcpu": 16, "storage": 0, "storage_bandwidth": 2000, "storage_medium": "ebs", "networking": "high" },
- { "name": "c4.8xlarge", "memory": 60, "vcpu": 32, "storage": 0, "storage_bandwidth": 4000, "storage_medium": "ebs", "networking": "ten_gigabit" },
+ { "name": "c4.large", "memory": 3.75, "vcpu": 2, "storage": 0, "storage_bandwidth": 500, "storage_medium": "block", "networking": "moderate" },
+ { "name": "c4.xlarge", "memory": 7.5, "vcpu": 4, "storage": 0, "storage_bandwidth": 750, "storage_medium": "block", "networking": "high" },
+ { "name": "c4.2xlarge", "memory": 15, "vcpu": 8, "storage": 0, "storage_bandwidth": 1000, "storage_medium": "block", "networking": "high" },
+ { "name": "c4.4xlarge", "memory": 30, "vcpu": 16, "storage": 0, "storage_bandwidth": 2000, "storage_medium": "block", "networking": "high" },
+ { "name": "c4.8xlarge", "memory": 60, "vcpu": 32, "storage": 0, "storage_bandwidth": 4000, "storage_medium": "block", "networking": "ten_gigabit" },
 
  { "name": "r3.large", "memory": 15.25, "vcpu": 2, "storage": 32, "storage_geometry": "1x32", "storage_medium": "ssd", "networking": "moderate" },
  { "name": "r3.xlarge", "memory": 30.5, "vcpu": 4, "storage": 80, "storage_geometry": "2x40", "storage_medium": "ssd", "networking": "moderate" },

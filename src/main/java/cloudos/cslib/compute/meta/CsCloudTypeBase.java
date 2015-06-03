@@ -6,9 +6,9 @@ import cloudos.cslib.option.CsResourceOptionType;
 import cloudos.model.CsGeoRegion;
 import cloudos.model.CsInstanceType;
 import cloudos.model.CsPlatform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.emory.mathcs.backport.java.util.Arrays;
 import lombok.Getter;
-import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.io.StreamUtil;
 import org.cobbzilla.util.json.JsonUtil;
 
@@ -18,10 +18,12 @@ import java.util.List;
 import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.reflect.ReflectionUtil.getFirstTypeParam;
 
 public abstract class CsCloudTypeBase<T extends CsCloud> implements CsCloudType<T> {
+
+    public static final ObjectMapper JSON = JsonUtil.FULL_MAPPER_ALLOW_COMMENTS;
 
     public static final CsResourceOption OPT_NAME = new CsResourceOption()
             .setName("name").setType(CsResourceOptionType.TEXT)
@@ -46,7 +48,7 @@ public abstract class CsCloudTypeBase<T extends CsCloud> implements CsCloudType<
         final List<CsGeoRegion> list;
         try {
             final String json = StreamUtil.loadResourceAsString(getRegionsJson());
-            list = Arrays.asList(JsonUtil.fromJson(json, CsGeoRegion[].class));
+            list = Arrays.asList(JSON.readValue(json, CsGeoRegion[].class));
         } catch (Exception e) {
             return die("Error loading regions json from classpath ("+getRegionsJson()+"): "+e, e);
         }
@@ -65,7 +67,7 @@ public abstract class CsCloudTypeBase<T extends CsCloud> implements CsCloudType<
     protected List<CsInstanceType> initInstanceTypes() {
         try {
             final String json = StreamUtil.loadResourceAsString(getInstanceTypesJson());
-            return Arrays.asList(JsonUtil.fromJson(json, CsInstanceType[].class));
+            return Arrays.asList(JSON.readValue(json, CsInstanceType[].class));
         } catch (Exception e) {
             return die("Error loading instanceTypes json from classpath ("+getInstanceTypesJson()+"): "+e, e);
         }
@@ -89,7 +91,7 @@ public abstract class CsCloudTypeBase<T extends CsCloud> implements CsCloudType<
     private List<CsPlatformImage> initPlatformImage() {
         try {
             final String json = StreamUtil.loadResourceAsString(getPlatformImagesJson());
-            return Arrays.asList(JsonUtil.fromJson(json, CsPlatformImage[].class));
+            return Arrays.asList(JSON.readValue(json, CsPlatformImage[].class));
         } catch (Exception e) {
             return die("Error loading platformImages json from classpath ("+getPlatformImagesJson()+"): "+e, e);
         }

@@ -49,6 +49,10 @@ public class JcloudBase extends CsCloudBase {
     public static final Map<String, ProviderMetadata> apiProviders = Maps.uniqueIndex(Providers.viewableAs(ComputeServiceContext.class),
             Providers.idFunction());
 
+    protected String getRegion() { return config.getRegion(); }
+    protected String getImage() { return config.getImage(); }
+    protected String getInstanceSize() { return config.getInstanceSize(); }
+
     @Override
     public CsInstance newInstance(CsInstanceRequest request) throws Exception {
 
@@ -80,9 +84,9 @@ public class JcloudBase extends CsCloudBase {
         Template template;
         try {
             template = templateBuilder
-                    .hardwareId(config.getInstanceSize())
-                    .imageId(config.getImage())
-                    .locationId(config.getRegion())
+                    .hardwareId(getInstanceSize())
+                    .imageId(getImage())
+                    .locationId(getRegion())
                     .build();
         } catch (Exception e) {
             log.error("error creating template: "+e, e);
@@ -90,7 +94,7 @@ public class JcloudBase extends CsCloudBase {
         }
 
         // build the actual instance
-        NodeMetadata node = getOnlyElement(compute.createNodesInGroup(groupName, 1, template));
+        final NodeMetadata node = getOnlyElement(compute.createNodesInGroup(groupName, 1, template));
 
         log.info(String.format("<< node %s: %s%n", node.getId(), concat(node.getPrivateAddresses(), node.getPublicAddresses())));
 

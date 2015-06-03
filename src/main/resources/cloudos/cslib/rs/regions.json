@@ -1,8 +1,8 @@
 [
   { "name": "DFW", "country": "US", "region": "Dallas-Fort Worth" },
-  { "name": "ORD", "country": "US", "region": "Chicago" },
+  // { "name": "ORD", "country": "US", "region": "Chicago" }, // disabled until we can find out which Ubuntu 14.04 image to use here
   { "name": "IAD", "country": "US", "region": "N. Virginia" },
-  { "name": "LON", "country": "UK", "region": "London" },
+  // { "name": "LON", "country": "UK", "region": "London" }, // disabled until we add space for rackspace-uk
   { "name": "SYD", "country": "AU", "region": "Sydney" },
   { "name": "HKG", "country": "HK", "region": "Hong Kong" }
 ]
