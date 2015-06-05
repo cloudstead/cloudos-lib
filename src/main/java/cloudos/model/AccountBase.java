@@ -81,9 +81,15 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
     @JsonIgnore public String getFullName() { return getFirstName() + " " + getLastName(); }
     @JsonIgnore public String getLastNameFirstName() { return getLastName() + ", " + getFirstName(); }
 
-    @Getter @Setter private boolean admin = false;
-    @Getter @Setter private boolean suspended = false;
-    @Getter @Setter private boolean twoFactor = false;
+    @Getter @Setter private Boolean admin = false;
+    @JsonIgnore public boolean isAdmin () { return admin != null && admin; }
+
+    @Getter @Setter private Boolean suspended = false;
+    @JsonIgnore public boolean isSuspended () { return suspended != null && suspended; }
+
+    @Getter @Setter private Boolean twoFactor = false;
+    @JsonIgnore public boolean isTwoFactor() { return twoFactor != null && twoFactor; }
+
     @Getter @Setter private Long lastLogin = null;
     public AccountBase setLastLogin () { lastLogin = System.currentTimeMillis(); return this; }
 
@@ -95,7 +101,8 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
 
     @JsonIgnore @Size(max=VERIFY_CODE_MAXLEN) @Getter @Setter private String emailVerificationCode;
     @JsonIgnore @Getter @Setter private Long emailVerificationCodeCreatedAt;
-    @Getter private boolean emailVerified = false;
+    @Getter private Boolean emailVerified = false;
+    @JsonIgnore public boolean isEmailVerified () { return emailVerified != null && emailVerified; }
 
     public String initEmailVerificationCode() {
         emailVerificationCode = randomAlphanumeric(getVerifyCodeLength());
