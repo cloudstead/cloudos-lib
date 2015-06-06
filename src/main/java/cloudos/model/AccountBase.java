@@ -2,6 +2,7 @@ package cloudos.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.cobbzilla.wizard.filters.Scrubbable;
@@ -19,6 +20,7 @@ import javax.validation.constraints.Size;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 
 @MappedSuperclass @Accessors(chain=true)
 public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
@@ -81,14 +83,9 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
     @JsonIgnore public String getFullName() { return getFirstName() + " " + getLastName(); }
     @JsonIgnore public String getLastNameFirstName() { return getLastName() + ", " + getFirstName(); }
 
-    @Getter @Setter private Boolean admin = false;
-    @JsonIgnore public boolean isAdmin () { return admin != null && admin; }
-
-    @Getter @Setter private Boolean suspended = false;
-    @JsonIgnore public boolean isSuspended () { return suspended != null && suspended; }
-
-    @Getter @Setter private Boolean twoFactor = false;
-    @JsonIgnore public boolean isTwoFactor() { return twoFactor != null && twoFactor; }
+    @Getter @Setter private boolean admin = false;
+    @Getter @Setter private boolean suspended = false;
+    @Getter @Setter private boolean twoFactor = false;
 
     @Getter @Setter private Long lastLogin = null;
     public AccountBase setLastLogin () { lastLogin = System.currentTimeMillis(); return this; }
@@ -101,8 +98,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
 
     @JsonIgnore @Size(max=VERIFY_CODE_MAXLEN) @Getter @Setter private String emailVerificationCode;
     @JsonIgnore @Getter @Setter private Long emailVerificationCodeCreatedAt;
-    @Getter private Boolean emailVerified = false;
-    @JsonIgnore public boolean isEmailVerified () { return emailVerified != null && emailVerified; }
+    @Getter @Setter private boolean emailVerified = false;
 
     public String initEmailVerificationCode() {
         emailVerificationCode = randomAlphanumeric(getVerifyCodeLength());
@@ -175,5 +171,14 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
         }
         setLocale(other.getLocale());
         return this;
+    }
+
+    @NoArgsConstructor
+    public static class PublicView {
+        @Getter @Setter public String name;
+        @Getter @Setter public String firstName;
+        @Getter @Setter public String lastName;
+        @Getter @Setter public String fullName;
+        public PublicView (AccountBase other) { copy(this, other); }
     }
 }
