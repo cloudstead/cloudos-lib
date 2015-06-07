@@ -32,6 +32,19 @@ if [ ! -z "${CLOUDOS_BACKUP_APP}" ] ; then
     echo "todo: backup app before continuing"
 fi
 
+# If this is not an 'app', do not allow uninstallation via this script.
+MANIFEST="${THISDIR}/data_bags/${COOKBOOK}/cloudos-manifest.json"
+if [ ! -f "${MANIFEST}" ] ; then
+    die "${COOKBOOK}: No manifest found in ${MANIFEST}"
+fi
+LEVEL=$(cat "${MANIFEST}" | ./JSON.sh -l | grep '\[\"level\"\]' | tr -d '"' | awk '{print $2}')
+if [ -z "${LEVEL}" ] ; then
+    die "${COOKBOOK} has no 'level' defined in manifest ${MANIFEST}, refusing to uninstall"
+fi
+if [ "${LEVEL}" != "app" ] ; then
+    die "${COOKBOOK} level is ${LEVEL}, refusing to uninstall"
+fi
+
 # Run uninstall recipe if we have one
 if [ -f "${THISDIR}/cookbooks/${COOKBOOK}/recipes/uninstall.rb" ] ; then
 
@@ -52,12 +65,15 @@ if [ -f "${THISDIR}/cookbooks/${COOKBOOK}/recipes/uninstall.rb" ] ; then
     echo "] }" >> ${UNINSTALL_SOLO}
 
     cd ${THISDIR} && "${chef_binary}" -c solo.rb -j ${UNINSTALL_SOLO} -l debug || die "Error running chef"
+
+elif [ ! -d "${THISDIR}/cookbooks/${COOKBOOK}" ] ; then
+    echo "WARNING: ${COOKBOOK} is not installed."
 fi
 
-# Remove from default run list
+# Remove from default run list, removing trailing comma if there is one
 TMP=$(mktemp /tmp/uninstall_sh_XXXXXXX.json) || die "Error creating temp file"
 cat ${SOLO_JSON} | sed -e 's/,/,\
-/g' | grep -v ${COOKBOOK} > ${TMP}
+/g' | grep -v ${COOKBOOK} | tr -d '\n ' | sed -e 's/,]}/]}/' > ${TMP}
 
 if [ ! -s ${TMP} ] ; then
   die "solo.json couldn't be updated"
