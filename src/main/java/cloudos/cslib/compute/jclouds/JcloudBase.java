@@ -20,6 +20,7 @@ import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.enterprise.config.EnterpriseConfigurationModule;
+import org.jclouds.location.reference.LocationConstants;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.providers.ProviderMetadata;
 import org.jclouds.providers.Providers;
@@ -124,6 +125,7 @@ public class JcloudBase extends CsCloudBase {
         long scriptTimeout = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
         properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, String.valueOf(scriptTimeout));
         properties.setProperty(SOCKET_FINDER_ALLOWED_INTERFACES, "PUBLIC");
+        properties.setProperty(LocationConstants.PROPERTY_ZONES, config.getRegion());
 
         // example of injecting a ssh implementation
         Iterable<Module> modules = ImmutableSet.<Module> of(
