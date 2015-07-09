@@ -43,12 +43,12 @@ for required in $(echo ${REQUIRED} | tr '\n' ' ') ; do
   fi
 done
 
-CLOUDOS_LIB_BASE=$(cd $(dirname $0) && pwd)
+LIB_BASE=$(cd $(dirname $0) && pwd)
 BASE=$(pwd)
 COOKBOOK_SOURCES=$(echo ${BASE}/cookbooks ${COOKBOOK_SOURCES} | tr '\n' ' ')
 
 # Extract cookbooks from solo.json run list
-COOKBOOKS="$(cat ${BASE}/solo.json | egrep -v '[[:blank:]]*//' | ${CLOUDOS_LIB_BASE}/JSON.sh  | grep '\["run_list",' | awk '{print $2}' | sed 's/recipe//' | tr -d '"[]' | tr ':' ' ' | awk '{print $1}' | sort | uniq)"
+COOKBOOKS="$(cat ${BASE}/solo.json | egrep -v '[[:blank:]]*//' | ${LIB_BASE}/JSON.sh  | grep '\["run_list",' | awk '{print $2}' | sed 's/recipe//' | tr -d '"[]' | tr ':' ' ' | awk '{print $1}' | sort | uniq)"
 if [ -z "$(echo ${COOKBOOKS} | tr -d '[:blank:]\n\r')" ]  ; then
   die "ERROR: no cookbooks could be gleaned from run list: ${BASE}/solo.json"
 fi
@@ -89,7 +89,7 @@ done
 
 # bootstrap files and run list...
 for f in JSON.sh install.sh uninstall.sh solo.rb ; do
-  cp ${CLOUDOS_LIB_BASE}/${f} ${TEMP}/
+  cp ${LIB_BASE}/${f} ${TEMP}/
 done
 for f in ${BASE}/solo*.json  ; do
   cp ${f} ${TEMP}/
