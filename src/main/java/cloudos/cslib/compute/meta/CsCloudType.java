@@ -28,6 +28,7 @@ public interface CsCloudType<T extends CsCloud> {
 
     public List<CsGeoRegion> getRegions ();
     public List<CsInstanceType> getInstanceTypes ();
+    public CsInstanceType getSmallestInstanceType ();
 
     public CsInstanceType getInstanceType(String name);
 

@@ -82,6 +82,10 @@ public abstract class CsCloudTypeBase<T extends CsCloud> implements CsCloudType<
     }
     public CsInstanceType type(String name) { return getInstanceType(name); }
 
+    @Override public CsInstanceType getSmallestInstanceType() {
+        return getInstanceTypes().get(0);
+    }
+
     public List<String> getInstanceTypeNames () {
         final List<String> names = new ArrayList<>();
         for (CsInstanceType t : getInstanceTypes()) names.add(t.getName());

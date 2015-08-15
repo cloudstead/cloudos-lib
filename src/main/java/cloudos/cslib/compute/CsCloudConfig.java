@@ -5,9 +5,11 @@ import cloudos.cslib.compute.meta.CsCloudTypeFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
+@Accessors(chain=true)
 public class CsCloudConfig {
 
     @JsonIgnore @Getter @Setter private CsCloudType<? extends CsCloud> type;

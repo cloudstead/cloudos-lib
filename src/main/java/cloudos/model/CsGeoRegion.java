@@ -35,7 +35,7 @@ public class CsGeoRegion {
     @HasValue(message="{err.geoRegion.name.empty}")
     @Getter @Setter private String name;
     @Getter @Setter private String country;
-    @Getter @Setter private String region;
+    @Getter @Setter private String region; // unique within a cloud vendor
 
     public String getImage(CsPlatform platform) { return cloudVendor.getImage(platform, name); }
 

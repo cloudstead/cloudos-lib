@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Usage: deploy.sh [target] [init-files] [required] [cookbook-sources] [solo-json-file]
+# Usage: deploy_lib.sh [target] [init-files] [required] [cookbook-sources] [solo-json-file]
 #
 # Run this from the chef-repo directory containing the solo.json that will drive the chef run
 #
