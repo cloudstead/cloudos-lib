@@ -48,11 +48,12 @@ public class CloudOsBase extends UniquelyNamedEntity {
 
     protected boolean isReserved(String n) { return false; }
 
-    @NotNull
+    @NotNull(message="err.cloudos.instanceType.required")
     @Column(length=30, nullable=false)
     @Getter @Setter private String instanceType;
 
-    @NotNull @Column(length=200, nullable=false)
+    @NotNull(message="err.cloudos.region.required")
+    @Column(length=200, nullable=false)
     @JsonIgnore
     @Getter @Setter private String region;
 
