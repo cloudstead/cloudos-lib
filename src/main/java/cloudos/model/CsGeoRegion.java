@@ -33,9 +33,9 @@ public class CsGeoRegion {
     public void setVendor (String name) { setCloudVendor(CsCloudTypeFactory.instance.fromType(name)); }
 
     @HasValue(message="{err.geoRegion.name.empty}")
-    @Getter @Setter private String name;
+    @Getter @Setter private String name;  // unique within a cloud vendor
     @Getter @Setter private String country;
-    @Getter @Setter private String region; // unique within a cloud vendor
+    @Getter @Setter private String region;
 
     public String getImage(CsPlatform platform) { return cloudVendor.getImage(platform, name); }
 

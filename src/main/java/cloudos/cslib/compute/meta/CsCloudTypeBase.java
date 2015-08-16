@@ -57,6 +57,13 @@ public abstract class CsCloudTypeBase<T extends CsCloud> implements CsCloudType<
     }
     protected abstract String getRegionsJson();
 
+    @Override public CsGeoRegion getRegion(String name) {
+        for (CsGeoRegion region : getRegions()) {
+            if (region.getName().equalsIgnoreCase(name)) return region;
+        }
+        return null;
+    }
+
     public List<String> getRegionNames () {
         final List<String> names = new ArrayList<>();
         for (CsGeoRegion r : getRegions()) names.add(r.getName());

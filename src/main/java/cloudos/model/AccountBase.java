@@ -31,7 +31,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
             new ScrubbableField(AccountBase.class, "authId", String.class)
     };
 
-    @Override @JsonIgnore public ScrubbableField[] getFieldsToScrub() { return SCRUBBABLE_FIELDS; }
+    @Override @JsonIgnore public ScrubbableField[] fieldsToScrub() { return SCRUBBABLE_FIELDS; }
 
     public static final String ERR_AUTHID_LENGTH = "{err.authid.length}";
     public static final String ERR_EMAIL_INVALID = "{err.email.invalid}";

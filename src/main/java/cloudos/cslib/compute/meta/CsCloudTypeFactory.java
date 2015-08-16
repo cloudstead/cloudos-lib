@@ -6,6 +6,7 @@ import cloudos.cslib.compute.digitalocean.DigitalOceanCloudType;
 import cloudos.cslib.compute.mock.MockCloudType;
 import cloudos.cslib.compute.rackspace.RackspaceCloudType;
 import cloudos.model.CsGeoRegion;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
