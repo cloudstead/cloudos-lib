@@ -2,8 +2,7 @@ package cloudos.cslib.compute.instance;
 
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.apache.commons.lang.RandomStringUtils;
-import org.cobbzilla.util.daemon.ZillaRuntime;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
