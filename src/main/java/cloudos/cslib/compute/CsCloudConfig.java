@@ -3,6 +3,7 @@ package cloudos.cslib.compute;
 import cloudos.cslib.compute.meta.CsCloudType;
 import cloudos.cslib.compute.meta.CsCloudTypeFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,6 +11,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 // Do NOT enable @Accessors(chain=true) for this class.
 // This class is used by YML files, which cannot populate beans using that pattern.
+@EqualsAndHashCode
 public class CsCloudConfig {
 
     @JsonIgnore @Getter @Setter private CsCloudType<? extends CsCloud> type;

@@ -4,42 +4,29 @@ import cloudos.cslib.compute.CsCloudBase;
 import cloudos.cslib.compute.instance.CsInstance;
 import cloudos.cslib.compute.instance.CsInstanceRequest;
 import cloudos.cslib.ssh.CsKeyPair;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.inject.Module;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.jclouds.ContextBuilder;
 import org.jclouds.apis.ApiMetadata;
 import org.jclouds.apis.Apis;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceContext;
+import org.jclouds.compute.domain.ComputeMetadata;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
-import org.jclouds.enterprise.config.EnterpriseConfigurationModule;
-import org.jclouds.location.reference.LocationConstants;
-import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.providers.ProviderMetadata;
 import org.jclouds.providers.Providers;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
-import org.jclouds.sshj.config.SshjSshClientModule;
 
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Predicates.and;
-import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Iterables.getOnlyElement;
-import static org.jclouds.compute.config.ComputeServiceProperties.SOCKET_FINDER_ALLOWED_INTERFACES;
-import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_SCRIPT_COMPLETE;
 import static org.jclouds.compute.options.TemplateOptions.Builder.runScript;
-import static org.jclouds.compute.predicates.NodePredicates.*;
 
 @Slf4j
 public class JcloudBase extends CsCloudBase {
@@ -49,6 +36,7 @@ public class JcloudBase extends CsCloudBase {
 
     public static final Map<String, ProviderMetadata> apiProviders = Maps.uniqueIndex(Providers.viewableAs(ComputeServiceContext.class),
             Providers.idFunction());
+    public static final ComputeServiceContextFactory CONTEXT_FACTORY = new ComputeServiceContextFactory();
 
     protected String getRegion() { return config.getRegion(); }
     protected String getImage() { return config.getImage(); }
@@ -57,10 +45,10 @@ public class JcloudBase extends CsCloudBase {
     @Override
     public CsInstance newInstance(CsInstanceRequest request) throws Exception {
 
-        @Cleanup ComputeServiceContext context = initComputeService();
-        ComputeService compute = context.getComputeService();
+        @Cleanup final ComputeServiceContext context = getComputeService();
+        final ComputeService compute = context.getComputeService();
 
-        TemplateBuilder templateBuilder = compute.templateBuilder();
+        final TemplateBuilder templateBuilder = compute.templateBuilder();
 
         final String groupName = config.getGroupPrefix() + RandomStringUtils.randomAlphanumeric(10).toLowerCase()+"-"+System.currentTimeMillis();
 
@@ -82,7 +70,7 @@ public class JcloudBase extends CsCloudBase {
                 .build();
         templateBuilder.options(runScript(bootStatement));
 
-        Template template;
+        final Template template;
         try {
             template = templateBuilder
                     .hardwareId(getInstanceSize())
@@ -120,49 +108,45 @@ public class JcloudBase extends CsCloudBase {
         return instance;
     }
 
-    private ComputeServiceContext initComputeService() {
-
-        // example of specific properties, in this case optimizing image list to
-        // only amazon supplied
-        Properties properties = new Properties();
-//        properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id=137112412989;architecture=x86_64;state=available;image-type=machine");
-//        properties.setProperty(PROPERTY_EC2_CC_AMI_QUERY, "");
-        long scriptTimeout = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
-        properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, String.valueOf(scriptTimeout));
-        properties.setProperty(SOCKET_FINDER_ALLOWED_INTERFACES, "PUBLIC");
-        properties.setProperty(LocationConstants.PROPERTY_ZONES, config.getRegion());
-
-        // example of injecting a ssh implementation
-        Iterable<Module> modules = ImmutableSet.<Module> of(
-                new SshjSshClientModule(),
-                new SLF4JLoggingModule(),
-                new EnterpriseConfigurationModule());
-
-        ContextBuilder builder = ContextBuilder.newBuilder(config.getType().getProviderName())
-                .credentials(config.getAccountId(), config.getAccountSecret())
-                .modules(modules)
-                .overrides(properties);
-
-        log.info(">> initializing " + builder.getApiMetadata());
-
-        ComputeServiceContext context = builder.buildView(ComputeServiceContext.class);
-        return context;
+    private ComputeServiceContext getComputeService() {
+        return CONTEXT_FACTORY.build(config);
     }
 
     @Override public boolean isRunning(CsInstance instance) throws Exception {
-        @Cleanup ComputeServiceContext context = initComputeService();
-        ComputeService compute = context.getComputeService();
-        final Set<? extends NodeMetadata> nodes = compute.listNodesDetailsMatching(withIds(instance.getVendorId()));
-        return !nodes.isEmpty() && !TERMINATED.apply(nodes.iterator().next());
+        final ComputeServiceContext context = getComputeService();
+        final ComputeService compute = context.getComputeService();
+        final Set<? extends ComputeMetadata> nodes = compute.listNodes();
+        if (nodes.isEmpty()) return false;
+        for (ComputeMetadata metadata : nodes) {
+            if (metadata instanceof NodeMetadata) {
+                final NodeMetadata node = (NodeMetadata) metadata;
+                if (node.getGroup().startsWith(config.getGroupPrefix()) && node.getStatus() != NodeMetadata.Status.TERMINATED) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
-    @Override public boolean teardown(CsInstance instance) throws Exception {
-        @Cleanup ComputeServiceContext context = initComputeService();
-        ComputeService compute = context.getComputeService();
-        Set<? extends NodeMetadata> destroyed = compute.destroyNodesMatching(
-                and(not(TERMINATED), inGroup(instance.getGroup())));
-        log.info("Destroyed: " + destroyed);
-        return !destroyed.isEmpty();
+    @Override public int teardown(CsInstance instance) throws Exception {
+        int destroyed = 0;
+        final ComputeServiceContext context = getComputeService();
+        final ComputeService compute = context.getComputeService();
+        final Set<? extends ComputeMetadata> nodes = compute.listNodes();
+        for (ComputeMetadata metadata : nodes) {
+            if (metadata instanceof NodeMetadata) {
+                final NodeMetadata node = (NodeMetadata) metadata;
+                if (node.getGroup().startsWith(config.getGroupPrefix()) && node.getStatus() != NodeMetadata.Status.TERMINATED) {
+                    try {
+                        compute.destroyNode(node.getId());
+                        destroyed++;
+                    } catch (Exception e) {
+                        log.error("teardown: "+e, e);
+                    }
+                }
+            }
+        }
+        return destroyed;
     }
 
 }

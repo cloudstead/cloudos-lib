@@ -14,7 +14,7 @@ public interface CsCloud {
     public CsInstance newInstance(CsInstanceRequest request) throws Exception;
 
     public boolean isRunning(CsInstance instance) throws Exception;
-    public boolean teardown(CsInstance instance) throws Exception;
+    public int teardown(CsInstance instance) throws Exception;
 
     public String execute(CsInstance instance, String command) throws Exception;
     public boolean scp(CsInstance instance, InputStream in, String remotePath) throws Exception;

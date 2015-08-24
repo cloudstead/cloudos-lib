@@ -18,9 +18,9 @@ public class MockCloud extends CsCloudBase {
         return new MockCsInstance(this, request);
     }
 
-    @Override public boolean teardown(CsInstance instance) throws Exception {
+    @Override public int teardown(CsInstance instance) throws Exception {
         ((MockCsInstance) instance).setState(CloudOsState.destroyed);
-        return true;
+        return 1;
     }
 
     @Override public boolean isRunning(CsInstance instance) throws Exception {
