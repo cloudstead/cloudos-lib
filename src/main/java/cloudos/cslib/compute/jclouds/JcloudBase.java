@@ -4,7 +4,6 @@ import cloudos.cslib.compute.CsCloudBase;
 import cloudos.cslib.compute.instance.CsInstance;
 import cloudos.cslib.compute.instance.CsInstanceRequest;
 import cloudos.cslib.ssh.CsKeyPair;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.inject.Module;
@@ -33,14 +32,14 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Predicates.and;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static org.jclouds.compute.config.ComputeServiceProperties.SOCKET_FINDER_ALLOWED_INTERFACES;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_SCRIPT_COMPLETE;
 import static org.jclouds.compute.options.TemplateOptions.Builder.runScript;
-import static org.jclouds.compute.predicates.NodePredicates.TERMINATED;
-import static org.jclouds.compute.predicates.NodePredicates.inGroup;
+import static org.jclouds.compute.predicates.NodePredicates.*;
 
 @Slf4j
 public class JcloudBase extends CsCloudBase {
@@ -96,7 +95,13 @@ public class JcloudBase extends CsCloudBase {
         }
 
         // build the actual instance
-        final NodeMetadata node = getOnlyElement(compute.createNodesInGroup(groupName, 1, template));
+        final NodeMetadata node;
+        try {
+            node = getOnlyElement(compute.createNodesInGroup(groupName, 1, template));
+        } catch (Exception e) {
+            log.error("error starting instance: "+e, e);
+            throw e;
+        }
 
         log.info(String.format("<< node %s: %s%n", node.getId(), concat(node.getPrivateAddresses(), node.getPublicAddresses())));
 
@@ -144,13 +149,19 @@ public class JcloudBase extends CsCloudBase {
         return context;
     }
 
-    @Override
-    public boolean teardown(CsInstance instance) throws Exception {
+    @Override public boolean isRunning(CsInstance instance) throws Exception {
+        @Cleanup ComputeServiceContext context = initComputeService();
+        ComputeService compute = context.getComputeService();
+        final Set<? extends NodeMetadata> nodes = compute.listNodesDetailsMatching(withIds(instance.getVendorId()));
+        return !nodes.isEmpty() && !TERMINATED.apply(nodes.iterator().next());
+    }
+
+    @Override public boolean teardown(CsInstance instance) throws Exception {
         @Cleanup ComputeServiceContext context = initComputeService();
         ComputeService compute = context.getComputeService();
         Set<? extends NodeMetadata> destroyed = compute.destroyNodesMatching(
-                Predicates.<NodeMetadata> and(not(TERMINATED), inGroup(instance.getGroup())));
-        log.info("Destroyed: "+destroyed);
+                and(not(TERMINATED), inGroup(instance.getGroup())));
+        log.info("Destroyed: " + destroyed);
         return !destroyed.isEmpty();
     }
 

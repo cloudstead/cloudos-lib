@@ -8,6 +8,9 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.cobbzilla.util.json.JsonUtil;
+import org.cobbzilla.util.security.Crypto;
+import org.cobbzilla.util.security.CryptoSimple;
+import org.cobbzilla.util.security.ShaUtil;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.UniquelyNamedEntity;
 import org.cobbzilla.wizard.validation.SimpleViolationException;
@@ -72,6 +75,9 @@ public class CloudOsBase extends UniquelyNamedEntity {
     @Getter @Setter private CloudOsState state = CloudOsState.initial;
     @Getter @Setter private long lastStateChange;
 
+    @JsonIgnore public boolean isLaunchable() { return state == CloudOsState.initial; }
+    @JsonIgnore public boolean isDestroyable() { return state != CloudOsState.initial; }
+
     @JsonIgnore public boolean isRunning() { return state == CloudOsState.live; }
 
     @Column(length=1024, updatable=false, unique=true)
@@ -90,12 +96,25 @@ public class CloudOsBase extends UniquelyNamedEntity {
     @Getter @Setter private String ucid;
     public void initUcid () { if (empty(ucid)) this.ucid = UUID.randomUUID().toString(); }
 
-    @Size(max=16384, message="err.cloudos.instanceJson.tooLong")
-    @Getter @Setter @JsonIgnore private String instanceJson;
+    @Transient @JsonIgnore
+    public Crypto getCrypto () { return new CryptoSimple(ShaUtil.sha256_hex(getAdminUuid())); }
+
+    @Size(max=64000, message="err.cloudos.instanceJson.tooLong")
+    @JsonIgnore private String instanceJson;
+
+    public String getInstanceJson() {
+        final Crypto crypto = getCrypto();
+        return empty(instanceJson) || crypto == null ? instanceJson : crypto.decrypt(instanceJson);
+    }
+
+    public void setInstanceJson(String instanceJson) {
+        final Crypto crypto = getCrypto();
+        this.instanceJson = crypto == null ? instanceJson : crypto.encrypt(instanceJson);
+    }
 
     @JsonIgnore public CsInstance getInstance () {
         try {
-            return instanceJson == null ? null : JsonUtil.fromJson(instanceJson, CsInstance.class);
+            return empty(instanceJson) ? null : JsonUtil.fromJson(getInstanceJson(), CsInstance.class);
         } catch (Exception e) {
             return die("Invalid instanceJson: " + e, e);
         }
@@ -121,4 +140,5 @@ public class CloudOsBase extends UniquelyNamedEntity {
         stagingDir = abs(stagingDirFile);
         return stagingDirFile;
     }
+
 }
