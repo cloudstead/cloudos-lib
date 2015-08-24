@@ -37,7 +37,13 @@ public class CsGeoRegion {
     @Getter @Setter private String country;
     @Getter @Setter private String region;
 
-    public String getImage(CsPlatform platform) { return cloudVendor.getImage(platform, name); }
+    public String getImage(String instanceType, CsPlatform platform) {
+        return cloudVendor.getImage(getInstanceType(instanceType), platform, name);
+    }
+
+    protected CsInstanceType getInstanceType(String instanceType) {
+        return cloudVendor.getInstanceType(instanceType);
+    }
 
     @JsonIgnore public boolean isValid() {
         if (empty(cloudVendor) || empty(name)) return false;

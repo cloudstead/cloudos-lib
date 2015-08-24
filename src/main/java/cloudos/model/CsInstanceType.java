@@ -1,5 +1,7 @@
 package cloudos.model;
 
+import cloudos.cslib.compute.meta.CsStorageMedium;
+import cloudos.cslib.compute.meta.CsStorageType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,11 +19,14 @@ public class CsInstanceType {
 
     @Getter @Setter private double system_storage;   // in GB, if there is a separate system disk
     @Getter @Setter private double storage;   // in GB
-    @Getter @Setter private String storage_medium; // ssd, hdd or block
+    @Getter @Setter private CsStorageMedium storage_medium; // ssd, hdd or block
     @Getter @Setter private String storage_geometry;
     @Getter @Setter private double storage_bandwidth; // in Mb/s
 
     @Getter @Setter private CsNetworkLevel networking;
     @Getter @Setter private double network_bandwidth; // in Mb/s
 
+    public CsStorageType getStorage_type() { return storage_medium.getType(); }
+
+    public void setStorage_type() {/*noop*/}
 }

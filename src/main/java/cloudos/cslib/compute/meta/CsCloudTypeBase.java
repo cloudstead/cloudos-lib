@@ -40,6 +40,7 @@ public abstract class CsCloudTypeBase<T extends CsCloud> implements CsCloudType<
     public static final CsResourceOption OPT_ACCOUNT_SECRET = new CsResourceOption()
             .setName("accountSecret").setType(CsResourceOptionType.TEXT)
             .setRequired(true).freeze();
+    public static final String WILDCARD = "*";
 
     @Override public Class<T> getCloudClass() { return getFirstTypeParam(getClass()); }
 
@@ -85,7 +86,7 @@ public abstract class CsCloudTypeBase<T extends CsCloud> implements CsCloudType<
         for (CsInstanceType t : getInstanceTypes()) {
             if (t.getName().equalsIgnoreCase(name)) return t;
         }
-        return die("No such instance type: '"+name+"'");
+        return die("No such instance type: '" + name + "'");
     }
     public CsInstanceType type(String name) { return getInstanceType(name); }
 
@@ -110,15 +111,25 @@ public abstract class CsCloudTypeBase<T extends CsCloud> implements CsCloudType<
     }
     protected abstract String getPlatformImagesJson();
 
-    @Override public String getImage(CsPlatform platform, String region) {
+    @Override public String getImage(CsInstanceType instanceType, CsPlatform platform, String region) {
         for (CsPlatformImage image : getPlatformImages()) {
-            if (image.getPlatform().equals(platform) && regionMatches(image.getRegion(), region)) return image.getImage();
+            if (image.getPlatform().equals(platform)
+                    && regionMatches(image.getRegion(), region)
+                    && isCompatible(instanceType, image)) {
+                return image.getImage();
+            }
         }
         return die("No image found for region/platform: "+region+"/"+platform+" (available: "+getPlatformImages()+")");
     }
 
+    protected boolean isCompatible(CsInstanceType instanceType, CsPlatformImage image) {
+        return instanceType == null
+                || image.getRegion().equals(WILDCARD)
+                || instanceType.getStorage_type().equals(image.getStorage_type());
+    }
+
     private boolean regionMatches(String cloudRegion, String requestedRegion) {
-        return cloudRegion.equals("*") || cloudRegion.equals(requestedRegion);
+        return cloudRegion.equals(WILDCARD) || cloudRegion.equals(requestedRegion);
     }
 
     public String getName() { return getClass().getSimpleName(); }

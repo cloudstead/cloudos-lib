@@ -12,5 +12,6 @@ public class CsPlatformImage {
     @Getter @Setter private String region;
     @Getter @Setter private CsPlatform platform;
     @Getter @Setter private String image;
+    @Getter @Setter private CsStorageType storage_type;
 
 }

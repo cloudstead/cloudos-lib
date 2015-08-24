@@ -1,4 +1,5 @@
 [
+ { "name": "t1.micro", "memory": 0.615, "vcpu": 1, "storage": 0, "storage_medium": "block", "networking": "low" },
  { "name": "t2.micro", "memory": 1, "vcpu": 1, "storage": 0, "storage_medium": "block", "networking": "low" },
  { "name": "t2.small", "memory": 2, "vcpu": 1, "storage": 0, "storage_medium": "block", "networking": "low" },
  { "name": "t2.medium", "memory": 4, "vcpu": 2, "storage": 0, "storage_medium": "block", "networking": "low" },

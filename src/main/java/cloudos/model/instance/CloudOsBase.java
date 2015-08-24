@@ -68,7 +68,9 @@ public class CloudOsBase extends UniquelyNamedEntity {
     @Getter @Setter private String apps;
 
     public List<String> getAllApps() {
-        return empty(apps) ? new ArrayList<String>() : Arrays.asList(apps.split("[,\\s]+"));
+        return empty(apps)
+                ? new ArrayList<>(CloudOsAppBundle.required.getApps())
+                : Arrays.asList(apps.split("[,\\s]+"));
     }
 
     @NotNull @Enumerated(value=EnumType.STRING) @Column(length=30, nullable=false)

@@ -35,5 +35,5 @@ public interface CsCloudType<T extends CsCloud> {
 
     public CsInstanceType getInstanceType(String name);
 
-    public String getImage(CsPlatform platform, String region);
+    public String getImage(CsInstanceType instanceType, CsPlatform platform, String region);
 }

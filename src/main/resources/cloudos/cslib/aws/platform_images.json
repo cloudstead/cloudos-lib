@@ -1,10 +1,19 @@
 [
-  { "region": "us-east-1", "platform": "ubuntu_14_lts", "image": "ami-ad184ac4" },
-  { "region": "us-west-1", "platform": "ubuntu_14_lts", "image": "ami-4843740d" },
-  { "region": "us-west-2", "platform": "ubuntu_14_lts", "image": "ami-ace67f9c" },
-  { "region": "sa-east-1", "platform": "ubuntu_14_lts", "image": "ami-41e84e5c" },
-  { "region": "eu-west-1", "platform": "ubuntu_14_lts", "image": "ami-480bea3f" },
-  { "region": "ap-northeast-1", "platform": "ubuntu_14_lts", "image": "ami-b945ddb8" },
-  { "region": "ap-southeast-1", "platform": "ubuntu_14_lts", "image": "ami-94baf0c6" },
-  { "region": "ap-southeast-2", "platform": "ubuntu_14_lts", "image": "ami-9fc25ea5" }
+  { "region": "us-east-1", "platform": "ubuntu_14_lts", "storage_type": "local", "image": "ami-b7ce7adc" },
+  { "region": "us-west-1", "platform": "ubuntu_14_lts", "storage_type": "local", "image": "ami-c1718f85" },
+  { "region": "us-west-2", "platform": "ubuntu_14_lts", "storage_type": "local", "image": "ami-8f2035bf" },
+  { "region": "sa-east-1", "platform": "ubuntu_14_lts", "storage_type": "local", "image": "ami-41af275c" },
+  { "region": "eu-west-1", "platform": "ubuntu_14_lts", "storage_type": "local", "image": "ami-f44a1683" },
+  { "region": "ap-northeast-1", "platform": "ubuntu_14_lts", "storage_type": "local", "image": "ami-3606bc36" },
+  { "region": "ap-southeast-1", "platform": "ubuntu_14_lts", "storage_type": "local", "image": "ami-54343a06" },
+  { "region": "ap-southeast-2", "platform": "ubuntu_14_lts", "storage_type": "local", "image": "ami-c10745fb" },
+
+  { "region": "us-east-1", "platform": "ubuntu_14_lts", "storage_type": "block", "image": "ami-43e45028" },
+  { "region": "us-west-1", "platform": "ubuntu_14_lts", "storage_type": "block", "image": "ami-ff6d93bb" },
+  { "region": "us-west-2", "platform": "ubuntu_14_lts", "storage_type": "block", "image": "ami-bbd5c08b" },
+  { "region": "sa-east-1", "platform": "ubuntu_14_lts", "storage_type": "block", "image": "ami-aba129b6" },
+  { "region": "eu-west-1", "platform": "ubuntu_14_lts", "storage_type": "block", "image": "ami-a0401cd7" },
+  { "region": "ap-northeast-1", "platform": "ubuntu_14_lts", "storage_type": "block", "image": "ami-7205bf72" },
+  { "region": "ap-southeast-1", "platform": "ubuntu_14_lts", "storage_type": "block", "image": "ami-5c353b0e" },
+  { "region": "ap-southeast-2", "platform": "ubuntu_14_lts", "storage_type": "block", "image": "ami-cf0446f5" }
 ]

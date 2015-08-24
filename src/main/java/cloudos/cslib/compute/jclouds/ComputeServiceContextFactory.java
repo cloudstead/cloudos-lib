@@ -6,6 +6,7 @@ import com.google.inject.Module;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.io.CloseOnExit;
 import org.jclouds.ContextBuilder;
+import org.jclouds.aws.ec2.reference.AWSEC2Constants;
 import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.enterprise.config.EnterpriseConfigurationModule;
 import org.jclouds.location.reference.LocationConstants;
@@ -39,7 +40,7 @@ public class ComputeServiceContextFactory {
         // example of specific properties, in this case optimizing image list to
         // only amazon supplied
         Properties properties = new Properties();
-//        properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id=137112412989;architecture=x86_64;state=available;image-type=machine");
+//        properties.setProperty(AWSEC2Constants.PROPERTY_EC2_AMI_QUERY, "owner-id=137112412989;architecture=x86_64;state=available;image-type=machine");
 //        properties.setProperty(PROPERTY_EC2_CC_AMI_QUERY, "");
         long scriptTimeout = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
         properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, String.valueOf(scriptTimeout));
