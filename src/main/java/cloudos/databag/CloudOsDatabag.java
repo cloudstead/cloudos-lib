@@ -6,6 +6,8 @@ import lombok.experimental.Accessors;
 import org.cobbzilla.util.http.ApiConnectionInfo;
 import rooty.toots.vendor.VendorDatabag;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+
 @Accessors(chain=true)
 public class CloudOsDatabag {
 
@@ -18,6 +20,8 @@ public class CloudOsDatabag {
     @Getter @Setter private String ucid;
 
     @Getter @Setter private String server_tarball;
+    public boolean hasServerTarball () { return !empty(server_tarball); }
+
     @Getter @Setter private int server_port;
     @Getter @Setter private String run_as;
     @Getter @Setter private String admin_initial_pass;
