@@ -120,7 +120,9 @@ public class JcloudBase extends CsCloudBase {
         for (ComputeMetadata metadata : nodes) {
             if (metadata instanceof NodeMetadata) {
                 final NodeMetadata node = (NodeMetadata) metadata;
-                if (node.getGroup().startsWith(config.getGroupPrefix()) && node.getStatus() != NodeMetadata.Status.TERMINATED) {
+                if (node.getGroup() != null
+                        && node.getGroup().startsWith(config.getGroupPrefix())
+                        && node.getStatus() != NodeMetadata.Status.TERMINATED) {
                     return true;
                 }
             }

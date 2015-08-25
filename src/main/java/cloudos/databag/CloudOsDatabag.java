@@ -1,5 +1,6 @@
 package cloudos.databag;
 
+import cloudos.server.DnsConfiguration;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -38,9 +39,9 @@ public class CloudOsDatabag {
         return this;
     }
 
-    @Getter @Setter private ApiConnectionInfo dns = new ApiConnectionInfo();
+    @Getter @Setter private DnsConfiguration dns = new DnsConfiguration();
     public CloudOsDatabag setDns (String baseUri, String user, String password) {
-        setDns(new ApiConnectionInfo(baseUri, user, password));
+        setDns(new DnsConfiguration(baseUri, user, password));
         return this;
     }
 
