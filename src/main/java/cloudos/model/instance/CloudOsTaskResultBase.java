@@ -15,8 +15,8 @@ import org.cobbzilla.wizard.validation.SimpleViolationException;
 @NoArgsConstructor @Slf4j
 public class CloudOsTaskResultBase<A extends Identifiable, C extends CloudOsBase> extends TaskResult<CloudOsEvent> {
 
-    @Getter @Setter private A admin;
-    @Getter @Setter private C cloudOs;
+    @Getter @Setter protected A admin;
+    @Getter @Setter protected C cloudOs;
 
     @JsonIgnore @Getter @Setter private DAO<CloudOsEvent> eventDAO;
 

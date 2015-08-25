@@ -41,8 +41,15 @@ public class SslCertificateBase extends UniquelyNamedEntity {
         while ((thing = pemParser.readObject()) != null) {
             if (thing instanceof X509CertificateHolder) {
                 final String subject = ((X509CertificateHolder) thing).getSubject().toString();
-                if (subject != null && subject.startsWith(CN_PREFIX) && subject.length() > CN_PREFIX.length()) {
-                    commonName = subject.substring(CN_PREFIX.length());
+                if (subject != null) {
+                    if (subject.startsWith(CN_PREFIX) && subject.length() > CN_PREFIX.length()) {
+                        commonName = subject.substring(CN_PREFIX.length());
+
+                    } else if (subject.contains(CN_PREFIX)) {
+                        final int start = subject.indexOf(CN_PREFIX) + CN_PREFIX.length();
+                        int commaPos = subject.indexOf(",", start);
+                        commonName = subject.substring(start, commaPos);
+                    }
                 }
             }
         }
