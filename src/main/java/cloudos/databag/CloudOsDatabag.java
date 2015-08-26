@@ -7,10 +7,29 @@ import lombok.experimental.Accessors;
 import org.cobbzilla.util.http.ApiConnectionInfo;
 import rooty.toots.vendor.VendorDatabag;
 
+import java.io.File;
+
+import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.io.FileUtil.abs;
+import static org.cobbzilla.util.io.FileUtil.toFileOrDie;
+import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
+import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
 
 @Accessors(chain=true)
 public class CloudOsDatabag {
+
+    public static CloudOsDatabag fromChefRepo(File dir) {
+        final File databag = getDatabagFile(dir);
+        if (!databag.exists()) die("fromChefRepo: databag not found: "+abs(databag));
+        return fromJsonOrDie(databag, CloudOsDatabag.class);
+    }
+
+    public static File getDatabagFile(File dir) {
+        return new File(abs(dir) + "/data_bags/cloudos/init.json");
+    }
+
+    public void writeChefRepo(File dir) { toFileOrDie(getDatabagFile(dir), toJsonOrDie(this)); }
 
     public String getId() { return "init"; }
     public void setId (String id) { /*noop*/ }
@@ -52,4 +71,5 @@ public class CloudOsDatabag {
     }
 
     @Getter @Setter private VendorDatabag vendor = new VendorDatabag();
+
 }
