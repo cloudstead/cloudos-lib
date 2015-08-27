@@ -33,7 +33,7 @@ public class CloudOsTaskResultBase<A extends Identifiable, C extends CloudOsBase
 
     @Override public void add(CloudOsEvent event) {
         super.add(event);
-        eventDAO.create(event);
+        if (eventDAO != null) eventDAO.create(event);
     }
 
     protected CloudOsEvent event(String messageKey) {
