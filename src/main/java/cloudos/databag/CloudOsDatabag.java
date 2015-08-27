@@ -25,9 +25,7 @@ public class CloudOsDatabag {
         return fromJsonOrDie(databag, CloudOsDatabag.class);
     }
 
-    public static File getDatabagFile(File dir) {
-        return new File(abs(dir) + "/data_bags/cloudos/init.json");
-    }
+    public static File getDatabagFile(File dir) { return new File(abs(dir) + "/data_bags/cloudos/init.json"); }
 
     public void writeChefRepo(File dir) { toFileOrDie(getDatabagFile(dir), toJsonOrDie(this)); }
 
