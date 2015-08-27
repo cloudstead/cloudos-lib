@@ -26,6 +26,5 @@ public class BaseDatabag {
     @Getter @Setter private String hostname;
     @Getter @Setter private String parent_domain;
     @Getter @Setter private String ssl_cert_name = HttpUtil.DEFAULT_CERT_NAME;
-    @Getter @Setter private CloudOsDnsMode dns_mode;
 
 }
