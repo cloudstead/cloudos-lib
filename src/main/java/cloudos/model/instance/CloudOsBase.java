@@ -33,7 +33,7 @@ import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
 
 @MappedSuperclass
-@ToString(of={"adminUuid", "name", "state", "instanceJson"})
+@ToString(of={"adminUuid", "name", "state"})
 @Accessors(chain=true)
 public class CloudOsBase extends UniquelyNamedEntity {
 

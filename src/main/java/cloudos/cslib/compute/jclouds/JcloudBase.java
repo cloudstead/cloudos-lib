@@ -118,9 +118,7 @@ public class JcloudBase extends CsCloudBase {
         return instance;
     }
 
-    private ComputeServiceContext getComputeService() {
-        return CONTEXT_FACTORY.build(config);
-    }
+    private ComputeServiceContext getComputeService() { return CONTEXT_FACTORY.build(config); }
 
     @Override public CsInstance findInstance(String instanceId, String name, CsKeyPair keyPair) {
         final ComputeServiceContext context = getComputeService();
