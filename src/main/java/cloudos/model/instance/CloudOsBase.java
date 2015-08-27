@@ -143,4 +143,6 @@ public class CloudOsBase extends UniquelyNamedEntity {
         return stagingDirFile;
     }
 
+    @Transient @JsonIgnore public boolean canTerminate() { return true; }
+
 }

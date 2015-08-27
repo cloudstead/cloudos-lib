@@ -4,6 +4,7 @@ import cloudos.cslib.compute.CsCloudBase;
 import cloudos.cslib.compute.CsCloudConfig;
 import cloudos.cslib.compute.instance.CsInstance;
 import cloudos.cslib.compute.instance.CsInstanceRequest;
+import cloudos.cslib.ssh.CsKeyPair;
 import cloudos.model.instance.CloudOsState;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,6 +22,10 @@ public class MockCloud extends CsCloudBase {
     @Override public int teardown(CsInstance instance) throws Exception {
         ((MockCsInstance) instance).setState(CloudOsState.destroyed);
         return 1;
+    }
+
+    @Override public CsInstance findInstance(String instanceId, String name, CsKeyPair keyPair) {
+        return null;
     }
 
     @Override public boolean isRunning(CsInstance instance) throws Exception {

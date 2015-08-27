@@ -50,7 +50,7 @@ public class JcloudBase extends CsCloudBase {
 
         final TemplateBuilder templateBuilder = compute.templateBuilder();
 
-        final String groupName = config.getGroupPrefix() + RandomStringUtils.randomAlphanumeric(10).toLowerCase()+"-"+System.currentTimeMillis();
+        final String groupName = randomGroupName();
 
         final CsKeyPair keyPair = CsKeyPair.createKeyPairWithoutPassphrase();
         final String adminPrivateKey = keyPair.getPrivateKey();
@@ -93,23 +93,50 @@ public class JcloudBase extends CsCloudBase {
 
         log.info(String.format("<< node %s: %s%n", node.getId(), concat(node.getPrivateAddresses(), node.getPublicAddresses())));
 
+        return getCsInstance(request.getHost(), groupName, keyPair, node);
+    }
+
+    protected String randomGroupName() {
+        return config.getGroupPrefix() + RandomStringUtils.randomAlphanumeric(10).toLowerCase()+"-"+System.currentTimeMillis();
+    }
+
+    protected CsInstance getCsInstance(String hostname,
+                                       String groupName,
+                                       CsKeyPair keyPair,
+                                       NodeMetadata node) {
         final CsInstance instance = new CsInstance();
         instance.setCloudConfig(config);
         instance.setVendorId(node.getId());
-        instance.setHost(request.getHost());
+        instance.setHost(hostname);
         instance.setPort(22);
-        instance.setUser(user);
-        instance.setKey(adminPrivateKey);
+        instance.setUser(config.getUser());
+        instance.setKey(keyPair.getPrivateKey());
         instance.setPassphrase(keyPair.getPassphrase());
         instance.setGroup(groupName);
         instance.setPublicAddresses(node.getPublicAddresses());
         instance.setPrivateAddresses(node.getPrivateAddresses());
-
         return instance;
     }
 
     private ComputeServiceContext getComputeService() {
         return CONTEXT_FACTORY.build(config);
+    }
+
+    @Override public CsInstance findInstance(String instanceId, String name, CsKeyPair keyPair) {
+        final ComputeServiceContext context = getComputeService();
+        final ComputeService compute = context.getComputeService();
+        final Set<? extends ComputeMetadata> nodes = compute.listNodes();
+        if (nodes.isEmpty()) return null;
+        for (ComputeMetadata metadata : nodes) {
+            if (metadata instanceof NodeMetadata) {
+                final NodeMetadata node = (NodeMetadata) metadata;
+                if (node.getProviderId().equals(instanceId)
+                        && node.getStatus() != NodeMetadata.Status.TERMINATED) {
+                    return getCsInstance(name, node.getGroup(), keyPair, node);
+                }
+            }
+        }
+        return null;
     }
 
     @Override public boolean isRunning(CsInstance instance) throws Exception {

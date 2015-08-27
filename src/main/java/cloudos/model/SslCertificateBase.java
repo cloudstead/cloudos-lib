@@ -65,9 +65,7 @@ public class SslCertificateBase extends UniquelyNamedEntity {
         return this;
     }
 
-    public boolean isValid() {
-        return false;
-    }
+    public boolean isValid() { return false; }
 
     public boolean isValidForHostname(String hostname) {
         if (empty(commonName)) die("isValidForHostname: commonName was not set");
