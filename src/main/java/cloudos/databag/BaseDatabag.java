@@ -7,21 +7,19 @@ import org.cobbzilla.util.http.HttpUtil;
 
 import java.io.File;
 
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.io.FileUtil.abs;
-import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
-
 @Accessors(chain=true)
-public class BaseDatabag {
+public class BaseDatabag extends Databag {
 
-    public static BaseDatabag fromChefRepo(File dir) {
-        final File databag = new File(abs(dir) + "/data_bags/cloudos/base.json");
-        if (!databag.exists()) die("fromChefRepo: base databag not found: "+abs(databag));
-        return fromJsonOrDie(databag, BaseDatabag.class);
-    }
+    public static final String ID = "base";
+    public static final String APP = "cloudos";
 
-    public String getId() { return "base"; }
+    public String getId() { return ID; }
     public void setId (String id) { /*noop*/ }
+
+    // chef file management
+    public static File getChefFile(File dir) { return getChefFile(BaseDatabag.class, dir, APP); }
+    public static BaseDatabag fromChefRepo(File dir) { return fromChefRepo(BaseDatabag.class, dir, APP); }
+    public void toChefRepo(File dir) { toChefRepo(dir, APP); }
 
     @Getter @Setter private String hostname;
     @Getter @Setter private String parent_domain;

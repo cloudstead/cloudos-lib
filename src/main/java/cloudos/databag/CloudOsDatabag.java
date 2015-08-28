@@ -9,28 +9,18 @@ import rooty.toots.vendor.VendorDatabag;
 
 import java.io.File;
 
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.io.FileUtil.abs;
-import static org.cobbzilla.util.io.FileUtil.toFileOrDie;
-import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
-import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
 
 @Accessors(chain=true)
-public class CloudOsDatabag {
+public class CloudOsDatabag extends InitDatabag {
 
-    public static CloudOsDatabag fromChefRepo(File dir) {
-        final File databag = getDatabagFile(dir);
-        if (!databag.exists()) die("fromChefRepo: databag not found: "+abs(databag));
-        return fromJsonOrDie(databag, CloudOsDatabag.class);
-    }
+    public static final String APP = "cloudos";
 
-    public static File getDatabagFile(File dir) { return new File(abs(dir) + "/data_bags/cloudos/init.json"); }
-
-    public void writeChefRepo(File dir) { toFileOrDie(getDatabagFile(dir), toJsonOrDie(this)); }
-
-    public String getId() { return "init"; }
-    public void setId (String id) { /*noop*/ }
+    // chef file management functions
+    public static File getChefFile(File dir) { return getChefFile(CloudOsDatabag.class, dir, APP); }
+    public static CloudOsDatabag fromChefRepo(File dir) { return fromChefRepo(CloudOsDatabag.class, dir, APP); }
+    public static CloudOsDatabag fromChefRepoOrNew(File dir) { return fromChefRepoOrNew(CloudOsDatabag.class, dir, APP); }
+    public void toChefRepo(File dir) { toChefRepo(dir, APP); }
 
     // UCID: universal cloud identifier, similar to UDID on a mobile device
     // uniquely identifies the cloud. multiple systems operating in concert may

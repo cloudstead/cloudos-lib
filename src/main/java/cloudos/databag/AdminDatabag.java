@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @NoArgsConstructor @AllArgsConstructor
-public class AdminDatabag {
+public class AdminDatabag extends Databag {
 
     public static final String ID = "admin";
 

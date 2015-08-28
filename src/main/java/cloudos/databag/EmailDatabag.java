@@ -7,7 +7,7 @@ import org.cobbzilla.util.system.ConnectionInfo;
 import rooty.toots.vendor.VendorDatabag;
 
 @Accessors(chain=true)
-public class EmailDatabag {
+public class EmailDatabag extends Databag {
 
     public String getId() { return "init"; }
     public void setId (String id) { /*noop*/ }
