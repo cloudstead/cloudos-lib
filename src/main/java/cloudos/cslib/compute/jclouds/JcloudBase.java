@@ -93,7 +93,14 @@ public class JcloudBase extends CsCloudBase {
 
         log.info(String.format("<< node %s: %s%n", node.getId(), concat(node.getPrivateAddresses(), node.getPublicAddresses())));
 
-        return getCsInstance(request.getHost(), groupName, keyPair, node);
+        final CsInstance instance = getCsInstance(request.getHost(), groupName, keyPair, node);
+        if (request.hasPublicKey()) {
+            // copy public key
+            final String remotePath = "/tmp/key_" + RandomStringUtils.randomAlphanumeric(20);
+            scp(instance, request.getPublicKeyStream(), remotePath, instance.getUser(), instance.getKey(), instance.getPassphrase());
+            execute(instance, request.getInstallKeyCommand(remotePath));
+        }
+        return instance;
     }
 
     protected String randomGroupName() {

@@ -16,9 +16,13 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 @MappedSuperclass @Slf4j @Accessors(chain=true)
 public abstract class SshKeyBase extends SshPublicKeyBase implements Scrubbable {
 
+    public static final String DSA_KEY = "ssh-dss";
+    public static final String RSA_KEY = "ssh-rsa";
+
     public static final ScrubbableField[] SCRUBBABLE = {
             new ScrubbableField(SshKeyBase.class, "privateKey", String.class)
     };
+
     @Override public ScrubbableField[] fieldsToScrub() { return SCRUBBABLE; }
 
     public abstract Crypto getCrypto();
