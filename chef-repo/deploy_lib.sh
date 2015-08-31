@@ -10,7 +10,7 @@
 #   required:         list of required files in the init-files dir (use quotes). paths are relative to init-files dir.
 #   cookbook-sources: list of directories that contain cookbooks (use quotes)
 #   solo-json-file:   run list to use for chef solo run
-#   mode:             default is 'tempdir' which will create a new temp dir with init files added. 'inline' will copy init files into this chef repo.
+#   mode:             default is 'tempdir' which will create a new temp dir with init files added. 'inline' will assume the current directory is the chef repo, and cookbook-sources is ignored.
 #
 
 function die {
@@ -22,11 +22,14 @@ if [ ! -f $(pwd)/solo.json ] ; then
   die "ERROR: Current directory does not contain solo.json, required for deployment: $(pwd)"
 fi
 
+LIB_BASE=$(cd $(dirname $0) && pwd)
+BASE=$(pwd)
+
 host="${1:?no user@host specified}"
 INIT_FILES="${2:?no init-files dir specified}"
 REQUIRED="${3:?no required specified}"
 COOKBOOK_SOURCES="${4:?no cookbook sources specified}"
-SOLO_JSON="${5:-./solo.json}"
+SOLO_JSON="${5:-${BASE}/solo.json}"
 MODE="${6:-tempdir}"
 
 # The host key might change when we instantiate a new VM, so
@@ -45,18 +48,8 @@ for required in $(echo ${REQUIRED} | tr '\n' ' ') ; do
   fi
 done
 
-LIB_BASE=$(cd $(dirname $0) && pwd)
-BASE=$(pwd)
-COOKBOOK_SOURCES=$(echo ${BASE}/cookbooks ${COOKBOOK_SOURCES} | tr '\n' ' ')
-
 JSON="${LIB_BASE}/JSON.sh"
 if [ ! -x ${JSON} ] ; then chmod u+x ${JSON} ; fi
-
-# Extract cookbooks from solo.json run list
-COOKBOOKS="$(cat ${BASE}/solo.json | egrep -v '[[:blank:]]*//' | ${JSON} | grep '\["run_list",' | awk '{print $2}' | sed 's/recipe//' | tr -d '"[]' | tr ':' ' ' | awk '{print $1}' | sort | uniq)"
-if [ -z "$(echo ${COOKBOOKS} | tr -d '[:blank:]\n\r')" ]  ; then
-  die "ERROR: no cookbooks could be gleaned from run list: ${BASE}/solo.json"
-fi
 
 # create staging area with our cookbooks, shared cookbooks, and scripts
 mkdir -p ${BASE}/chef-runs
@@ -66,52 +59,60 @@ if [ "${MODE}" = "tempdir" ] ; then
 
   # bootstrap files and run list...
   for f in JSON.sh install.sh uninstall.sh solo.rb ; do
-    cp ${LIB_BASE}/${f} ${CHEF}/
+    cp ${LIB_BASE}/${f} ${CHEF}/ || die "ERROR: ${LIB_BASE}/${f} could not be copied to ${CHEF}"
   done
   for f in ${BASE}/solo*.json  ; do
-    cp ${f} ${CHEF}/
+    cp ${f} ${CHEF}/ || die "ERROR: ${f} could not be copied to ${CHEF}"
   done
   cp ${SOLO_JSON} ${CHEF}/solo.json || die "ERROR: ${SOLO_JSON} could not be copied to ${CHEF}/solo.json"
 
-elif [ "${MODE}" = "inline" ] ; then
-  CHEF="${BASE}"
-else
-  die "Unrecognized mode: ${MODE}"
-fi
-
-# cookbooks...
-mkdir -p ${CHEF}/cookbooks/
-mkdir -p ${CHEF}/data_bags/
-for cookbook in ${COOKBOOKS} ; do
-  if [ -d ${CHEF}/cookbooks ] ; then
-    echo 1>&2 "INFO: using cookbook: ${cookbook}"
-    continue
+  # Extract cookbooks from solo.json run list
+  COOKBOOK_SOURCES=$(echo ${BASE}/cookbooks ${COOKBOOK_SOURCES} | tr '\n' ' ')
+  COOKBOOKS="$(cat ${SOLO_JSON} | egrep -v '[[:blank:]]*//' | ${JSON} | grep '\["run_list",' | awk '{print $2}' | sed 's/recipe//' | tr -d '"[]' | tr ':' ' ' | awk '{print $1}' | sort | uniq)"
+  if [ -z "$(echo ${COOKBOOKS} | tr -d '[:blank:]\n\r')" ]  ; then
+    die "ERROR: no cookbooks could be gleaned from run list: ${SOLO_JSON}"
   fi
-  found=0
-  for source in ${COOKBOOK_SOURCES} ; do
-    if [ ! -d ${source} ] ; then
-      echo 1>&2 "WARNING: cookbook source not found: ${source}"
+
+  # cookbooks...
+  mkdir -p ${CHEF}/cookbooks/
+  mkdir -p ${CHEF}/data_bags/
+  for cookbook in ${COOKBOOKS} ; do
+    if [ -d ${CHEF}/cookbooks ] ; then
+      echo 1>&2 "INFO: using cookbook: ${cookbook}"
       continue
     fi
-    if [ -d ${source}/${cookbook} ] ; then
-      # Copy cookbook files
-      rsync -vac ${source}/${cookbook} ${CHEF}/cookbooks/
-
-      # If there is a manifest in the databags dir, copy that too
-      manifest="${source}/../data_bags/${cookbook}/cloudos-manifest.json"
-      if [ -f ${manifest} ] ; then
-        mkdir -p ${CHEF}/data_bags/${cookbook} && \
-        rsync -vac ${manifest} ${CHEF}/data_bags/${cookbook}/
+    found=0
+    for source in ${COOKBOOK_SOURCES} ; do
+      if [ ! -d ${source} ] ; then
+        echo 1>&2 "WARNING: cookbook source not found: ${source}"
+        continue
       fi
-      found=1
-      break
+      if [ -d ${source}/${cookbook} ] ; then
+        # Copy cookbook files
+        rsync -vac ${source}/${cookbook} ${CHEF}/cookbooks/
+
+        # If there is a manifest in the databags dir, copy that too
+        manifest="${source}/../data_bags/${cookbook}/cloudos-manifest.json"
+        if [ -f ${manifest} ] ; then
+          mkdir -p ${CHEF}/data_bags/${cookbook} && \
+          rsync -vac ${manifest} ${CHEF}/data_bags/${cookbook}/
+        fi
+        found=1
+        break
+      fi
+    done
+
+    if [ ${found} -eq 0 ] ; then
+      die "ERROR: cookbook ${cookbook} not found in any sources: ${COOKBOOK_SOURCES}"
     fi
   done
 
-  if [ ${found} -eq 0 ] ; then
-    die "ERROR: cookbook ${cookbook} not found in any sources: ${COOKBOOK_SOURCES}"
-  fi
-done
+elif [ "${MODE}" = "inline" ] ; then
+  CHEF="${BASE}"
+
+else
+  die "Unrecognized mode: ${MODE}"
+fi
 
 # data_bags, data and certs...
 rsync -vac ${INIT_FILES}/* ${CHEF}/
@@ -127,9 +128,6 @@ else
   SSH_OPTS="-i ${SSH_KEY}"
   cp ${SSH_KEY} /tmp/ckey
 fi
-
-#echo "chef run is in ${CHEF}, cookbooks were ${COOKBOOKS}"
-#exit 1
 
 # Let's roll. Time to:
 # - copy the tarball over,
@@ -156,9 +154,9 @@ rval=$?
 
 cd ${BASE}
 if [ "${MODE}" = "tempdir" ] ; then
-#  rm -rf ${TEMP}
+  rm -rf ${TEMP}
 # if you want to keep chef run dirs, comment out the line above, and uncomment the line below
- echo "chef run is in ${CHEF}"
+# echo "chef run is in ${CHEF}"
 else
  echo "chef run is in ${CHEF}"
 fi
