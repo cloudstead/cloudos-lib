@@ -1,6 +1,7 @@
 package cloudos.server;
 
 import cloudos.databag.DnsMode;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,9 +25,9 @@ public class DnsConfiguration extends ApiConnectionInfo {
 
     public DnsConfiguration(String baseUri, String user, String password) { super(baseUri, user, password); }
 
-    public boolean isDynDns () { return mode == DnsMode.dyn; }
+    @JsonIgnore public boolean isDynDns () { return mode == DnsMode.dyn; }
 
-    public boolean isValid () {
+    @JsonIgnore public boolean isValid () {
         return isDynDns()
                 ? !empty(getUser()) && !empty(getPassword()) && !empty(getAccount()) && !empty(getZone())
                 : !empty(getUser()) && !empty(getPassword()) && !empty(getBaseUri());
