@@ -48,6 +48,7 @@ public class SslCertificateBase extends UniquelyNamedEntity {
                     } else if (subject.contains(CN_PREFIX)) {
                         final int start = subject.indexOf(CN_PREFIX) + CN_PREFIX.length();
                         int commaPos = subject.indexOf(",", start);
+                        if (commaPos == -1) commaPos = subject.length();
                         commonName = subject.substring(start, commaPos);
                     }
                 }
