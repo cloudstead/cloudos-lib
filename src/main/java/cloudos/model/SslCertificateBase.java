@@ -1,5 +1,6 @@
 package cloudos.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -66,7 +67,7 @@ public class SslCertificateBase extends UniquelyNamedEntity {
         return this;
     }
 
-    public boolean isValid() { return false; }
+    @JsonIgnore public boolean isValid() { return false; }
 
     public boolean isValidForHostname(String hostname) {
         if (empty(commonName)) die("isValidForHostname: commonName was not set");
