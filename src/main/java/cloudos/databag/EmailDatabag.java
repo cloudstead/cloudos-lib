@@ -13,6 +13,14 @@ public class EmailDatabag extends Databag {
     public void setId (String id) { /*noop*/ }
 
     @Getter @Setter private ConnectionInfo smtp_relay = new ConnectionInfo();
+    @Getter private EmailServerType server_type = EmailServerType.custom;
+
+    public void setServer_type(EmailServerType server_type) {
+        this.server_type = server_type;
+        smtp_relay.setHost(server_type.getHost());
+        smtp_relay.setPort(server_type.getPort());
+    }
+
     @Getter @Setter private VendorDatabag vendor = new VendorDatabag();
     @Getter @Setter private String vmail_user = "vmail";
     @Getter @Setter private String postmaster_user = "postmaster";
