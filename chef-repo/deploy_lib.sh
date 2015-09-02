@@ -68,7 +68,7 @@ if [ "${MODE}" = "tempdir" ] ; then
 
   # Extract cookbooks from solo.json run list
   COOKBOOK_SOURCES=$(echo ${BASE}/cookbooks ${COOKBOOK_SOURCES} | tr '\n' ' ')
-  COOKBOOKS="$(cat ${SOLO_JSON} | egrep -v '[[:blank:]]*//' | ${JSON} | grep '\["run_list",' | awk '{print $2}' | sed 's/recipe//' | tr -d '"[]' | tr ':' ' ' | awk '{print $1}' | sort | uniq)"
+  COOKBOOKS="$(cat ${SOLO_JSON} | sed -e 's,//.*,,' | ${JSON} | grep '\["run_list",' | awk '{print $2}' | sed 's/recipe//' | tr -d '"[]' | tr ':' ' ' | awk '{print $1}' | sort | uniq)"
   if [ -z "$(echo ${COOKBOOKS} | tr -d '[:blank:]\n\r')" ]  ; then
     die "ERROR: no cookbooks could be gleaned from run list: ${SOLO_JSON}"
   fi
@@ -77,7 +77,7 @@ if [ "${MODE}" = "tempdir" ] ; then
   mkdir -p ${CHEF}/cookbooks/
   mkdir -p ${CHEF}/data_bags/
   for cookbook in ${COOKBOOKS} ; do
-    if [ -d ${CHEF}/cookbooks ] ; then
+    if [ -d ${CHEF}/cookbooks/${cookbook} ] ; then
       echo 1>&2 "INFO: using cookbook: ${cookbook}"
       continue
     fi
@@ -126,7 +126,6 @@ if [ -z ${SSH_KEY} ] ; then
   SSH_OPTS=""
 else
   SSH_OPTS="-i ${SSH_KEY}"
-  cp ${SSH_KEY} /tmp/ckey
 fi
 
 # Let's roll. Time to:
