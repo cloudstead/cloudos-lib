@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.reflect.ReflectionUtil.instantiate;
 
 @NoArgsConstructor
 public class CsCloudFactory {
@@ -15,12 +16,7 @@ public class CsCloudFactory {
         final Class<? extends CsCloud> cloudClass = cloudType.getCloudClass();
         if (empty(cloudClass)) die("config.cloudClass was missing");
 
-        final CsCloud cloud;
-        try {
-            cloud = cloudClass.newInstance();
-        } catch (Exception e) {
-            return die("Error instantiating cloud (" + cloudType.getCloudClassName() + "): " + e, e);
-        }
+        final CsCloud cloud = instantiate(cloudClass);
         cloud.init(config);
         return cloud;
     }
