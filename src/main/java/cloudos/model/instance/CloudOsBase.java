@@ -21,7 +21,6 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -70,7 +69,20 @@ public class CloudOsBase extends UniquelyNamedEntity {
     public List<String> getAllApps() {
         return empty(apps)
                 ? new ArrayList<>(CloudOsAppBundle.required.getApps())
-                : Arrays.asList(apps.split("[,\\s]+"));
+                : parseApps();
+    }
+
+    protected List<String> parseApps() {
+        final String[] apps = this.apps.split("[,\\s]+");
+        final List<String> list = new ArrayList<>();
+        for (String app : apps) {
+            if (CloudOsAppBundle.isValid(app)) {
+                list.addAll(CloudOsAppBundle.valueOf(app).getApps());
+            } else {
+                list.add(app);
+            }
+        }
+        return list;
     }
 
     @NotNull @Enumerated(value=EnumType.STRING) @Column(length=30, nullable=false)

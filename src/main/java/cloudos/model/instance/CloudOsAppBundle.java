@@ -22,7 +22,7 @@ public enum CloudOsAppBundle {
         this.parent = parent;
     }
 
-    @JsonCreator public CloudOsAppBundle create (String name) { return valueOf(name.toLowerCase()); }
+    @JsonCreator public static CloudOsAppBundle create (String name) { return valueOf(name.toLowerCase()); }
 
     public List<String> getApps () {
         final List<String> appList = new ArrayList<>();
@@ -35,6 +35,10 @@ public enum CloudOsAppBundle {
     @JsonIgnore public String[] getAppsArray () {
         final List<String> appList = getApps();
         return appList.toArray(new String[appList.size()]);
+    }
+
+    public static boolean isValid(String val) {
+        try { return create(val) != null; } catch (Exception e) { return false; }
     }
 
     private static class Constants {
