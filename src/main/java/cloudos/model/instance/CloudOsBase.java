@@ -97,7 +97,7 @@ public class CloudOsBase extends UniquelyNamedEntity {
     @Column(length=1024, updatable=false, unique=true)
     @JsonIgnore @Getter @Setter private String stagingDir;
     @JsonIgnore public boolean hasStagingDir () { return !empty(stagingDir); }
-    @JsonIgnore public File getStagingDirFile () { return new File(stagingDir); }
+    @JsonIgnore public File getStagingDirFile () { return hasStagingDir() ? new File(stagingDir) : null; }
 
     public void updateState (CloudOsState newState) {
         if (newState != state) {
