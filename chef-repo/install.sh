@@ -48,7 +48,7 @@ if [ -z ${SINGLE_COOKBOOK} ] ; then
   SINGLE_COOKBOOK="${2}"
 fi
 
-# If a databag exists in base/init.json, and it includes a hostname and parent domain,
+# If a databag exists in base.json, and it includes a hostname and parent domain,
 # then set the hostname before starting the chef run
 NUM_BASE_DATABAGS=$(find data_bags -type f -name base.json | wc -l | tr -d ' ')
 BASE_INIT_DATABAG="$(find data_bags -type f -name base.json)"

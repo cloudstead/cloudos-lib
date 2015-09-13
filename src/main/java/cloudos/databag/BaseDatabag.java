@@ -12,7 +12,7 @@ import java.io.File;
 public class BaseDatabag extends Databag {
 
     public static final String ID = "base";
-    public static final String APP = "cloudos";
+    public static final String APP = "base";
 
     public String getId() { return ID; }
     public void setId (String id) { /*noop*/ }
