@@ -14,12 +14,17 @@
 THISDIR=$(pwd)
 JSON=${THISDIR}/JSON.sh
 
-chef_binary=/usr/bin/chef-solo
-
 function die {
     echo 1>&2 "${1}"
     exit 1
 }
+
+chef_binary=/usr/bin/chef-solo
+chef_user=$(cat /etc/chef-user)
+
+if [ -z "${chef_user}" ] ; then
+  die "No chef user found in /etc/chef-user"
+fi
 
 COOKBOOK="${1:?No cookbook arg provided}"
 
@@ -64,6 +69,7 @@ if [ -f "${THISDIR}/cookbooks/${COOKBOOK}/recipes/uninstall.rb" ] ; then
     # footer
     echo "] }" >> ${UNINSTALL_SOLO}
 
+    chown ${chef_user} ${UNINSTALL_SOLO} || die "Error chaninging ownership of ${UNINSTALL_SOLO}"
     cd ${THISDIR} && "${chef_binary}" -c solo.rb -j ${UNINSTALL_SOLO} -l debug || die "Error running chef"
 
 elif [ ! -d "${THISDIR}/cookbooks/${COOKBOOK}" ] ; then
@@ -79,7 +85,8 @@ if [ ! -s ${TMP} ] ; then
   die "solo.json couldn't be updated"
 fi
 
-mv ${TMP} ${SOLO_JSON}
+mv ${TMP} ${SOLO_JSON} || die "Error moving ${TMP} -> ${SOLO_JSON}"
+chown ${chef_user} ${SOLO_JSON} || die "Error chaning ownership of ${SOLO_JSON}"
 
 rm -rf ${THISDIR}/cookbooks/${COOKBOOK}
 rm -rf ${THISDIR}/data_bags/${COOKBOOK}
