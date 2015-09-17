@@ -118,3 +118,7 @@ if [ ! -z ${SINGLE_COOKBOOK} ] ; then
 fi
 
 cd ${THISDIR} && "${chef_binary}" -c solo.rb -j ${RUN_LIST} -l debug
+
+if [[ $(service apache2 status) =~ " not running" ]] ; then
+  service apache2 restart
+fi
