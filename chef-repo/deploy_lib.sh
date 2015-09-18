@@ -91,6 +91,12 @@ if [ "${MODE}" = "tempdir" ] ; then
         # Copy cookbook files
         rsync -vac ${source}/${cookbook} ${CHEF}/cookbooks/
 
+        # Copy databags, but only if they don't already exist
+        databags="${source}/${cookbook}/../../data_bags/${cookbook}"
+        if [ -d ${databags} ] ; then
+          mkdir -p ${CHEF}/data_bags/${cookbook}
+          cp -Rn ${databags}/* ${CHEF}/data_bags/${cookbook}/
+        fi
         # If there is a manifest in the databags dir, copy that too
         manifest="${source}/../data_bags/${cookbook}/cloudos-manifest.json"
         if [ -f ${manifest} ] ; then
