@@ -99,8 +99,8 @@ if [ ! -z ${SINGLE_COOKBOOK} ] ; then
   echo "{ \"run_list\": [ " > ${SC_RUN_LIST}
 
   # add all lib recipes
-  for lib in $(cat ${RUN_LIST} | egrep -v '^[[:space:]]*//' | ${JSON} | grep "\"run_list\"," | grep ::lib | awk '{print $2}') ; do
-    echo -n "${lib}, " >> ${SC_RUN_LIST}
+  for lib in $(find $(find cookbooks -type d -name recipes) -type f -name lib.rb | xargs dirname | xargs dirname | xargs -n 1 basename) ; do
+    echo -n "\"recipe[${lib}::lib]\", " >> ${SC_RUN_LIST}
   done
 
   # add the single default recipe
