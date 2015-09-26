@@ -44,7 +44,7 @@ elif [ ! -f "${RUN_LIST}" ] ; then
   RUN_LIST=solo.json
 fi
 
-if [ -z ${SINGLE_COOKBOOK} ] ; then
+if [ -z "${SINGLE_COOKBOOK}" ] ; then
   SINGLE_COOKBOOK="${2}"
 fi
 
