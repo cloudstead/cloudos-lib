@@ -88,7 +88,7 @@ public abstract class AccountsResourceBase<A extends AccountBase, R extends Auth
             }
 
             // authenticate above should have returned 403 when the password didn't match, since
-            // when an account is suspended its kerberos password is changed to a long random string.
+            // when an account is suspended its LDAP password is changed to a long random string.
             // ...but just in case...
             if (account.isSuspended()) return ResourceUtil.forbidden();
 
