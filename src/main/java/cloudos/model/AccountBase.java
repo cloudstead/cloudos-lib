@@ -20,10 +20,11 @@ import javax.validation.constraints.Size;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.safeInt;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 
 @MappedSuperclass @Accessors(chain=true)
-public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
+public class AccountBase extends UniquelyNamedEntity implements Scrubbable, BasicAccount {
 
     @JsonIgnore public int getVerifyCodeLength () { return 16; }
 
@@ -58,12 +59,17 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
     @Getter @Setter @Embedded
     @JsonIgnore private HashedPassword hashedPassword;
 
+    @Override public String initResetToken() { return hashedPassword.initResetToken(); }
+    @Override public long getResetTokenAge() { return hashedPassword.getResetTokenAge(); }
+    @Override public AccountBase setPassword(String newPassword) { hashedPassword.setPassword(newPassword); return this; }
+    @Override public void setResetToken(String token) { hashedPassword.setResetToken(token); }
+
     @Size(max=30, message=ERR_AUTHID_LENGTH)
     @Getter @Setter private String authId = null;
 
     public boolean hasAuthId() { return !empty(authId); }
 
-    @JsonIgnore @Transient public Integer getAuthIdInt() { return authId == null ? null : Integer.valueOf(authId); }
+    @JsonIgnore @Transient public Integer getAuthIdInt() { return safeInt(authId); }
     public AccountBase setAuthIdInt(int authId) { setAuthId(String.valueOf(authId)); return this; }
 
     @Transient
@@ -88,7 +94,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
     @Getter @Setter private boolean twoFactor = false;
 
     @Getter @Setter private Long lastLogin = null;
-    public AccountBase setLastLogin () { lastLogin = System.currentTimeMillis(); return this; }
+    public void setLastLogin () { lastLogin = System.currentTimeMillis(); }
 
     @Email(message=ERR_EMAIL_INVALID)
     @HasValue(message=ERR_EMAIL_EMPTY)
@@ -98,7 +104,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable {
 
     @JsonIgnore @Size(max=VERIFY_CODE_MAXLEN) @Getter @Setter private String emailVerificationCode;
     @JsonIgnore @Getter @Setter private Long emailVerificationCodeCreatedAt;
-    @Getter @Setter private boolean emailVerified = false;
+    @Getter private boolean emailVerified = false;
 
     public String initEmailVerificationCode() {
         emailVerificationCode = randomAlphanumeric(getVerifyCodeLength());

@@ -1,17 +1,16 @@
 package cloudos.model.auth;
 
-import cloudos.model.AccountBase;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.cobbzilla.util.daemon.ZillaRuntime;
+import org.cobbzilla.wizard.model.Identifiable;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @NoArgsConstructor @AllArgsConstructor
-public abstract class AuthResponse<T extends AccountBase> {
+public abstract class AuthResponse<T extends Identifiable> {
 
     @Getter @Setter private String sessionId;
     @Getter @Setter private T account;

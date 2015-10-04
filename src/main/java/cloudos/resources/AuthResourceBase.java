@@ -1,13 +1,13 @@
 package cloudos.resources;
 
 import cloudos.dao.AccountBaseDAO;
-import cloudos.model.AccountBase;
+import cloudos.dao.BasicAccountDAO;
+import cloudos.model.BasicAccount;
 import cloudos.model.auth.ResetPasswordRequest;
 import com.qmino.miredot.annotations.ReturnType;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.mail.TemplatedMail;
 import org.cobbzilla.mail.service.TemplatedMailService;
-import org.cobbzilla.util.daemon.ZillaRuntime;
 import org.cobbzilla.util.system.CommandShell;
 import org.cobbzilla.wizard.resources.ResourceUtil;
 
@@ -24,7 +24,7 @@ import static org.cobbzilla.mail.service.TemplatedMailService.T_RESET_PASSWORD;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @Slf4j
-public abstract class AuthResourceBase<A extends AccountBase> {
+public abstract class AuthResourceBase<A extends BasicAccount> {
 
     public static final String EP_ACTIVATE = "/activate";
     public static final String EP_FORGOT_PASSWORD = "/forgot_password";
@@ -33,7 +33,7 @@ public abstract class AuthResourceBase<A extends AccountBase> {
     public static final String PARAM_KEY = "key";
     public static final String PARAM_RESETPASSWORD_URL = "resetPasswordUrl";
 
-    protected abstract AccountBaseDAO<A> getAccountBaseDAO();
+    protected abstract BasicAccountDAO<A> getAccountDAO();
     protected abstract TemplatedMailService getTemplatedMailService();
 
     protected abstract String getResetPasswordUrl(String token);
@@ -54,15 +54,15 @@ public abstract class AuthResourceBase<A extends AccountBase> {
     @ReturnType("java.lang.Void")
     public Response activate (@PathParam(PARAM_KEY) String key) {
 
-        final AccountBaseDAO<A> accountBaseDAO = getAccountBaseDAO();
-        final A found = accountBaseDAO.findByActivationKey(key);
+        final BasicAccountDAO<A> accountDAO = getAccountDAO();
+        final A found = accountDAO.findByActivationKey(key);
 
         if (found == null) return ResourceUtil.notFound(key);
 
         if (found.getEmailVerificationCode().equals(key)) {
             if (found.isEmailVerificationCodeValid(getVerificationCodeExpiration())) {
                 found.setEmailVerified(true);
-                accountBaseDAO.update(found);
+                accountDAO.update(found);
             } else {
                 return ResourceUtil.invalid("err.key.expired");
             }
@@ -91,13 +91,13 @@ public abstract class AuthResourceBase<A extends AccountBase> {
     @ReturnType("java.lang.Void")
     public Response forgotPassword (String name) {
 
-        final AccountBaseDAO<A> accountBaseDAO = getAccountBaseDAO();
+        final BasicAccountDAO<A> accountBaseDAO = getAccountDAO();
         final A found = accountBaseDAO.findByName(name);
 
         if (found == null) return Response.ok().build();
 
         // generate a reset token
-        final String token = found.getHashedPassword().initResetToken();
+        final String token = found.initResetToken();
         accountBaseDAO.update(found);
 
         final TemplatedMail mail = new TemplatedMail()
@@ -131,13 +131,13 @@ public abstract class AuthResourceBase<A extends AccountBase> {
     @ReturnType("java.lang.Void")
     public Response resetPassword (ResetPasswordRequest request) {
 
-        final AccountBaseDAO<A> accountBaseDAO = getAccountBaseDAO();
-        final A found = accountBaseDAO.findByResetPasswordToken(request.getToken());
+        final BasicAccountDAO<A> accountDAO = getAccountDAO();
+        final A found = accountDAO.findByResetPasswordToken(request.getToken());
 
         if (found == null) return Response.ok().build();
-        if (found.getHashedPassword().getResetTokenAge() > getVerificationCodeExpiration()) return ResourceUtil.invalid("err.key.expired");
+        if (found.getResetTokenAge() > getVerificationCodeExpiration()) return ResourceUtil.invalid("err.key.expired");
 
-        accountBaseDAO.setPassword(found, request.getPassword());
+        accountDAO.setPassword(found, request.getPassword());
 
         return Response.ok().build();
     }

@@ -1,8 +1,8 @@
 package cloudos.resources;
 
-import cloudos.dao.AccountBaseDAO;
 import cloudos.dao.AccountDeviceDAO;
-import cloudos.model.AccountBase;
+import cloudos.dao.BasicAccountDAO;
+import cloudos.model.BasicAccount;
 import cloudos.model.auth.AccountDevice;
 import cloudos.model.auth.AuthResponse;
 import cloudos.model.auth.AuthenticationException;
@@ -24,13 +24,13 @@ import java.util.concurrent.TimeUnit;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
 @Slf4j
-public abstract class AccountsResourceBase<A extends AccountBase, R extends AuthResponse> {
+public abstract class AccountsResourceBase<A extends BasicAccount, R extends AuthResponse> {
 
     protected void beforeSessionStart(LoginRequest login, A account) throws Exception {}
     protected abstract void afterSuccessfulLogin(LoginRequest login, A account) throws Exception;
     protected abstract R buildAuthResponse(String sessionId, A account);
 
-    @Autowired protected AccountBaseDAO<A> accountBaseDAO;
+    @Autowired protected BasicAccountDAO<A> accountBaseDAO;
     @Autowired protected HasTwoFactorAuthConfiguration twoFactorConfig;
     @Autowired protected AbstractSessionDAO<A> sessionDAO;
     @Autowired protected AccountDeviceDAO deviceDAO;
@@ -54,7 +54,7 @@ public abstract class AccountsResourceBase<A extends AccountBase, R extends Auth
         try {
             final A account;
             if (login.isSecondFactor()) {
-                account = accountBaseDAO.findByName(login.getName());
+                account = accountBaseDAO.findByName(login.getName().toLowerCase());
                 if (account == null) return ResourceUtil.notFound();
                 try {
                     getTwoFactorAuthService().verify(account.getAuthIdInt(), login.getSecondFactor());
@@ -122,16 +122,16 @@ public abstract class AccountsResourceBase<A extends AccountBase, R extends Auth
 
     private boolean deviceIsAuthorized(A account, String deviceId) {
         if (empty(deviceId)) return false;
-        final AccountDevice accountDevice = deviceDAO.findByAccountAndDevice(account.getAccountName(), deviceId);
+        final AccountDevice accountDevice = deviceDAO.findByAccountAndDevice(account.getName(), deviceId);
         return accountDevice != null && accountDevice.isAuthYoungerThan(DEVICE_TIMEOUT);
     }
 
     protected void updateDeviceAuth(A account, String deviceId, String deviceName) {
         if (empty(deviceId)) return;
-        final AccountDevice accountDevice = deviceDAO.findByAccountAndDevice(account.getAccountName(), deviceId);
+        final AccountDevice accountDevice = deviceDAO.findByAccountAndDevice(account.getName(), deviceId);
         if (accountDevice == null) {
             deviceDAO.create(new AccountDevice()
-                    .setAccount(account.getAccountName())
+                    .setAccount(account.getName())
                     .setDeviceId(deviceId)
                     .setDeviceName(deviceName)
                     .setAuthTime());

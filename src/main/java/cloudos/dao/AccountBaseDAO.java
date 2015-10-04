@@ -1,25 +1,16 @@
 package cloudos.dao;
 
-import cloudos.model.AccountBase;
-import cloudos.model.auth.AuthenticationException;
-import cloudos.model.auth.LoginRequest;
-import org.cobbzilla.wizard.dao.UniquelyNamedEntityDAO;
+import cloudos.model.BasicAccount;
+import org.cobbzilla.wizard.dao.DAO;
 
-import java.util.List;
+public interface AccountBaseDAO<A extends BasicAccount> extends DAO<A> {
 
-public abstract class AccountBaseDAO<T extends AccountBase> extends UniquelyNamedEntityDAO<T>  {
+    public A findByActivationKey(String key);
 
-    public abstract T authenticate(LoginRequest loginRequest) throws AuthenticationException;
+    public A findByName(String name);
 
-    public T findByActivationKey(String key) { return findByUniqueField("emailVerificationCode", key); }
+    public A findByResetPasswordToken(String token);
 
-    public T findByResetPasswordToken(String key) { return findByUniqueField("hashedPassword.resetToken", key); }
+    public void setPassword(A account, String password);
 
-    public void setPassword(T account, String newPassword) {
-        account.getHashedPassword().setPassword(newPassword);
-        account.getHashedPassword().setResetToken(null);
-        update(account);
-    }
-
-    public List<T> findAdmins() { return findByField("admin", true); }
 }
