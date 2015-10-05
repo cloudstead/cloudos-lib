@@ -16,6 +16,7 @@ THISDIR=$(pwd)
 JSON=${THISDIR}/JSON.sh
 
 chef_binary=/usr/bin/chef-solo
+chef_gem=/opt/chef/embedded/bin/gem
 
 function die {
   echo 1>&2 "${1}"
@@ -116,6 +117,20 @@ if [ ! -z ${SINGLE_COOKBOOK} ] ; then
 
   RUN_LIST="${SC_RUN_LIST}"
 fi
+
+# Some apps may require us to install gems for chef in order to work
+# For example, the kolab app requires the inifile gem to parse the kolab.conf file
+apps=$(cat ${RUN_LIST} | sed -e 's,//.*,,' | ${THISDIR}/JSON.sh | grep \"run_list\", | tr '[]' '  ' | awk '{print $3}' | sed -e 's/::.*//')
+for app in ${apps} ; do
+  gems_file="${THISDIR}/cookbooks/${app}/files/default/installer_gems"
+  if [ -f "${gems_file}" ] ; then
+    for gem in $(cat ${gems_file}) ; do
+      if [ $(${chef_gem} list | egrep -- "${gem} \(" | wc -l | tr -d ' ') -eq 0 ] ; then
+        ${chef_gem} install ${gem} || die "Error installing chef-gem ${gem}"
+      fi
+    done
+  fi
+done
 
 cd ${THISDIR} && "${chef_binary}" -c solo.rb -j ${RUN_LIST} -l debug
 
