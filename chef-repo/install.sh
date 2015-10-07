@@ -120,7 +120,7 @@ fi
 
 # Some apps may require us to install gems for chef in order to work
 # For example, the kolab app requires the inifile gem to parse the kolab.conf file
-apps=$(cat ${RUN_LIST} | sed -e 's,//.*,,' | ${THISDIR}/JSON.sh | grep \"run_list\", | tr '[]' '  ' | awk '{print $3}' | sed -e 's/::.*//')
+apps=$(cd ${THISDIR} && cat ${RUN_LIST} | sed -e 's,//.*,,' | ${THISDIR}/JSON.sh | grep \"run_list\", | tr '[]' '  ' | awk '{print $3}' | sed -e 's/::.*//')
 for app in ${apps} ; do
   gems_file="${THISDIR}/cookbooks/${app}/files/default/installer_gems"
   if [ -f "${gems_file}" ] ; then
