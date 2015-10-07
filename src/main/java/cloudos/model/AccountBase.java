@@ -60,7 +60,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     @JsonIgnore private HashedPassword hashedPassword;
 
     @Override public String initResetToken() { return hashedPassword.initResetToken(); }
-    @Override public long getResetTokenAge() { return hashedPassword.getResetTokenAge(); }
+    @Override @JsonIgnore public long getResetTokenAge() { return hashedPassword.getResetTokenAge(); }
     @Override public AccountBase setPassword(String newPassword) { hashedPassword.setPassword(newPassword); return this; }
     @Override public void setResetToken(String token) { hashedPassword.setResetToken(token); }
 
