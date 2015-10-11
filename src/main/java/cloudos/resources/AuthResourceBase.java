@@ -1,6 +1,5 @@
 package cloudos.resources;
 
-import cloudos.dao.AccountBaseDAO;
 import cloudos.dao.BasicAccountDAO;
 import cloudos.model.BasicAccount;
 import cloudos.model.auth.ResetPasswordRequest;
@@ -9,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.mail.TemplatedMail;
 import org.cobbzilla.mail.service.TemplatedMailService;
 import org.cobbzilla.util.system.CommandShell;
-import org.cobbzilla.wizard.resources.ResourceUtil;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -22,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.mail.service.TemplatedMailService.T_RESET_PASSWORD;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.wizard.resources.ResourceUtil.*;
 
 @Slf4j
 public abstract class AuthResourceBase<A extends BasicAccount> {
@@ -57,21 +56,21 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
         final BasicAccountDAO<A> accountDAO = getAccountDAO();
         final A found = accountDAO.findByActivationKey(key);
 
-        if (found == null) return ResourceUtil.notFound(key);
+        if (found == null) return notFound(key);
 
         if (found.getEmailVerificationCode().equals(key)) {
             if (found.isEmailVerificationCodeValid(getVerificationCodeExpiration())) {
                 found.setEmailVerified(true);
                 accountDAO.update(found);
             } else {
-                return ResourceUtil.invalid("err.key.expired");
+                return invalid("err.key.expired");
             }
         }
 
         if (!empty(getActivationSuccessRedirect())) {
             Response.temporaryRedirect(URI.create(getActivationSuccessRedirect()));
         }
-        return Response.ok().build();
+        return ok();
     }
 
     protected String getFromName(String templateName) { return System.getProperty("user.name") + "@" + CommandShell.hostname(); }
@@ -94,7 +93,7 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
         final BasicAccountDAO<A> accountBaseDAO = getAccountDAO();
         final A found = accountBaseDAO.findByName(name);
 
-        if (found == null) return Response.ok().build();
+        if (found == null) return ok();
 
         // generate a reset token
         final String token = found.initResetToken();
@@ -113,10 +112,10 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
             getTemplatedMailService().getMailSender().deliverMessage(mail);
         } catch (Exception e) {
             log.error("forgotPassword: Error sending email: "+e, e);
-            return Response.ok().build();
+            return ok();
         }
 
-        return Response.ok().build();
+        return ok();
     }
 
     /**
@@ -134,12 +133,12 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
         final BasicAccountDAO<A> accountDAO = getAccountDAO();
         final A found = accountDAO.findByResetPasswordToken(request.getToken());
 
-        if (found == null) return Response.ok().build();
-        if (found.getResetTokenAge() > getVerificationCodeExpiration()) return ResourceUtil.invalid("err.key.expired");
+        if (found == null) return ok();
+        if (found.getResetTokenAge() > getVerificationCodeExpiration()) return invalid("err.key.expired");
 
         accountDAO.setPassword(found, request.getPassword());
 
-        return Response.ok().build();
+        return ok();
     }
 
 }
