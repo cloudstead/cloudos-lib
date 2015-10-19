@@ -96,7 +96,7 @@ For commercial use, please contact cloudstead.io
         <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
-            <version>0.1.52</version>
+            <version>0.1.53</version>
         </dependency>
 
         <dependency>
@@ -197,7 +197,7 @@ For commercial use, please contact cloudstead.io
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.0.9</version>
+            <version>${logback.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
