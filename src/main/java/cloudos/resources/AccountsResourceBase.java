@@ -13,7 +13,6 @@ import com.qmino.miredot.annotations.ReturnType;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.time.TimeUtil;
 import org.cobbzilla.wizard.dao.AbstractSessionDAO;
-import org.cobbzilla.wizard.resources.ResourceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.Valid;
@@ -22,6 +21,7 @@ import javax.ws.rs.core.Response;
 import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.wizard.resources.ResourceUtil.*;
 
 @Slf4j
 public abstract class AccountsResourceBase<A extends BasicAccount, R extends AuthResponse> {
@@ -55,11 +55,11 @@ public abstract class AccountsResourceBase<A extends BasicAccount, R extends Aut
             final A account;
             if (login.isSecondFactor()) {
                 account = accountBaseDAO.findByName(login.getName().toLowerCase());
-                if (account == null) return ResourceUtil.notFound();
+                if (account == null) return notFound();
                 try {
                     getTwoFactorAuthService().verify(account.getAuthIdInt(), login.getSecondFactor());
                 } catch (Exception e) {
-                    return ResourceUtil.notFound();
+                    return notFound();
                 }
 
             } else {
@@ -69,12 +69,12 @@ public abstract class AccountsResourceBase<A extends BasicAccount, R extends Aut
                     log.warn("Error authenticating: " + e);
                     switch (e.getProblem()) {
                         case NOT_FOUND:
-                            return ResourceUtil.notFound();
+                            return notFound();
                         case INVALID:
-                            return ResourceUtil.notFound();
+                            return notFound();
                         case BOOTCONFIG_ERROR:
                         default:
-                            return Response.serverError().build();
+                            return serverError();
                     }
                 }
 
@@ -82,7 +82,7 @@ public abstract class AccountsResourceBase<A extends BasicAccount, R extends Aut
                 if (account.isTwoFactor()) {
                     // if a device was supplied, check to see that most recent auth-time for that device
                     if (!deviceIsAuthorized(account, login.getDeviceId())) {
-                        return Response.ok(buildAuthResponse(AuthResponse.TWO_FACTOR_SID, null)).build();
+                        return ok(buildAuthResponse(AuthResponse.TWO_FACTOR_SID, null));
                     }
                 }
             }
@@ -90,7 +90,7 @@ public abstract class AccountsResourceBase<A extends BasicAccount, R extends Aut
             // authenticate above should have returned 403 when the password didn't match, since
             // when an account is suspended its LDAP password is changed to a long random string.
             // ...but just in case...
-            if (account.isSuspended()) return ResourceUtil.forbidden();
+            if (account.isSuspended()) return forbidden();
 
             // update last login
             account.setLastLogin();
@@ -115,7 +115,7 @@ public abstract class AccountsResourceBase<A extends BasicAccount, R extends Aut
             log.info("login executed in "+ TimeUtil.formatDurationFrom(start));
         }
 
-        return Response.ok(authResponse).build();
+        return ok(authResponse);
     }
 
     public static final long DEVICE_TIMEOUT = TimeUnit.DAYS.toMillis(30);

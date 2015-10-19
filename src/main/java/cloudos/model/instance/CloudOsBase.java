@@ -13,7 +13,6 @@ import org.cobbzilla.util.security.CryptoSimple;
 import org.cobbzilla.util.security.ShaUtil;
 import org.cobbzilla.wizard.model.Identifiable;
 import org.cobbzilla.wizard.model.UniquelyNamedEntity;
-import org.cobbzilla.wizard.validation.SimpleViolationException;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -30,6 +29,7 @@ import static org.cobbzilla.util.io.FileUtil.*;
 import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
 import static org.cobbzilla.util.security.ShaUtil.sha256_hex;
+import static org.cobbzilla.wizard.resources.ResourceUtil.invalidEx;
 
 @MappedSuperclass
 @ToString(of={"adminUuid", "name", "state"})
@@ -44,7 +44,7 @@ public class CloudOsBase extends UniquelyNamedEntity {
     @Column(updatable=false, unique=true, length=30)
     public String getName () { return name == null ? null : name.toLowerCase(); }
     public CloudOsBase setName (String n) {
-        if (isReserved(n)) throw new SimpleViolationException("err.cloudos.name.reserved");
+        if (isReserved(n)) throw invalidEx("err.cloudos.name.reserved");
         name = (n == null) ? null : n.toLowerCase(); return this;
     }
 
