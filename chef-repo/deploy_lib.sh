@@ -115,6 +115,9 @@ if [ "${MODE}" = "tempdir" ] ; then
 
 elif [ "${MODE}" = "inline" ] ; then
   CHEF="${BASE}"
+  if ! cmp --silent ${SOLO_JSON} ${CHEF}/solo.json ; then
+    cp ${SOLO_JSON} ${CHEF}/solo.json || die "ERROR: ${SOLO_JSON} could not be copied to ${CHEF}/solo.json"
+  fi
 
 else
   die "Unrecognized mode: ${MODE}"
