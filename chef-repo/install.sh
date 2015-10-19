@@ -64,19 +64,21 @@ if [ ${NUM_BASE_DATABAGS} -eq 1 ] ; then
     die "Databag ${BASE_INIT_DATABAG} was missing 'hostname' and/or 'parent_domain'"
   fi
 
-  NEW_HOSTNAME="${TARGET_HOSTNAME}.${TARGET_DOMAIN}"
-  if [ $(hostname) != "${NEW_HOSTNAME}" ] ; then
-    hostname "${NEW_HOSTNAME}"
-    echo "${NEW_HOSTNAME}" > /etc/hostname
-  fi
-  if [ $(cat /etc/hosts | grep ${NEW_HOSTNAME} | wc -l | tr -d ' ') -eq 0 ] ; then
-    # needed for first-time run, so sudo commands do not print errors.
-    # the chef run will overwrite /etc/hosts when the app with the base.json databag is installed
-    IP=$(ifconfig | grep -A 3 eth0 | grep "inet addr:" | tr ':' ' ' | awk '{print $3}')
-    if [ -z "${IP}" ] ; then
-      die "Error determining IP address"
+  if [[ ${TARGET_HOSTNAME} != "localhost" ]] ; then
+    NEW_HOSTNAME="${TARGET_HOSTNAME}.${TARGET_DOMAIN}"
+    if [ $(hostname) != "${NEW_HOSTNAME}" ] ; then
+      hostname "${NEW_HOSTNAME}"
+      echo "${NEW_HOSTNAME}" > /etc/hostname
     fi
-    echo "${IP} ${NEW_HOSTNAME}" >> /etc/hosts
+    if [ $(cat /etc/hosts | grep ${NEW_HOSTNAME} | wc -l | tr -d ' ') -eq 0 ] ; then
+      # needed for first-time run, so sudo commands do not print errors.
+      # the chef run will overwrite /etc/hosts when the app with the base.json databag is installed
+      IP=$(ifconfig | grep -A 3 eth0 | grep "inet addr:" | tr ':' ' ' | awk '{print $3}')
+      if [ -z "${IP}" ] ; then
+        die "Error determining IP address"
+      fi
+      echo "${IP} ${NEW_HOSTNAME}" >> /etc/hosts
+    fi
   fi
 fi
 
