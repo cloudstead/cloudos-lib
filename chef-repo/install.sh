@@ -52,16 +52,16 @@ fi
 # If a databag exists in base.json, and it includes a hostname and parent domain,
 # then set the hostname before starting the chef run
 NUM_BASE_DATABAGS=$(find data_bags -type f -name base.json | wc -l | tr -d ' ')
-BASE_INIT_DATABAG="$(find data_bags -type f -name base.json)"
+BASE_DATABAG="$(find data_bags -type f -name base.json)"
 if [ ${NUM_BASE_DATABAGS} -gt 1 ] ; then
-  die "More than one base.json databag found: ${BASE_INIT_DATABAG}"
+  die "More than one base.json databag found: ${BASE_DATABAG}"
 fi
 if [ ${NUM_BASE_DATABAGS} -eq 1 ] ; then
-  TARGET_HOSTNAME=$(value_from_databag ${BASE_INIT_DATABAG} "hostname")
-  TARGET_DOMAIN=$(value_from_databag ${BASE_INIT_DATABAG} "parent_domain")
+  TARGET_HOSTNAME=$(value_from_databag ${BASE_DATABAG} "hostname")
+  TARGET_DOMAIN=$(value_from_databag ${BASE_DATABAG} "parent_domain")
   # Sanity check
   if [[ -z ${TARGET_HOSTNAME} || -z ${TARGET_DOMAIN} ]] ; then
-    die "Databag ${BASE_INIT_DATABAG} was missing 'hostname' and/or 'parent_domain'"
+    die "Databag ${BASE_DATABAG} was missing 'hostname' and/or 'parent_domain'"
   fi
 
   if [[ ${TARGET_HOSTNAME} != "localhost" ]] ; then
@@ -70,13 +70,18 @@ if [ ${NUM_BASE_DATABAGS} -eq 1 ] ; then
       hostname "${NEW_HOSTNAME}"
       echo "${NEW_HOSTNAME}" > /etc/hostname
     fi
-    if [ $(cat /etc/hosts | grep ${NEW_HOSTNAME} | wc -l | tr -d ' ') -eq 0 ] ; then
+    if [ $(cat /etc/hosts | egrep "^${IP}[[:space:]]+${NEW_HOSTNAME}" | wc -l | tr -d ' ') -eq 0 ] ; then
       # needed for first-time run, so sudo commands do not print errors.
-      # the chef run will overwrite /etc/hosts when the app with the base.json databag is installed
-      IP=$(ifconfig | grep -A 3 eth0 | grep "inet addr:" | tr ':' ' ' | awk '{print $3}')
+      # the chef run will overwrite /etc/hosts with the info from the base.json databag
+      IP=$(cat ${BASE_DATABAG} | ${JSON} | grep '\["'public_ip'"\]' | head -n 1 | tr -d '"[]' | awk '{print $2}' | tr -d ' ')
       if [ -z "${IP}" ] ; then
-        die "Error determining IP address"
+        IP=$(ifconfig | grep -A 3 eth0 | grep "inet addr:" | tr ':' ' ' | awk '{print $3}')
+        if [ -z "${IP}" ] ; then
+          die "Error determining IP address"
+        fi
       fi
+      echo "" >> /etc/hosts
+      echo "# Added by chef install script: $0" >> /etc/hosts
       echo "${IP} ${NEW_HOSTNAME}" >> /etc/hosts
     fi
   fi
