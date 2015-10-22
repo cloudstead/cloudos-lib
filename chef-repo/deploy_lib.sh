@@ -7,8 +7,8 @@
 # Arguments:
 #   target:           the user@host to deploy to
 #   init-files:       directory containing init files (dirs should be data_bags, data_files and certs)
-#   required:         list of required files in the init-files dir (use quotes). paths are relative to init-files dir.
-#   cookbook-sources: list of directories that contain cookbooks (use quotes)
+#   required:         space-separated list of required files in the init-files dir (use quotes). paths are relative to init-files dir.
+#   cookbook-sources: space-separated list of directories that contain cookbooks (use quotes)
 #   solo-json-file:   run list to use for chef solo run
 #   mode:             default is 'tempdir' which will create a new temp dir with init files added. 'inline' will assume the current directory is the chef repo, and cookbook-sources is ignored.
 #
@@ -17,10 +17,6 @@ function die {
   echo 1>&2 "${1}"
   exit 1
 }
-
-if [ ! -f $(pwd)/solo.json ] ; then
-  die "ERROR: Current directory does not contain solo.json, required for deployment: $(pwd)"
-fi
 
 LIB_BASE=$(cd $(dirname $0) && pwd)
 BASE=$(pwd)
@@ -31,6 +27,10 @@ REQUIRED="${3:?no required specified}"
 COOKBOOK_SOURCES="${4:?no cookbook sources specified}"
 SOLO_JSON="${5:-${BASE}/solo.json}"
 MODE="${6:-tempdir}"
+
+if [ ! -f ${SOLO_JSON} ] ; then
+  die "ERROR: ${SOLO_JSON} does not exist, required for deployment"
+fi
 
 # The host key might change when we instantiate a new VM, so
 # we remove (-R) the old host key from known_hosts
