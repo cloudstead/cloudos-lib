@@ -70,16 +70,16 @@ if [ ${NUM_BASE_DATABAGS} -eq 1 ] ; then
       hostname "${NEW_HOSTNAME}"
       echo "${NEW_HOSTNAME}" > /etc/hostname
     fi
+    IP=$(cat ${BASE_DATABAG} | ${JSON} | grep '\["'public_ip'"\]' | head -n 1 | tr -d '"[]' | awk '{print $2}' | tr -d ' ')
+    if [ -z "${IP}" ] ; then
+      IP=$(ifconfig | grep -A 3 eth0 | grep "inet addr:" | tr ':' ' ' | awk '{print $3}')
+      if [ -z "${IP}" ] ; then
+        die "Error determining IP address"
+      fi
+    fi
     if [ $(cat /etc/hosts | egrep "^${IP}[[:space:]]+${NEW_HOSTNAME}" | wc -l | tr -d ' ') -eq 0 ] ; then
       # needed for first-time run, so sudo commands do not print errors.
       # the chef run will overwrite /etc/hosts with the info from the base.json databag
-      IP=$(cat ${BASE_DATABAG} | ${JSON} | grep '\["'public_ip'"\]' | head -n 1 | tr -d '"[]' | awk '{print $2}' | tr -d ' ')
-      if [ -z "${IP}" ] ; then
-        IP=$(ifconfig | grep -A 3 eth0 | grep "inet addr:" | tr ':' ' ' | awk '{print $3}')
-        if [ -z "${IP}" ] ; then
-          die "Error determining IP address"
-        fi
-      fi
       echo "" >> /etc/hosts
       echo "# Added by chef install script: $0" >> /etc/hosts
       echo "${IP} ${NEW_HOSTNAME}" >> /etc/hosts
