@@ -5,7 +5,7 @@
 # Run this from the chef-repo directory containing the solo.json that will drive the chef run
 #
 # Arguments:
-#   target:           the user@host to deploy to
+#   target:           where to deploy, can be user@host or docker:tag
 #   init-files:       directory containing init files (dirs should be data_bags, data_files and certs)
 #   required:         space-separated list of required files in the init-files dir (use quotes). paths are relative to init-files dir.
 #   cookbook-sources: space-separated list of directories that contain cookbooks (use quotes)
@@ -20,8 +20,7 @@ function die {
 
 LIB_BASE=$(cd $(dirname $0) && pwd)
 BASE=$(pwd)
-
-host="${1:?no user@host specified}"
+DEPLOY_TARGET="${1:?no deploy target specified. Use user@host or docker:tag}"
 INIT_FILES="${2:?no init-files dir specified}"
 REQUIRED="${3:?no required specified}"
 COOKBOOK_SOURCES="${4:?no cookbook sources specified}"
@@ -32,9 +31,14 @@ if [ ! -f ${SOLO_JSON} ] ; then
   die "ERROR: ${SOLO_JSON} does not exist, required for deployment"
 fi
 
-# The host key might change when we instantiate a new VM, so
-# we remove (-R) the old host key from known_hosts
-ssh-keygen -R "${host#*@}" 2> /dev/null
+DOCKER_TAG=""
+if [[ "${DEPLOY_TARGET}" =~ "docker:" ]] ; then
+  DOCKER_TAG="${DEPLOY_TARGET#*:}"
+else
+  # The host key might change when we instantiate a new VM, so
+  # we remove (-R) the old host key from known_hosts
+  ssh-keygen -R "${DEPLOY_TARGET#*@}" 2> /dev/null
+fi
 
 if [ -z "${INIT_FILES}" ] ; then
   die "ERROR: INIT_FILES is not defined in the environment."
@@ -58,7 +62,7 @@ if [ "${MODE}" = "tempdir" ] ; then
   CHEF="${TEMP}"
 
   # bootstrap files and run list...
-  for f in JSON.sh install.sh uninstall.sh solo.rb ; do
+  for f in JSON.sh install.sh uninstall.sh solo.rb Dockerfile ; do
     cp ${LIB_BASE}/${f} ${CHEF}/ || die "ERROR: ${LIB_BASE}/${f} could not be copied to ${CHEF}"
   done
   for f in ${BASE}/solo*.json  ; do
@@ -143,32 +147,67 @@ fi
 # - delete ~/chef dir
 # - unpack fresh chef-repo
 # - run chef-solo
-cd ${CHEF} &&  tar cj . | ssh ${SSH_OPTS} -o 'StrictHostKeyChecking no' "$host" '
-start=$(date) &&
-t=$(mktemp /tmp/chef-user.XXXXXXX) &&
-  echo $(whoami) > ${t} &&
-  sudo cp ${t} /etc/chef-user &&
-  rm -f ${t} &&
-  sudo rm -rf ~/chef &&
-  mkdir ~/chef &&
-  cd ~/chef &&
-  tar xj &&
-  for dir in data_bags data_files certs ; do if [ -d ${dir} ] ; then chmod -R 700 ${dir} || exit 1 ; fi ; done &&
-  sudo bash install.sh 2>&1 | tee chef.out &&
-  echo "chef-run started at ${start}" | tee -a chef.out &&
-  echo "chef-run ended   at $(date)"  | tee -a chef.out ;
-  sudo rm -rf /tmp/*'
-rval=$?
+if [ -z "${DOCKER_TAG}" ] ; then
+  # Deploy target is user@host -- use SSH to deploy
+  cd ${CHEF} && tar cj . | ssh ${SSH_OPTS} -o 'StrictHostKeyChecking no' "${DEPLOY_TARGET}" '
+  start=$(date) &&
+  t=$(mktemp /tmp/chef-user.XXXXXXX) &&
+    echo $(whoami) > ${t} &&
+    sudo cp ${t} /etc/chef-user &&
+    rm -f ${t} &&
+    sudo rm -rf ~/chef &&
+    mkdir ~/chef &&
+    cd ~/chef &&
+    tar xj &&
+    for dir in data_bags data_files certs ; do if [ -d ${dir} ] ; then chmod -R 700 ${dir} || exit 1 ; fi ; done &&
+    sudo bash install.sh 2>&1 | tee chef.out &&
+    echo "chef-run started at ${start}" | tee -a chef.out &&
+    echo "chef-run ended   at $(date)"  | tee -a chef.out ;
+    sudo rm -rf /tmp/*'
+  rval=$?
 
-cd ${BASE}
-if [ "${MODE}" = "tempdir" ] ; then
-  rm -rf ${TEMP}
-# if you want to keep chef run dirs, comment out the line above, and uncomment the line below
-# echo "chef run is in ${CHEF}"
+  cd ${BASE}
+  if [ "${MODE}" = "tempdir" ] ; then
+    rm -rf ${TEMP}
+  # if you want to keep chef run dirs, comment out the line above, and uncomment the line below
+  # echo "chef run is in ${CHEF}"
+  else
+   echo "chef run is in ${CHEF}"
+  fi
+
+  if [ ${rval} -ne 0 ] ; then
+      die "Error running chef: exit code ${rval}"
+  fi
+
 else
- echo "chef run is in ${CHEF}"
-fi
+  # Deploy target is docker:tag
+  if [ -z "${SSH_KEY}" ] ; then
+    if [ -f "${HOME}/.ssh/id_dsa" ] ; then
+      SSH_KEY="${HOME}/.ssh/id_dsa"
+    elif [ -f "${HOME}/.ssh/id_rsa" ] ; then
+      SSH_KEY="${HOME}/.ssh/id_rsa"
+    else
+      die "SSH_KEY not defined in environment, and ${HOME}/.ssh did not contain id_dsa nor id_rsa"
+    fi
+  fi
+  if [ ! -f "${SSH_KEY}.pub" ] ; then
+    die "SSH public key file does not exist: ${SSH_KEY}.pub"
+  fi
 
-if [ ${rval} -ne 0 ] ; then
-    die "Error running chef: exit code ${rval}"
+  docker_build_log=$(mktemp /tmp/docker_build.XXXXXXX.log)
+  docker_container_id=$(mktemp /tmp/docker_run.XXXXXXX.log)
+
+  cd ${CHEF} && \
+    cp ${SSH_KEY}.pub ./docker_key.pub && \
+    image_id=$(docker build -t ${DOCKER_TAG} . | tee ${docker_build_log} | grep "Successfully built" | awk '{print $3}') && \
+    if [ -z "${image_id}" ] ; then
+      die "Error building docker image (pwd=$(pwd)): $(cat ${docker_build_log})"
+    fi && \
+    docker run -d ${image_id} > ${docker_container_id} && \
+    if [ -z "$(cat ${docker_container_id})" ] ; then
+      die "Error starting docker container"
+    fi
+    echo "Docker container '${DOCKER_TAG}' successfully launched: $(docker inspect -f "{{ .NetworkSettings.IPAddress }}" $(cat ${docker_container_id}))" \
+
+#  rm -f ${docker_build_log} ${docker_container_id}
 fi

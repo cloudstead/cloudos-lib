@@ -92,11 +92,13 @@ if ! test -f "${chef_binary}"; then
 
     export DEBIAN_FRONTEND=noninteractive
     # Upgrade headlessly (this is only safe-ish on vanilla systems)
-    aptitude update && apt-get -o Dpkg::Options::="--force-confnew" --force-yes -fuy dist-upgrade &&
+    apt-get update && apt-get -o Dpkg::Options::="--force-confnew" --force-yes -fuy dist-upgrade &&
 
     # Install Chef
-    cd /tmp && curl -O ${CHEF_PACKAGE_URL} &&
-    if [ $(dpkg -l | grep chef | grep -v chef-server | wc -l) -eq 0 ] ; then sudo dpkg -i ${CHEF_PACKAGE} ;  fi
+    if [ $(dpkg -l | grep chef | grep -v chef-server | wc -l) -eq 0 ] ; then
+      cd /tmp && curl -O ${CHEF_PACKAGE_URL} && sudo dpkg -i ${CHEF_PACKAGE} || die "Error installing Chef package ${CHEF_PACKAGE}"
+    fi
+
 fi &&
 
 # If we are only being asked to install a single cookbook, create a custom run-list file just for that
