@@ -338,15 +338,9 @@ case \${op} in
     ;;
   destroy)
     docker rm -f ${docker_container_id}
-    container_ok=\$?
     docker rmi ${image_id}
-    image_ok=\$?
-    if [[ \${container_ok} -eq 0 && \${image_ok} -eq 0 ]] ; then
-      rm -rf ${CHEF} ${CONTROL}
-      exit \$?
-    else
-      exit 1
-    fi
+    rm -rf ${CHEF} ${CONTROL}
+    exit 0
     ;;
   *)
     echo "Unsupported operation \${op}, use: \${legal_commands}"
