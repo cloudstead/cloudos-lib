@@ -26,7 +26,6 @@ public class BaseDatabag extends Databag {
     @Getter @Setter private String parent_domain;
     @Getter @Setter private String ssl_cert_name = HttpUtil.DEFAULT_CERT_NAME;
     @Getter @Setter private boolean disable_dns = false;
-    @Getter @Setter private boolean disable_docker = false;
 
     @JsonIgnore public String getFqdn () { return hostname + "." + parent_domain; }
 

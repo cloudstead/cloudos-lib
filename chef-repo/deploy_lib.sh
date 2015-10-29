@@ -5,7 +5,10 @@
 # Run this from the chef-repo directory containing the solo.json that will drive the chef run
 #
 # Arguments:
-#   target:           where to deploy, can be user@host or docker:tag
+#   target:           where to deploy, can be:
+#                        user@host            -- for ssh deploys
+#                        docker:tag           -- create a new docker container
+#                        docker:container-id  -- re-deploy to an existing container
 #   init-files:       directory containing init files (dirs should be data_bags, data_files and certs)
 #   required:         space-separated list of required files in the init-files dir (use quotes). paths are relative to init-files dir.
 #   cookbook-sources: space-separated list of directories that contain cookbooks (use quotes)
@@ -16,6 +19,51 @@
 function die {
   echo 1>&2 "${1}"
   exit 1
+}
+
+function value_from_databag {
+  local databag=$1
+  local field=$2
+  local search=$(echo "\[\"$(echo "${field}" | sed -e 's_\._","_g')\"\]")
+  local value=$(cat ${databag} | ${JSON} | grep "${search}" | head -n 1 | tr -d '"[]' | awk '{print $2}' | tr -d ' ')
+  if [ -z "${value}" ] ; then
+    die "Field ${field} not found in databag ${databag}"
+  fi
+  echo "${value}"
+}
+
+DEPLOY_RESULT=""
+
+function deploy_ssh {
+  local chef="${1}"
+  local ssh_opts="${2}"
+  local deploy_target="${3}"
+  cd ${chef} && tar cj . | ssh ${ssh_opts} -o 'StrictHostKeyChecking no' "${deploy_target}" '
+  start=$(date) &&
+  t=$(mktemp /tmp/chef-user.XXXXXXX) &&
+    echo $(whoami) > ${t} &&
+    sudo cp ${t} /etc/chef-user &&
+    rm -f ${t} &&
+    sudo rm -rf ~/chef &&
+    mkdir ~/chef &&
+    cd ~/chef &&
+    tar xj &&
+    for dir in data_bags data_files certs ; do if [ -d ${dir} ] ; then chmod -R 700 ${dir} || exit 1 ; fi ; done &&
+    sudo bash install.sh 2>&1 | tee chef.out &&
+    echo "chef-run started at ${start}" | tee -a chef.out &&
+    echo "chef-run ended   at $(date)"  | tee -a chef.out ;
+    sudo rm -rf /tmp/*'
+  local rval=$?
+
+  cd ${BASE}
+  if [ "${MODE}" = "tempdir" ] ; then
+    rm -rf ${TEMP}
+  # if you want to keep chef run dirs, comment out the line above, and uncomment the line below
+  # echo "chef run is in ${CHEF}"
+  else
+    echo "chef run is in ${CHEF}"
+  fi
+  DEPLOY_RESULT=${rval}
 }
 
 LIB_BASE=$(cd $(dirname $0) && pwd)
@@ -149,38 +197,13 @@ fi
 # - run chef-solo
 if [ -z "${DOCKER_TAG}" ] ; then
   # Deploy target is user@host -- use SSH to deploy
-  cd ${CHEF} && tar cj . | ssh ${SSH_OPTS} -o 'StrictHostKeyChecking no' "${DEPLOY_TARGET}" '
-  start=$(date) &&
-  t=$(mktemp /tmp/chef-user.XXXXXXX) &&
-    echo $(whoami) > ${t} &&
-    sudo cp ${t} /etc/chef-user &&
-    rm -f ${t} &&
-    sudo rm -rf ~/chef &&
-    mkdir ~/chef &&
-    cd ~/chef &&
-    tar xj &&
-    for dir in data_bags data_files certs ; do if [ -d ${dir} ] ; then chmod -R 700 ${dir} || exit 1 ; fi ; done &&
-    sudo bash install.sh 2>&1 | tee chef.out &&
-    echo "chef-run started at ${start}" | tee -a chef.out &&
-    echo "chef-run ended   at $(date)"  | tee -a chef.out ;
-    sudo rm -rf /tmp/*'
-  rval=$?
-
-  cd ${BASE}
-  if [ "${MODE}" = "tempdir" ] ; then
-    rm -rf ${TEMP}
-  # if you want to keep chef run dirs, comment out the line above, and uncomment the line below
-  # echo "chef run is in ${CHEF}"
-  else
-   echo "chef run is in ${CHEF}"
-  fi
-
-  if [ ${rval} -ne 0 ] ; then
-      die "Error running chef: exit code ${rval}"
+  deploy_ssh "${CHEF}" "${SSH_OPTS}" "${DEPLOY_TARGET}"
+  if [ ${DEPLOY_RESULT} -ne 0 ] ; then
+    die "Error running chef: exit code ${DEPLOY_RESULT}"
   fi
 
 else
-  # Deploy target is docker:tag
+  # Deploy target is docker:tag or docker:container_id
   if [ -z "${SSH_KEY}" ] ; then
     if [ -f "${HOME}/.ssh/id_dsa" ] ; then
       SSH_KEY="${HOME}/.ssh/id_dsa"
@@ -194,20 +217,144 @@ else
     die "SSH public key file does not exist: ${SSH_KEY}.pub"
   fi
 
-  docker_build_log=$(mktemp /tmp/docker_build.XXXXXXX.log)
-  docker_container_id=$(mktemp /tmp/docker_run.XXXXXXX.log)
+  # Construct docker hostname
+  BASE_DATABAG="${CHEF}/data_bags/base/base.json"
+  base_host=$(value_from_databag ${BASE_DATABAG} "hostname")
+  base_domain=$(value_from_databag ${BASE_DATABAG} "parent_domain")
+  if [[ -z "${base_host}" || -z "${base_domain}" ]] ; then
+    die "Base databag was missing hostname and/or parent_domain: ${BASE_DATABAG}"
+  fi
+  DOCKER_HOSTNAME="${base_host}.${base_domain}"
 
-  cd ${CHEF} && \
-    cp ${SSH_KEY}.pub ./docker_key.pub && \
-    image_id=$(docker build -t ${DOCKER_TAG} . | tee ${docker_build_log} | grep "Successfully built" | awk '{print $3}') && \
-    if [ -z "${image_id}" ] ; then
-      die "Error building docker image (pwd=$(pwd)): $(cat ${docker_build_log})"
-    fi && \
-    docker run -d ${image_id} > ${docker_container_id} && \
-    if [ -z "$(cat ${docker_container_id})" ] ; then
+  # Check if deploy target is docker:container_id
+  if [ $(docker ps -q | awk '{print $1}' | grep ${DOCKER_TAG} | wc -l) -eq 1 ] ; then
+    IP="$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" ${DOCKER_TAG})"
+    if [ -z "${IP}" ] ; then
+      die "No IP address found for existing docker container ${DOCKER_TAG}"
+    fi
+    DEPLOY_TARGET="ubuntu@${IP}"
+    deploy_ssh "${CHEF}" "${SSH_OPTS}" "${DEPLOY_TARGET}"
+    if [ ${DEPLOY_RESULT} -ne 0 ] ; then
+      die "Error running chef: exit code ${DEPLOY_RESULT}"
+    fi
+
+  else
+    docker_build_log=$(mktemp /tmp/docker_build.XXXXXXX.log)
+    docker_container_id_file=$(mktemp /tmp/docker_run.XXXXXXX.log)
+
+    # Any ports to expose?
+    expose=""
+    if [ ! -z "${DOCKER_EXPOSE_PORTS}" ] ; then
+      for port in ${DOCKER_EXPOSE_PORTS} ; do
+        expose="${expose} -p ${port}"
+      done
+    fi
+
+    cd ${CHEF} && \
+      cp ${SSH_KEY}.pub ./docker_key.pub && \
+      echo "Building docker image from $(pwd) with tag ${DOCKER_TAG}, logging to ${docker_build_log}" && \
+      image_id=$(docker build -t ${DOCKER_TAG} . | tee ${docker_build_log} | grep "Successfully built" | awk '{print $3}') && \
+      if [ -z "${image_id}" ] ; then
+        die "Error building docker image (pwd=$(pwd)): $(cat ${docker_build_log})"
+      fi && \
+      echo "Starting docker container from image ${image_id} with tag ${DOCKER_TAG}" && \
+      docker run ${expose} \
+        --hostname ${DOCKER_HOSTNAME} \
+        --name ${DOCKER_TAG#*:} \
+        --detach \
+        ${image_id} > ${docker_container_id_file}
+    rval=$?
+    docker_container_id="$(cat ${docker_container_id_file})"
+    if [[ ${rval} -ne 0 || -z "${docker_container_id}" ]] ; then
+      if [ ! -z "${docker_container_id}" ] ; then docker rm -f ${docker_container_id} ; fi
+      docker rmi ${image_id}
       die "Error starting docker container"
     fi
-    echo "Docker container '${DOCKER_TAG}' successfully launched: $(docker inspect -f "{{ .NetworkSettings.IPAddress }}" $(cat ${docker_container_id}))" \
 
-#  rm -f ${docker_build_log} ${docker_container_id}
+    IP="$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" ${docker_container_id})"
+    if [ -z "${IP}" ] ; then
+      docker rm -f ${docker_container_id}
+      docker rmi ${image_id}
+      die "No IP address found for newly-created docker container ${docker_container_id}"
+    fi
+
+    # Wait for ssh to come up
+    start=$(date +%s)
+    while ! nc -z ${IP} 22 ; do
+      if [ $(expr $(date +%s) - ${start}) -gt 30 ] ; then
+        docker rm -f ${docker_container_id}
+        docker rmi ${image_id}
+        die "Timed out waiting for sshd to come up on container ${docker_container_id}"
+      fi
+      sleep 1s
+    done
+
+    # Run chef
+    echo "Docker container '${DOCKER_TAG}' successfully started: ${docker_container_id}"
+    DEPLOY_TARGET="ubuntu@${IP}"
+
+    # Create docker control script
+    if [ -z "${DOCKER_SSH_DIR}" ] ; then
+      DOCKER_SSH_DIR="/usr/local/bin/docker"
+    fi
+    mkdir -p ${DOCKER_SSH_DIR}
+    CONTROL="${DOCKER_SSH_DIR}/${DOCKER_TAG#*:}.sh"
+    cat > ${CONTROL} <<EOF
+#!/bin/bash
+op=\${1:?no operation, use: ssh json destroy}
+case \${op} in
+  ssh)
+    ssh -i ${SSH_KEY} ${DEPLOY_TARGET}
+    exit \$?
+    ;;
+  ip)
+    echo "${IP}" && exit 0
+    ;;
+  ports)
+    echo "\$(docker port ${docker_container_id})" && exit 0
+    ;;
+  json)
+    echo "{
+    \"hostname\": \"${DOCKER_HOSTNAME}\",
+    \"ports\": \"\$(docker port ${docker_container_id})\",
+    \"chef_dir\": \"${CHEF}\",
+    \"image_id\": \"${image_id}\",
+    \"container_id\": \"${docker_container_id}\",
+    \"tag\": \"${DOCKER_TAG}\",
+    \"ssh_key\": \"${SSH_KEY}\",
+    \"ip\": \"${IP}\",
+    \"ssh_cmd\": \"ssh -i ${SSH_KEY} ${DEPLOY_TARGET}\",
+}"
+    exit 0
+    ;;
+  destroy)
+    docker rm -f ${docker_container_id}
+    container_ok=\$?
+    docker rmi ${image_id}
+    image_ok=\$?
+    if [[ \${container_ok} -eq 0 && \${image_ok} -eq 0 ]] ; then
+      rm -rf ${CHEF} ${CONTROL}
+      exit \$?
+    else
+      exit 1
+    fi
+    ;;
+  *)
+    echo "Unsupported operation \${op}, use: ssh json destroy"
+    exit 1
+    ;;
+esac
+EOF
+    chown $(whoami) ${DOCKER_SSH_DIR}/${DOCKER_TAG#*:}.sh
+    chmod 755 ${DOCKER_SSH_DIR}/${DOCKER_TAG#*:}.sh
+
+    deploy_ssh "${CHEF}" "${SSH_OPTS}" "${DEPLOY_TARGET}"
+    if [ ${DEPLOY_RESULT} -ne 0 ] ; then
+#      docker rm -f ${docker_container_id}
+#      docker rmi ${image_id}
+      die "Error running chef: exit code ${DEPLOY_RESULT}"
+    fi
+
+    rm -f ${docker_build_log} ${docker_container_id_file}
+  fi
 fi

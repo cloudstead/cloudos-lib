@@ -16,10 +16,6 @@ MAINTAINER Jonathan Cobb <jonathan@cloudstead.io>
 # Use baseimage-docker's init system.
 CMD ["/sbin/my_init"]
 
-# Install our SSH key
-COPY docker_key.pub /tmp/docker_key.pub
-RUN cat /tmp/docker_key.pub >> /root/.ssh/authorized_keys && rm -f /tmp/docker_key.pub
-
 # Update the system
 RUN apt-get update
 
@@ -30,24 +26,27 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN rm -f /etc/service/sshd/down
 
 # Add ubuntu user with chef powers
-RUN useradd -m ubuntu && \
+RUN useradd --home /home/ubuntu --create-home --shell /bin/bash --password '_login_with_password_disabled_' ubuntu && \
   echo "" >> /etc/sudoers && \
   echo "ubuntu  ALL = (ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Create "chef-user" file, accessible only to root
-RUN echo "ubuntu" > /etc/chef-user && chown root.root /etc/chef-user && chmod 600 /etc/chef-user
+# Install ubuntu SSH key
+COPY docker_key.pub /tmp/docker_key.pub
+RUN mkdir /home/ubuntu/.ssh && \
+  chmod 700 /home/ubuntu/.ssh && \
+  cat /tmp/docker_key.pub >> /home/ubuntu/.ssh/authorized_keys && \
+  chmod 600 /home/ubuntu/.ssh/authorized_keys && \
+  chown -R ubuntu.ubuntu /home/ubuntu/.ssh && \
+  rm -f /tmp/docker_key.pub
+
+# Create docker marker file, indicates we are in a docker container
+RUN echo "true" > /etc/is-docker && chown root.root /etc/is-docker && chmod 644 /etc/is-docker
 
 # Copy chef-repo, set perms
 COPY . /home/ubuntu/chef/
-RUN chown -R ubuntu /home/ubuntu && \
-  for dir in data_bags data_files certs ; do \
-    if [ -d ${dir} ] ; then chmod -R 700 ${dir} || exit 1 ; fi \
-  done
+RUN for dir in data_bags data_files certs ; do \
+      if [ -d ${dir} ] ; then chmod -R 700 ${dir} || exit 1 ; fi \
+    done
+RUN chown -R ubuntu /home/ubuntu/chef
 
-# Run chef
-RUN cd /home/ubuntu/chef && \
- start=$(date) && \
- sudo bash install.sh 2>&1 | tee chef.out && \
- echo "chef-run started at ${start}" | tee -a chef.out && \
- echo "chef-run ended   at $(date)"  | tee -a chef.out || exit 1 ; sudo rm -rf /tmp/*
-
+# Ready for chef run
