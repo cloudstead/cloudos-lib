@@ -299,9 +299,11 @@ else
     fi
     mkdir -p ${DOCKER_SSH_DIR}
     CONTROL="${DOCKER_SSH_DIR}/${DOCKER_TAG#*:}.sh"
+    ctime=$(date +%s)
     cat > ${CONTROL} <<EOF
 #!/bin/bash
-op=\${1:?no operation, use: ssh json destroy}
+legal_commands="ssh ip ports cid ctime json destroy"
+op=\${1:?no operation, use: \${legal_commands}}
 case \${op} in
   ssh)
     ssh -i ${SSH_KEY} ${DEPLOY_TARGET}
@@ -313,8 +315,15 @@ case \${op} in
   ports)
     echo "\$(docker port ${docker_container_id})" && exit 0
     ;;
+  cid)
+    echo "${docker_container_id}" && exit 0
+    ;;
+  ctime)
+    echo "${ctime}" && exit 0
+    ;;
   json)
     echo "{
+    \"ctime\": \"${ctime}\",
     \"hostname\": \"${DOCKER_HOSTNAME}\",
     \"ports\": \"\$(docker port ${docker_container_id})\",
     \"chef_dir\": \"${CHEF}\",
@@ -340,7 +349,7 @@ case \${op} in
     fi
     ;;
   *)
-    echo "Unsupported operation \${op}, use: ssh json destroy"
+    echo "Unsupported operation \${op}, use: \${legal_commands}"
     exit 1
     ;;
 esac
