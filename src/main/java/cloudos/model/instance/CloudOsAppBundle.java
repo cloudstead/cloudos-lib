@@ -44,8 +44,8 @@ public enum CloudOsAppBundle {
     private static class Constants {
 
         public static final String[] REQUIRED_APPS = {
-                "base", "auth", "apache", "postgresql", "mysql",
-                "java", "git", "email", "kestrel", "cloudos"
+                "base", "apache", "postgresql", "mysql",
+                "java", "git", "kolab", "kestrel", "cloudos"
         };
 
         public static final String[] BASIC_APPS = {
