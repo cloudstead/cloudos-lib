@@ -36,9 +36,13 @@ DEPLOY_RESULT=""
 
 function deploy_ssh {
   local chef="${1}"
-  local ssh_opts="${2}"
+  local ssh_opts="${2} -o 'StrictHostKeyChecking no'"
   local deploy_target="${3}"
-  cd ${chef} && tar cj . | ssh ${ssh_opts} -o 'StrictHostKeyChecking no' "${deploy_target}" '
+
+  cd ${chef} && \
+  ssh ${ssh_opts} "${deploy_target}" 'rm -rf ~/chef && mkdir -p ~/chef' && \
+  rsync -avzc -e "ssh ${ssh_opts}" ./* ${deploy_target}:chef/ && \
+  ssh ${ssh_opts} "${deploy_target}" '
   start=$(date) &&
   t=$(mktemp /tmp/chef-user.XXXXXXX) &&
     echo $(whoami) > ${t} &&
