@@ -13,8 +13,11 @@ public class LoginRequest {
 
     @Setter private String name;
     public String getName () { return name == null ? null : name.toLowerCase(); }
+    public boolean hasName () { return !empty(name); }
 
     @Getter @Setter @JsonProperty private String password;
+    public boolean hasPassword () { return !empty(password); }
+
     @Getter @Setter @JsonProperty private String secondFactor;
     @JsonIgnore public boolean isSecondFactor () { return !empty(secondFactor); }
 
