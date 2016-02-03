@@ -24,6 +24,7 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.daemon.ZillaRuntime.safeInt;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
+import static org.cobbzilla.wizard.resources.ResourceUtil.invalidEx;
 
 @MappedSuperclass @Accessors(chain=true)
 public class AccountBase extends UniquelyNamedEntity implements Scrubbable, BasicAccount {
@@ -112,6 +113,11 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     @Column(unique=true, nullable=false, length=EMAIL_MAXLEN)
     @Getter private String email;
 
+    @HasValue(message=ERR_EMAIL_EMPTY)
+    @Size(max=EMAIL_MAXLEN, message=ERR_EMAIL_LENGTH)
+    @Column(unique=true, nullable=false, length=EMAIL_MAXLEN)
+    @Getter private String canonicalEmail;
+
     @JsonIgnore @Size(max=VERIFY_CODE_MAXLEN) @Getter @Setter private String emailVerificationCode;
     @JsonIgnore @Getter @Setter private Long emailVerificationCodeCreatedAt;
     @Getter private boolean emailVerified = false;
@@ -132,11 +138,21 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
         return emailVerificationCodeCreatedAt != null && emailVerificationCodeCreatedAt > (System.currentTimeMillis() - expiration);
     }
 
+    public static String canonicalizeEmail (String email) {
+        if (empty(email)) throw invalidEx(ERR_EMAIL_EMPTY);
+        int atPos = email.indexOf('@');
+        if (atPos == -1 || atPos == email.length()-1) throw invalidEx(ERR_EMAIL_INVALID);
+        String addr = email.substring(0, atPos);
+        String domain = email.substring(atPos+1);
+        return addr.replaceAll("\\W", "_").toLowerCase() + "@" + domain;
+    }
+
     public AccountBase setEmail (String email) {
         if (this.email == null || !this.email.equals(email)) {
             emailVerified = false;
             emailVerificationCode = null;
             emailVerificationCodeCreatedAt = null;
+            canonicalEmail = canonicalizeEmail(email);
             this.email = email;
         }
         return this;
