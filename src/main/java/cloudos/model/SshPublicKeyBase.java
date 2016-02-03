@@ -16,8 +16,8 @@ public class SshPublicKeyBase extends UniquelyNamedEntity {
 
     public static final int KEY_MAXLEN = 8192;
 
-    @HasValue(message="err.sshkey.privateKey.required")
-    @Size(max=KEY_MAXLEN, message="err.sshkey.privateKey.length")
+    @HasValue(message="err.sshkey.publicKey.required")
+    @Size(max=KEY_MAXLEN, message="err.sshkey.publicKey.length")
     @Column(nullable=false, updatable=false, length=KEY_MAXLEN)
     @Getter @Setter private String publicKey;
 

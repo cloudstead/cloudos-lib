@@ -27,7 +27,7 @@ public abstract class SshKeyBase extends SshPublicKeyBase implements Scrubbable 
 
     public abstract Crypto getCrypto();
 
-    @HasValue(message="err.sshkey.publicKey.required")
+    @HasValue(message="err.sshkey.privateKey.required")
     @Size(max=KEY_MAXLEN, message="err.sshkey.privateKey.length")
     @Column(nullable=false, updatable=false, length=KEY_MAXLEN)
     private String privateKey;
