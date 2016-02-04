@@ -26,6 +26,9 @@ public class LoginRequest {
 
     @Getter @Setter private String deviceName;
 
+    // optional - server-side resource can fill this in for other server-side code to use
+    @JsonIgnore @Getter @Setter private String userAgent;
+
     public String toString () {
         return "{name="+getName()+", password="+mask(password)+", secondFactor="+mask(secondFactor)+", device="+getDevice()+"}";
     }
