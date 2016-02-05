@@ -14,7 +14,7 @@ public abstract class AccountBaseDAOBase<A extends AccountBase>
     @Override public A findByName(String name) { return findByUniqueField("name", name); }
 
     @Override public A findByResetPasswordToken(String token) {
-        return findByUniqueField(AccountBase.RESET_PASSWORD_TOKEN, token);
+        return findByUniqueField("hashedPassword."+AccountBase.RESET_PASSWORD_TOKEN, token);
     }
 
     public void setPassword(A account, String newPassword) {
