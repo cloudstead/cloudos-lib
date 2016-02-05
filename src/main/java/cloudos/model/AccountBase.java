@@ -119,7 +119,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
         if (atPos == -1 || atPos == email.length()-1) throw invalidEx(ERR_EMAIL_INVALID);
         String addr = email.substring(0, atPos);
         String domain = email.substring(atPos+1);
-        return addr.replaceAll("\\W", "_").toLowerCase() + "@" + domain.toLowerCase();
+        return (addr.replaceAll("\\W+", "_") + "@" + domain).toLowerCase();
     }
 
     @Email(message=ERR_EMAIL_INVALID)
