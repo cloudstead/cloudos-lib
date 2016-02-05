@@ -11,8 +11,10 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 @Accessors(chain=true)
 public class LoginRequest {
 
+    public boolean forceLowercase () { return true; }
+
     @Setter private String name;
-    public String getName () { return name == null ? null : name.toLowerCase(); }
+    public String getName () { return name == null ? null : forceLowercase() ? name.toLowerCase() : name; }
     public boolean hasName () { return !empty(name); }
 
     @Getter @Setter @JsonProperty private String password;
