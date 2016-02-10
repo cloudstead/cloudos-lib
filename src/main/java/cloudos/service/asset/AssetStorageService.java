@@ -19,8 +19,8 @@ public abstract class AssetStorageService {
         }
     }
 
-    public abstract InputStream load(String uri);
+    public abstract AssetStream load(String uri);
     public abstract boolean exists(String uri);
-    public abstract String store(InputStream fileStream);
+    public abstract String store(InputStream fileStream, String fileName);
 
 }
