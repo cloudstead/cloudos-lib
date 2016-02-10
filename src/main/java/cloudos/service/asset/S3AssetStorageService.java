@@ -7,10 +7,10 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.cobbzilla.util.io.FileUtil;
-import org.cobbzilla.util.security.ShaUtil;
 
 import java.io.*;
 import java.util.Map;
@@ -19,6 +19,7 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.*;
 
+@Slf4j
 public class S3AssetStorageService extends AssetStorageService {
 
     public static final String PROP_ACCESS_KEY = "accessKey";
@@ -53,13 +54,18 @@ public class S3AssetStorageService extends AssetStorageService {
 
     @Override public AssetStream load(String uri) {
         final File cachefile = new File(abs(localCache) + "/" + uri);
-        if (cachefile.exists()) try {
-            return new AssetStream(new FileInputStream(cachefile), toStringOrDie(abs(cachefile)+".contentType"));
-        } catch (FileNotFoundException e) {
-            die("load: "+e, e);
+        if (cachefile.exists()) {
+            try {
+                return new AssetStream(uri, new FileInputStream(cachefile), toStringOrDie(abs(cachefile)+".contentType"));
+            } catch (FileNotFoundException e) { die("load: "+e, e); }
         }
-        final S3Object s3Object = s3Client.getObject(bucket, prefix + "/" + uri);
-        return new AssetStream(s3Object.getObjectContent(), s3Object.getObjectMetadata().getContentType());
+        try {
+            final S3Object s3Object = s3Client.getObject(bucket, prefix + "/" + uri);
+            return new AssetStream(uri, s3Object.getObjectContent(), s3Object.getObjectMetadata().getContentType());
+        } catch (Exception e) {
+            log.warn("load: "+e);
+            return null;
+        }
     }
 
     @Override public boolean exists(String uri) {
@@ -73,26 +79,24 @@ public class S3AssetStorageService extends AssetStorageService {
         }
     }
 
-    @Override public String store(InputStream fileStream, String filename) {
+    @Override public String store(InputStream fileStream, String filename, String path) {
 
         final String mimeType = Mimetypes.getInstance().getMimetype(filename);
-        final String ext = FileUtil.extension(filename);
 
         try {
             final File temp = File.createTempFile("s3Asset", ".tmp");
             try (FileOutputStream out = new FileOutputStream(temp)) {
                 IOUtils.copyLarge(fileStream, out);
             }
-            final String sha = ShaUtil.sha256_file(temp);
-            final String path = sha.substring(0, 2) + "/" + sha.substring(2, 4) + "/" + sha.substring(4, 6) + "/" + sha + ext;
+            if (path == null) path = getUri(temp, filename);
             final File stored = new File(abs(localCache) + "/" + path);
             if (exists(path)) {
                 FileUtils.deleteQuietly(temp);
 
             } else {
+                FileUtil.toFile(abs(stored)+".contentType", mimeType);
                 mkdirOrDie(stored.getParentFile());
                 if (!temp.renameTo(stored)) die("store: error renaming " + abs(temp) + " -> " + abs(stored));
-                FileUtil.toFile(abs(stored)+".contentType", mimeType);
 
                 final ObjectMetadata metadata = new ObjectMetadata();
                 metadata.setContentType(mimeType);
