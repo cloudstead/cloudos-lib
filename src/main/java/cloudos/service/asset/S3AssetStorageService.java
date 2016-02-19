@@ -8,16 +8,20 @@ import com.amazonaws.services.s3.model.S3Object;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.cobbzilla.util.io.FileUtil;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.*;
+import static org.cobbzilla.util.io.TempDir.quickTemp;
 
 @Slf4j
 public class S3AssetStorageService extends AssetStorageService {
@@ -28,6 +32,7 @@ public class S3AssetStorageService extends AssetStorageService {
     public static final String PROP_PREFIX = "prefix";
     public static final String PROP_LOCAL_CACHE = "localCache";
     public static final String CACHE_DISABLED = "disabled";
+    public static final String BZ2_SUFFIX = ".bz2";
 
     @Getter @Setter private String accessKey;
     @Getter @Setter private String secretKey;
@@ -63,15 +68,16 @@ public class S3AssetStorageService extends AssetStorageService {
             final File cachefile = new File(abs(localCache) + "/" + uri);
             if (cachefile.exists()) {
                 try {
-                    return new AssetStream(uri, new FileInputStream(cachefile), toStringOrDie(abs(cachefile) + ".contentType"));
-                } catch (FileNotFoundException e) {
+                    return new AssetStream(uri, new BZip2CompressorInputStream(new FileInputStream(cachefile)), toStringOrDie(abs(cachefile) + ".contentType"));
+                } catch (IOException e) {
                     die("load: " + e, e);
                 }
             }
         }
         try {
             final S3Object s3Object = s3Client.getObject(bucket, prefix + "/" + uri);
-            return new AssetStream(uri, s3Object.getObjectContent(), s3Object.getObjectMetadata().getContentType());
+            final BZip2CompressorInputStream bzin = new BZip2CompressorInputStream(s3Object.getObjectContent());
+            return new AssetStream(uri, bzin, s3Object.getObjectMetadata().getContentType());
         } catch (Exception e) {
             log.warn("load: "+e);
             return null;
@@ -94,10 +100,8 @@ public class S3AssetStorageService extends AssetStorageService {
         final String mimeType = filename.endsWith(".json") ? "application/json" : Mimetypes.getInstance().getMimetype(filename);
 
         try {
-            final File temp = File.createTempFile("s3Asset", ".tmp");
-            try (FileOutputStream out = new FileOutputStream(temp)) {
-                IOUtils.copyLarge(fileStream, out);
-            }
+            // everything is bzipped!
+            final File temp = bzip2(fileStream);
             if (path == null) path = getUri(temp, filename);
 
             final File stored = (localCache == null) ? temp : new File(abs(localCache) + "/" + path);
@@ -115,14 +119,34 @@ public class S3AssetStorageService extends AssetStorageService {
                 metadata.setContentType(mimeType);
                 metadata.setContentLength(stored.length());
 
-                try (InputStream in = new FileInputStream(stored)) {
-                    s3Client.putObject(bucket, prefix + "/" + path, in, metadata);
-                }
+                // everything is bzipped!
+                final String bzPath = path + BZ2_SUFFIX;
+                put(bzPath, stored, metadata);
+
+                // redirect the root path to the bzip file
+                final ObjectMetadata redirect = new ObjectMetadata();
+                metadata.setHeader("x-amz-website-redirect-location", bzPath);
+                put(path, quickTemp(60_000), redirect);
             }
             return path;
 
         } catch (Exception e) {
             return die("store: "+e, e);
         }
+    }
+
+    public void put(String path, File stored, ObjectMetadata metadata) throws IOException {
+        if (metadata == null) {
+            put(path, stored);
+        } else {
+            // ok we have to use an input stream to do the metadata in the same call
+            try (InputStream in = new FileInputStream(stored)) {
+                s3Client.putObject(bucket, prefix + "/" + path, in, metadata);
+            }
+        }
+    }
+
+    public void put(String path, File stored) throws IOException {
+        s3Client.putObject(bucket, prefix + "/" + path, stored);
     }
 }
