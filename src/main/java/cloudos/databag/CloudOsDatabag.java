@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.cobbzilla.util.http.ApiConnectionInfo;
-import rooty.toots.vendor.VendorDatabag;
+import org.cobbzilla.util.chef.VendorDatabag;
 
 import java.io.File;
 

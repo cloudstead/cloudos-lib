@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.cobbzilla.util.system.ConnectionInfo;
-import rooty.toots.vendor.VendorDatabag;
+import org.cobbzilla.util.chef.VendorDatabag;
 
 @Accessors(chain=true)
 public class EmailDatabag extends Databag {
