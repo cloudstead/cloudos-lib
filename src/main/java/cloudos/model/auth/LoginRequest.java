@@ -11,8 +11,10 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 @Accessors(chain=true)
 public class LoginRequest {
 
+    public boolean forceLowercase () { return true; }
+
     @Setter private String name;
-    public String getName () { return name == null ? null : name.toLowerCase(); }
+    public String getName () { return name == null ? null : forceLowercase() ? name.toLowerCase() : name; }
     public boolean hasName () { return !empty(name); }
 
     @Getter @Setter @JsonProperty private String password;
@@ -25,6 +27,9 @@ public class LoginRequest {
     @JsonIgnore public boolean hasDevice () { return !empty(deviceId); }
 
     @Getter @Setter private String deviceName;
+
+    // optional - server-side resource can fill this in for other server-side code to use
+    @JsonIgnore @Getter @Setter private String userAgent;
 
     public String toString () {
         return "{name="+getName()+", password="+mask(password)+", secondFactor="+mask(secondFactor)+", device="+getDevice()+"}";

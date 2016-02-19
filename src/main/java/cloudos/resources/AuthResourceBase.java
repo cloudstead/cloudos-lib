@@ -136,6 +136,7 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
         if (found == null) return ok();
         if (found.getResetTokenAge() > getVerificationCodeExpiration()) return invalid("err.key.expired");
 
+        found.setEmailVerified(true); // if you can reset a password, you must have been able to check your email
         accountDAO.setPassword(found, request.getPassword());
 
         return ok();

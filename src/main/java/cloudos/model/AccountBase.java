@@ -31,6 +31,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
 
     public static final String EMAIL_VERIFICATION_CODE = "emailVerificationCode";
     public static final String RESET_PASSWORD_TOKEN = "resetToken";
+
     public static final Comparator<AccountBase> SORT_ACCOUNT_NAME = new Comparator<AccountBase>() {
         @Override public int compare(AccountBase a1, AccountBase a2) {
             return a1 == null ? 1 : a2 == null ? -1 : String.valueOf(a1.getName()).compareTo(String.valueOf(a2.getName()));
@@ -107,16 +108,36 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     @Getter @Setter private Long lastLogin = null;
     public void setLastLogin () { lastLogin = System.currentTimeMillis(); }
 
+    @HasValue(message=ERR_EMAIL_EMPTY)
+    @Size(max=EMAIL_MAXLEN, message=ERR_EMAIL_LENGTH)
+    @Column(unique=true, nullable=false, length=EMAIL_MAXLEN)
+    @JsonIgnore @Getter @Setter private String canonicalEmail;
+
+    public static String canonicalizeEmail (String email) {
+        if (empty(email)) throw invalidEx(ERR_EMAIL_EMPTY);
+        int atPos = email.indexOf('@');
+        if (atPos == -1 || atPos == email.length()-1) throw invalidEx(ERR_EMAIL_INVALID);
+        String addr = email.substring(0, atPos);
+        String domain = email.substring(atPos+1);
+        return (addr.replaceAll("\\W+", "_") + "@" + domain).toLowerCase();
+    }
+
     @Email(message=ERR_EMAIL_INVALID)
     @HasValue(message=ERR_EMAIL_EMPTY)
     @Size(max=EMAIL_MAXLEN, message=ERR_EMAIL_LENGTH)
     @Column(unique=true, nullable=false, length=EMAIL_MAXLEN)
     @Getter private String email;
 
-    @HasValue(message=ERR_EMAIL_EMPTY)
-    @Size(max=EMAIL_MAXLEN, message=ERR_EMAIL_LENGTH)
-    @Column(unique=true, nullable=false, length=EMAIL_MAXLEN)
-    @Getter private String canonicalEmail;
+    public AccountBase setEmail (String email) {
+        if (this.email == null || !this.email.equals(email)) {
+            emailVerified = false;
+            emailVerificationCode = null;
+            emailVerificationCodeCreatedAt = null;
+            canonicalEmail = canonicalizeEmail(email);
+            this.email = email;
+        }
+        return this;
+    }
 
     @JsonIgnore @Size(max=VERIFY_CODE_MAXLEN) @Getter @Setter private String emailVerificationCode;
     @JsonIgnore @Getter @Setter private Long emailVerificationCodeCreatedAt;
@@ -136,26 +157,6 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
 
     public boolean isEmailVerificationCodeValid (long expiration) {
         return emailVerificationCodeCreatedAt != null && emailVerificationCodeCreatedAt > (System.currentTimeMillis() - expiration);
-    }
-
-    public static String canonicalizeEmail (String email) {
-        if (empty(email)) throw invalidEx(ERR_EMAIL_EMPTY);
-        int atPos = email.indexOf('@');
-        if (atPos == -1 || atPos == email.length()-1) throw invalidEx(ERR_EMAIL_INVALID);
-        String addr = email.substring(0, atPos);
-        String domain = email.substring(atPos+1);
-        return addr.replaceAll("\\W", "_").toLowerCase() + "@" + domain;
-    }
-
-    public AccountBase setEmail (String email) {
-        if (this.email == null || !this.email.equals(email)) {
-            emailVerified = false;
-            emailVerificationCode = null;
-            emailVerificationCodeCreatedAt = null;
-            canonicalEmail = canonicalizeEmail(email);
-            this.email = email;
-        }
-        return this;
     }
 
     @Size(min=MOBILEPHONE_MINLEN, max=MOBILEPHONE_MAXLEN, message=ERR_MOBILEPHONE_LENGTH)
