@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.internal.Mimetypes;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.cobbzilla.util.io.FileUtil;
 
@@ -18,6 +19,8 @@ import static org.cobbzilla.util.io.FileUtil.*;
 public class LocalAssetStorateService extends AssetStorageService {
 
     public static final String PROP_BASE = "baseDir";
+
+    public static final String APPLICATION_JSON = "application/json";
 
     @Getter @Setter private File baseDir;
 
@@ -38,11 +41,10 @@ public class LocalAssetStorateService extends AssetStorageService {
         }
     }
 
-    @Override public boolean exists(String uri) { return new File(abs(baseDir) + uri).exists(); }
+    @Override public boolean exists(String uri) { return new File(abs(baseDir) + "/" + uri).exists(); }
 
     @Override public String store(InputStream fileStream, String filename, String path) {
-        final String mimeType = Mimetypes.getInstance().getMimetype(filename);
-        final String ext = FileUtil.extension(filename);
+        final String mimeType = getMimeType(filename);
         try {
             final File temp = File.createTempFile("localAsset", ".tmp");
             try (FileOutputStream out = new FileOutputStream(temp)) {
@@ -51,12 +53,22 @@ public class LocalAssetStorateService extends AssetStorageService {
             if (path == null) path = getUri(temp, filename);
             final File stored = new File(abs(baseDir) + "/" + path);
             mkdirOrDie(stored.getParentFile());
-            if (!temp.renameTo(stored)) die("store: error renaming "+abs(temp)+" -> "+abs(stored));
+
+            // rename, or copy, or die
+            if (!temp.renameTo(stored)) {
+                FileUtils.copyFile(temp, stored);
+                FileUtils.deleteQuietly(temp);
+            }
             FileUtil.toFile(abs(stored)+".contentType", mimeType);
+
             return path;
 
         } catch (Exception e) {
             return die("store: "+e, e);
         }
+    }
+
+    public String getMimeType(String filename) {
+        return filename.endsWith(".json") ? APPLICATION_JSON : Mimetypes.getInstance().getMimetype(filename);
     }
 }
