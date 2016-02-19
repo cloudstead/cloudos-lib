@@ -3,12 +3,12 @@ package cloudos.service.asset;
 import cloudos.server.asset.AssetStorageConfiguration;
 import cloudos.server.asset.AssetStorageType;
 import org.cobbzilla.util.io.FileUtil;
-import org.cobbzilla.util.security.ShaUtil;
 
 import java.io.File;
 import java.io.InputStream;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.security.ShaUtil.sha256_file;
 
 public abstract class AssetStorageService {
 
@@ -31,7 +31,10 @@ public abstract class AssetStorageService {
     public abstract String store(InputStream fileStream, String fileName, String uri);
 
     public String getUri(File file, String filename) {
-        final String sha = ShaUtil.sha256_file(file);
-        return sha.substring(0, 2) + "/" + sha.substring(2, 4) + "/" + sha.substring(4, 6) + "/" + sha + FileUtil.extension(filename);
+        return getUri(sha256_file(file), filename);
+    }
+
+    public String getUri(String sha256, String filename) {
+        return sha256.substring(0, 2) + "/" + sha256.substring(2, 4) + "/" + sha256.substring(4, 6) + "/" + sha256.substring(6, 8) + "/" + sha256 + FileUtil.extension(filename);
     }
 }

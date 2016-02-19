@@ -17,7 +17,7 @@ import static org.cobbzilla.util.io.FileUtil.*;
 @Slf4j
 public class LocalAssetStorateService extends AssetStorageService {
 
-    private static final String PROP_BASE = "baseDir";
+    public static final String PROP_BASE = "baseDir";
 
     @Getter @Setter private File baseDir;
 

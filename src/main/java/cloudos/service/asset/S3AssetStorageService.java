@@ -8,8 +8,6 @@ import com.amazonaws.services.s3.model.S3Object;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.apache.commons.io.FileUtils;
 import org.cobbzilla.util.io.FileUtil;
 
 import java.io.File;
@@ -32,7 +30,6 @@ public class S3AssetStorageService extends AssetStorageService {
     public static final String PROP_PREFIX = "prefix";
     public static final String PROP_LOCAL_CACHE = "localCache";
     public static final String CACHE_DISABLED = "disabled";
-    public static final String BZ2_SUFFIX = ".bz2";
 
     @Getter @Setter private String accessKey;
     @Getter @Setter private String secretKey;
@@ -68,7 +65,7 @@ public class S3AssetStorageService extends AssetStorageService {
             final File cachefile = new File(abs(localCache) + "/" + uri);
             if (cachefile.exists()) {
                 try {
-                    return new AssetStream(uri, new BZip2CompressorInputStream(new FileInputStream(cachefile)), toStringOrDie(abs(cachefile) + ".contentType"));
+                    return new AssetStream(uri, new FileInputStream(cachefile), toStringOrDie(abs(cachefile) + ".contentType"));
                 } catch (IOException e) {
                     die("load: " + e, e);
                 }
@@ -76,8 +73,7 @@ public class S3AssetStorageService extends AssetStorageService {
         }
         try {
             final S3Object s3Object = s3Client.getObject(bucket, prefix + "/" + uri);
-            final BZip2CompressorInputStream bzin = new BZip2CompressorInputStream(s3Object.getObjectContent());
-            return new AssetStream(uri, bzin, s3Object.getObjectMetadata().getContentType());
+            return new AssetStream(uri, s3Object.getObjectContent(), s3Object.getObjectMetadata().getContentType());
         } catch (Exception e) {
             log.warn("load: "+e);
             return null;
@@ -100,27 +96,23 @@ public class S3AssetStorageService extends AssetStorageService {
         final String mimeType = filename.endsWith(".json") ? "application/json" : Mimetypes.getInstance().getMimetype(filename);
 
         try {
-            // everything is bzipped!
-            final File temp = bzip2(fileStream);
+            final File temp = File.createTempFile("s3file-", ".tmp");
+            FileUtil.toFile(temp, fileStream);
             if (path == null) path = getUri(temp, filename);
 
             final File stored = (localCache == null) ? temp : new File(abs(localCache) + "/" + path);
 
-            if (exists(path)) {
-                FileUtils.deleteQuietly(temp);
-
-            } else {
-                if (localCache != null) {
-                    FileUtil.toFile(abs(stored) + ".contentType", mimeType);
-                    mkdirOrDie(stored.getParentFile());
-                    if (!temp.renameTo(stored)) die("store: error renaming " + abs(temp) + " -> " + abs(stored));
-                }
-
-                final ObjectMetadata metadata = new ObjectMetadata();
-                metadata.setContentType(mimeType);
-                metadata.setContentLength(stored.length());
-                put(path, stored, metadata);
+            if (localCache != null) {
+                FileUtil.toFile(abs(stored) + ".contentType", mimeType);
+                mkdirOrDie(stored.getParentFile());
+                if (!temp.renameTo(stored)) die("store: error renaming " + abs(temp) + " -> " + abs(stored));
             }
+
+            final ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentType(mimeType);
+            metadata.setContentLength(stored.length());
+            put(path, stored, metadata);
+
             return path;
 
         } catch (Exception e) {
