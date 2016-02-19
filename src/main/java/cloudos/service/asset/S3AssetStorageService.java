@@ -21,7 +21,7 @@ import java.util.Map;
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.*;
-import static org.cobbzilla.util.io.TempDir.quickTemp;
+
 
 @Slf4j
 public class S3AssetStorageService extends AssetStorageService {
@@ -110,23 +110,16 @@ public class S3AssetStorageService extends AssetStorageService {
                 FileUtils.deleteQuietly(temp);
 
             } else {
-                FileUtil.toFile(abs(stored)+".contentType", mimeType);
-                mkdirOrDie(stored.getParentFile());
-
-                if (localCache != null && !temp.renameTo(stored)) die("store: error renaming " + abs(temp) + " -> " + abs(stored));
+                if (localCache != null) {
+                    FileUtil.toFile(abs(stored) + ".contentType", mimeType);
+                    mkdirOrDie(stored.getParentFile());
+                    if (!temp.renameTo(stored)) die("store: error renaming " + abs(temp) + " -> " + abs(stored));
+                }
 
                 final ObjectMetadata metadata = new ObjectMetadata();
                 metadata.setContentType(mimeType);
                 metadata.setContentLength(stored.length());
-
-                // everything is bzipped!
-                final String bzPath = path + BZ2_SUFFIX;
-                put(bzPath, stored, metadata);
-
-                // redirect the root path to the bzip file
-                final ObjectMetadata redirect = new ObjectMetadata();
-                metadata.setHeader("x-amz-website-redirect-location", bzPath);
-                put(path, quickTemp(60_000), redirect);
+                put(path, stored, metadata);
             }
             return path;
 
