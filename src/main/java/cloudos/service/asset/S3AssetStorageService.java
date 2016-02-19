@@ -27,6 +27,7 @@ public class S3AssetStorageService extends AssetStorageService {
     public static final String PROP_BUCKET = "bucket";
     public static final String PROP_PREFIX = "prefix";
     public static final String PROP_LOCAL_CACHE = "localCache";
+    public static final String CACHE_DISABLED = "disabled";
 
     @Getter @Setter private String accessKey;
     @Getter @Setter private String secretKey;
@@ -44,7 +45,12 @@ public class S3AssetStorageService extends AssetStorageService {
 
         String local = config.get(PROP_LOCAL_CACHE);
         if (empty(local)) local = System.getProperty("java.io.tmpdir");
-        setLocalCache(mkdirOrDie(local));
+
+        if (local.equals(CACHE_DISABLED)) {
+            localCache = null;
+        } else {
+            setLocalCache(mkdirOrDie(local));
+        }
 
         s3Client = new AmazonS3Client(new AWSCredentials() {
             @Override public String getAWSAccessKeyId() { return getAccessKey(); }
@@ -53,11 +59,15 @@ public class S3AssetStorageService extends AssetStorageService {
     }
 
     @Override public AssetStream load(String uri) {
-        final File cachefile = new File(abs(localCache) + "/" + uri);
-        if (cachefile.exists()) {
-            try {
-                return new AssetStream(uri, new FileInputStream(cachefile), toStringOrDie(abs(cachefile)+".contentType"));
-            } catch (FileNotFoundException e) { die("load: "+e, e); }
+        if (localCache != null) {
+            final File cachefile = new File(abs(localCache) + "/" + uri);
+            if (cachefile.exists()) {
+                try {
+                    return new AssetStream(uri, new FileInputStream(cachefile), toStringOrDie(abs(cachefile) + ".contentType"));
+                } catch (FileNotFoundException e) {
+                    die("load: " + e, e);
+                }
+            }
         }
         try {
             final S3Object s3Object = s3Client.getObject(bucket, prefix + "/" + uri);
@@ -69,7 +79,7 @@ public class S3AssetStorageService extends AssetStorageService {
     }
 
     @Override public boolean exists(String uri) {
-        if (new File(abs(localCache) + "/" + uri).exists()) return true;
+        if (localCache != null && new File(abs(localCache) + "/" + uri).exists()) return true;
         try {
             s3Client.getObject(bucket, prefix + "/" + uri);
             return true;
@@ -81,7 +91,7 @@ public class S3AssetStorageService extends AssetStorageService {
 
     @Override public String store(InputStream fileStream, String filename, String path) {
 
-        final String mimeType = Mimetypes.getInstance().getMimetype(filename);
+        final String mimeType = filename.endsWith(".json") ? "application/json" : Mimetypes.getInstance().getMimetype(filename);
 
         try {
             final File temp = File.createTempFile("s3Asset", ".tmp");
@@ -89,14 +99,17 @@ public class S3AssetStorageService extends AssetStorageService {
                 IOUtils.copyLarge(fileStream, out);
             }
             if (path == null) path = getUri(temp, filename);
-            final File stored = new File(abs(localCache) + "/" + path);
+
+            final File stored = (localCache == null) ? temp : new File(abs(localCache) + "/" + path);
+
             if (exists(path)) {
                 FileUtils.deleteQuietly(temp);
 
             } else {
                 FileUtil.toFile(abs(stored)+".contentType", mimeType);
                 mkdirOrDie(stored.getParentFile());
-                if (!temp.renameTo(stored)) die("store: error renaming " + abs(temp) + " -> " + abs(stored));
+
+                if (localCache != null && !temp.renameTo(stored)) die("store: error renaming " + abs(temp) + " -> " + abs(stored));
 
                 final ObjectMetadata metadata = new ObjectMetadata();
                 metadata.setContentType(mimeType);
