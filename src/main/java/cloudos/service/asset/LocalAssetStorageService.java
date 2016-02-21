@@ -1,6 +1,5 @@
 package cloudos.service.asset;
 
-import com.amazonaws.services.s3.internal.Mimetypes;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +18,6 @@ import static org.cobbzilla.util.io.FileUtil.*;
 public class LocalAssetStorageService extends AssetStorageService {
 
     public static final String PROP_BASE = "baseDir";
-
-    public static final String APPLICATION_JSON = "application/json";
 
     @Getter @Setter private File baseDir;
     @Getter @Setter private String contentType;
@@ -72,9 +69,5 @@ public class LocalAssetStorageService extends AssetStorageService {
         } catch (Exception e) {
             return die("store: "+e, e);
         }
-    }
-
-    public String getMimeType(String filename) {
-        return filename.endsWith(".json") ? APPLICATION_JSON : Mimetypes.getInstance().getMimetype(filename);
     }
 }
