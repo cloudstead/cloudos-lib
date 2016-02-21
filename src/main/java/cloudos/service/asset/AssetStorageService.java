@@ -16,7 +16,7 @@ public abstract class AssetStorageService {
         AssetStorageType type = configuration.getType();
         if (type == null) type = AssetStorageType.local;
         switch (type) {
-            case local: return new LocalAssetStorateService(configuration.getConfig());
+            case local: return new LocalAssetStorageService(configuration.getConfig());
             case s3: return new S3AssetStorageService(configuration.getConfig());
             default: return die("AssetStorageService.build: invalid type: "+ type);
         }

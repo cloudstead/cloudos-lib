@@ -16,15 +16,16 @@ import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.util.io.FileUtil.*;
 
 @Slf4j
-public class LocalAssetStorateService extends AssetStorageService {
+public class LocalAssetStorageService extends AssetStorageService {
 
     public static final String PROP_BASE = "baseDir";
 
     public static final String APPLICATION_JSON = "application/json";
 
     @Getter @Setter private File baseDir;
+    @Getter @Setter private String contentType;
 
-    public LocalAssetStorateService(Map<String, String> config) {
+    public LocalAssetStorageService(Map<String, String> config) {
         String basePath = (config == null) ? null : config.get(PROP_BASE);
         if (empty(basePath)) basePath = System.getProperty("java.io.tmpdir");
         this.baseDir = FileUtil.mkdirOrDie(basePath);
@@ -32,13 +33,18 @@ public class LocalAssetStorateService extends AssetStorageService {
 
     @Override public AssetStream load(String uri) {
         try {
-            final String path = abs(baseDir) + uri;
-            return new AssetStream(uri, new FileInputStream(path), toStringOrDie(abs(path)+".contentType"));
+            final String path = abs(baseDir) + "/" + uri;
+            final File f = new File(path);
+            return f.exists() ? new AssetStream(uri, new FileInputStream(f), getContentType(path)) : null;
 
         } catch (FileNotFoundException e) {
             log.warn("load: "+e);
             return null;
         }
+    }
+
+    public String getContentType(String path) {
+        return contentType != null ? contentType : toStringOrDie(abs(path)+".contentType");
     }
 
     @Override public boolean exists(String uri) { return new File(abs(baseDir) + "/" + uri).exists(); }
@@ -59,7 +65,7 @@ public class LocalAssetStorateService extends AssetStorageService {
                 FileUtils.copyFile(temp, stored);
                 FileUtils.deleteQuietly(temp);
             }
-            FileUtil.toFile(abs(stored)+".contentType", mimeType);
+            if (contentType == null) FileUtil.toFile(abs(stored)+".contentType", mimeType);
 
             return path;
 
