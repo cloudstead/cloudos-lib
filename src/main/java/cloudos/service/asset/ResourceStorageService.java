@@ -27,7 +27,7 @@ public class ResourceStorageService extends AssetStorageService {
         try {
             return new AssetStream(uri, StreamUtil.loadResourceAsStream(base + "/" + uri), getMimeType(uri));
         } catch (Exception e) {
-            log.error("load: "+e, e);
+            log.error("load: "+e);
         }
         return null;
     }
