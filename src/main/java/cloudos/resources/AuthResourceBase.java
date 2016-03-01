@@ -79,6 +79,8 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
     // allows subclasses to add params to the forgot-password email
     protected void addForgotPasswordParams(Map<String, Object> params) {}
 
+    public A findAccountForForgotPassword(String name) { return getAccountDAO().findByName(name); }
+
     /**
      * Forgot password: Send a reset password email
      * @param name The account name
@@ -90,10 +92,14 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
     @ReturnType("java.lang.Void")
     public Response forgotPassword (String name) {
 
-        final BasicAccountDAO<A> accountBaseDAO = getAccountDAO();
-        final A found = accountBaseDAO.findByName(name);
+        if (name.startsWith("\"")) name = name.substring(1);
+        if (name.endsWith("\"")) name = name.substring(0, name.length()-1);
+        if (empty(name)) return notFound();
 
-        if (found == null) return ok();
+        final BasicAccountDAO<A> accountBaseDAO = getAccountDAO();
+        final A found = findAccountForForgotPassword(name);
+
+        if (found == null) return ok_empty();
 
         // generate a reset token
         final String token = found.initResetToken();
@@ -112,10 +118,10 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
             getTemplatedMailService().getMailSender().deliverMessage(mail);
         } catch (Exception e) {
             log.error("forgotPassword: Error sending email: "+e, e);
-            return ok();
+            return ok_empty();
         }
 
-        return ok();
+        return ok_empty();
     }
 
     /**
@@ -133,13 +139,14 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
         final BasicAccountDAO<A> accountDAO = getAccountDAO();
         final A found = accountDAO.findByResetPasswordToken(request.getToken());
 
-        if (found == null) return ok();
+        if (found == null) return invalid("err.key.invalid");
         if (found.getResetTokenAge() > getVerificationCodeExpiration()) return invalid("err.key.expired");
 
         found.setEmailVerified(true); // if you can reset a password, you must have been able to check your email
+        found.setResetToken(null);
         accountDAO.setPassword(found, request.getPassword());
 
-        return ok();
+        return ok_empty();
     }
 
 }
