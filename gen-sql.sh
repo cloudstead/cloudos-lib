@@ -18,6 +18,12 @@ if [ -x ${DBNAME} ] ; then
   die "Usage: $0 <dbname> <sql-file>"
 fi
 
+if [ -z "${DBADMIN}" ] ; then
+  DBADMIN=""
+else
+  DBADMIN="-U ${DBADMIN}"
+fi
+
 SQLFILE="${2}"
 if [ -z "${SQLFILE}" ] ; then
   die "Usage: $0 <dbname> <sql-file>"
@@ -33,12 +39,12 @@ if [ -x ${DBINIT} ] ; then
   die "No DbInit class found in src/test/java"
 fi
 
-dropdb ${DBNAME} || echo 1>&2 "Error dropping ${DBNAME} database"
-createdb ${DBNAME} || die "Error creating ${DBNAME} database"
+dropdb ${DBADMIN} ${DBNAME} || echo 1>&2 "Error dropping ${DBNAME} database"
+createdb ${DBADMIN} ${DBNAME} || die "Error creating ${DBNAME} database"
 
 MVN_LOG=$(mktemp /tmp/gen-sql.mvn.dbinit.XXXXXXX)
 mvn -Dtest=${DBINIT} test 2>&1 > ${MVN_LOG} || die "Error populating ${DBNAME} database. ${MVN_LOG} has more info: $(cat ${MVN_LOG})"
 rm -f ${MVN_LOG}
 
-pg_dump ${DBNAME} | sed -e "s/$(whoami)/postgres/g" > ${SQLFILE}
+pg_dump ${DBADMIN} ${DBNAME} | sed -e "s/$(whoami)/postgres/g" > ${SQLFILE}
 echo 1>&2 "Dumped SQL to ${SQLFILE}"
