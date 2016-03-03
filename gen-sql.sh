@@ -39,8 +39,10 @@ if [ -x ${DBINIT} ] ; then
   die "No DbInit class found in src/test/java"
 fi
 
-dropdb ${DBADMIN} ${DBNAME} || echo 1>&2 "Error dropping ${DBNAME} database"
-createdb ${DBADMIN} ${DBNAME} || die "Error creating ${DBNAME} database"
+if [ -z "${GENSQL_NODROPCREATE}" ] ; then
+  dropdb ${DBADMIN} ${DBNAME} || echo 1>&2 "Error dropping ${DBNAME} database"
+  createdb ${DBADMIN} ${DBNAME} || die "Error creating ${DBNAME} database"
+fi
 
 MVN_LOG=$(mktemp /tmp/gen-sql.mvn.dbinit.XXXXXXX)
 mvn -Dtest=${DBINIT} test 2>&1 > ${MVN_LOG} || die "Error populating ${DBNAME} database. ${MVN_LOG} has more info: $(cat ${MVN_LOG})"
