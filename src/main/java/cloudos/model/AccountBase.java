@@ -61,8 +61,8 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     public static final String ERR_LOCALE_LENGTH = "{err.locale.length}";
     public static final int EMAIL_MAXLEN = 255;
     public static final int VERIFY_CODE_MAXLEN = 100;
-    public static final int LASTNAME_MAXLEN = 25;
-    public static final int FIRSTNAME_MAXLEN = 25;
+    public static final int LASTNAME_MAXLEN = 100;
+    public static final int FIRSTNAME_MAXLEN = 100;
     public static final int MOBILEPHONE_MAXLEN = 30;
     public static final int MOBILEPHONE_MINLEN = 8;
     public static final int PRIMARY_GROUP_MAXLEN = 100;
