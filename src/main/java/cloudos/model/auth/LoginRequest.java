@@ -3,13 +3,19 @@ package cloudos.model.auth;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 
-@Accessors(chain=true)
+@NoArgsConstructor @Accessors(chain=true)
 public class LoginRequest {
+
+    public LoginRequest (String name, String password) {
+        this.name = name;
+        this.password = password;
+    }
 
     public boolean forceLowercase () { return true; }
 
