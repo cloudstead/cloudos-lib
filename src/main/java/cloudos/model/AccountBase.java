@@ -22,6 +22,7 @@ import java.util.Comparator;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.daemon.ZillaRuntime.safeInt;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.wizard.resources.ResourceUtil.invalidEx;
@@ -106,7 +107,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     @Getter @Setter private boolean twoFactor = false;
 
     @Getter @Setter private Long lastLogin = null;
-    public void setLastLogin () { lastLogin = System.currentTimeMillis(); }
+    public void setLastLogin () { lastLogin = now(); }
 
     @HasValue(message=ERR_EMAIL_EMPTY)
     @Size(max=EMAIL_MAXLEN, message=ERR_EMAIL_LENGTH)
@@ -145,7 +146,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
 
     public String initEmailVerificationCode() {
         emailVerificationCode = randomAlphanumeric(getVerifyCodeLength());
-        emailVerificationCodeCreatedAt = System.currentTimeMillis();
+        emailVerificationCodeCreatedAt = now();
         return emailVerificationCode;
     }
 
@@ -156,7 +157,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     }
 
     public boolean isEmailVerificationCodeValid (long expiration) {
-        return emailVerificationCodeCreatedAt != null && emailVerificationCodeCreatedAt > (System.currentTimeMillis() - expiration);
+        return emailVerificationCodeCreatedAt != null && emailVerificationCodeCreatedAt > (now() - expiration);
     }
 
     @Size(min=MOBILEPHONE_MINLEN, max=MOBILEPHONE_MAXLEN, message=ERR_MOBILEPHONE_LENGTH)

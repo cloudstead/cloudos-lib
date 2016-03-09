@@ -9,6 +9,8 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
+
 @Entity @Accessors(chain=true)
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"account", "deviceId"}))
 public class AccountDevice extends IdentifiableBase {
@@ -18,10 +20,10 @@ public class AccountDevice extends IdentifiableBase {
     @Getter @Setter private String deviceName;
     @Getter @Setter private Long authTime;
 
-    public AccountDevice setAuthTime () { authTime = System.currentTimeMillis(); return this; }
+    public AccountDevice setAuthTime () { authTime = now(); return this; }
 
     public boolean isAuthYoungerThan(long deviceTimeout) {
-        return authTime != null && (System.currentTimeMillis() - authTime) < deviceTimeout;
+        return authTime != null && (now() - authTime) < deviceTimeout;
     }
 
 }

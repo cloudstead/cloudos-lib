@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.io.FileUtil.*;
 import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
@@ -102,7 +103,7 @@ public class CloudOsBase extends UniquelyNamedEntity {
     public void updateState (CloudOsState newState) {
         if (newState != state) {
             state = newState;
-            lastStateChange = System.currentTimeMillis();
+            lastStateChange = now();
         }
     }
 

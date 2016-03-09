@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response;
 import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.wizard.resources.ResourceUtil.*;
 
 @Slf4j
@@ -50,7 +51,7 @@ public abstract class AccountsResourceBase<A extends BasicAccount, R extends Aut
     public Response login(@Valid LoginRequest login) {
 
         final R authResponse;
-        long start = System.currentTimeMillis();
+        long start = now();
         try {
             final A account;
             if (login.isSecondFactor()) {

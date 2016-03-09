@@ -26,6 +26,7 @@ import java.util.Set;
 
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Iterables.getOnlyElement;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.jclouds.compute.options.TemplateOptions.Builder.runScript;
 
 @Slf4j
@@ -104,7 +105,7 @@ public class JcloudBase extends CsCloudBase {
     }
 
     protected String randomGroupName() {
-        return config.getGroupPrefix() + RandomStringUtils.randomAlphanumeric(10).toLowerCase()+"-"+System.currentTimeMillis();
+        return config.getGroupPrefix() + RandomStringUtils.randomAlphanumeric(10).toLowerCase()+"-"+now();
     }
 
     protected CsInstance getCsInstance(String hostname,

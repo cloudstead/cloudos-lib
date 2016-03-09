@@ -11,6 +11,7 @@ import org.cobbzilla.util.string.StringUtil;
 import java.io.*;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
+import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 import static org.cobbzilla.util.io.FileUtil.abs;
 import static org.cobbzilla.util.string.StringUtil.UTF8;
 
@@ -148,7 +149,7 @@ public class CsJsch {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         IOUtils.copy(in, out);
 
-        final long start = System.currentTimeMillis();
+        final long start = now();
         while (!channel.isClosed() && !isTimedOut(start, timeout)) {
             Thread.sleep(100);
         }
@@ -160,9 +161,7 @@ public class CsJsch {
         return out.toString(UTF8);
     }
 
-    private boolean isTimedOut(long start, long timeout) {
-        return System.currentTimeMillis() - start > timeout;
-    }
+    private boolean isTimedOut(long start, long timeout) { return now() - start > timeout; }
 
     private static int checkAck(InputStream in) throws IOException {
         int b = in.read();
