@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# gen-sql.sh <dbname> <sql-file>
+# gen-sql.sh <dbname> <sql-file> [verbose]
 #
 # This script must be called from the root directory of a cobbzilla-wizard-style Java application.
 # It will look in src/test/java for a DbInit class to call.
@@ -33,6 +33,8 @@ if [ ! -d "${PARENT}" ] ; then
   mkdir ${PARENT} || die "sql-file parent directory does not exist and could not be created: ${PARENT}"
 fi
 
+VERBOSE="${3}"
+
 # There should be exactly one class named "DbInit" in the test sources
 DBINIT=$(find src/test/java -type f -name DbInit.java | sed -e 's,src/test/java/,,' | sed -e 's/.java$//' | tr '/' '.')
 if [ -x ${DBINIT} ] ; then
@@ -45,8 +47,12 @@ if [ -z "${GENSQL_NODROPCREATE}" ] ; then
 fi
 
 MVN_LOG=$(mktemp /tmp/gen-sql.mvn.dbinit.XXXXXXX)
-mvn -Dtest=${DBINIT} test 2>&1 > ${MVN_LOG} || die "Error populating ${DBNAME} database. ${MVN_LOG} has more info: $(cat ${MVN_LOG})"
-rm -f ${MVN_LOG}
+if [ -z "${VERBOSE}" ] ; then
+  mvn -Dtest=${DBINIT} test 2>&1 > ${MVN_LOG} || die "Error populating ${DBNAME} database. ${MVN_LOG} has more info: $(cat ${MVN_LOG})"
+  rm -f ${MVN_LOG}
+else
+  mvn -Dtest=${DBINIT} test || die "Error populating ${DBNAME} database."
+fi
 
 pg_dump ${DBADMIN} ${DBNAME} | sed -e "s/$(whoami)/postgres/g" > ${SQLFILE}
 echo 1>&2 "Dumped SQL to ${SQLFILE}"
