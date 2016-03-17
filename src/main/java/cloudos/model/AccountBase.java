@@ -17,14 +17,12 @@ import javax.persistence.Embedded;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.validation.constraints.Size;
-
 import java.util.Comparator;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.daemon.ZillaRuntime.now;
-import static org.cobbzilla.util.daemon.ZillaRuntime.safeInt;
+import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
+import static org.cobbzilla.util.string.StringUtil.urlEncode;
 import static org.cobbzilla.wizard.resources.ResourceUtil.invalidEx;
 
 @MappedSuperclass @Accessors(chain=true)
@@ -117,10 +115,10 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     public static String canonicalizeEmail (String email) {
         if (empty(email)) throw invalidEx(ERR_EMAIL_EMPTY);
         int atPos = email.indexOf('@');
-        if (atPos == -1 || atPos == email.length()-1) throw invalidEx(ERR_EMAIL_INVALID);
+        if (atPos == -1 || atPos == email.length()-1) throw invalidEx(ERR_EMAIL_INVALID, "email was invalid", email);
         String addr = email.substring(0, atPos);
         String domain = email.substring(atPos+1);
-        return (addr.replaceAll("\\W+", "_") + "@" + domain).toLowerCase();
+        return (urlEncode(addr) + "@" + domain).toLowerCase();
     }
 
     @Email(message=ERR_EMAIL_INVALID)
