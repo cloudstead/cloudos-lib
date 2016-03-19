@@ -10,6 +10,7 @@ import org.cobbzilla.wizard.filters.ScrubbableField;
 import org.cobbzilla.wizard.model.HashedPassword;
 import org.cobbzilla.wizard.model.UniquelyNamedEntity;
 import org.cobbzilla.wizard.validation.HasValue;
+import org.hibernate.annotations.Type;
 import org.hibernate.validator.constraints.Email;
 
 import javax.persistence.Column;
@@ -23,6 +24,7 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.reflect.ReflectionUtil.copy;
 import static org.cobbzilla.util.string.StringUtil.urlEncode;
+import static org.cobbzilla.wizard.model.crypto.EncryptedTypes.*;
 import static org.cobbzilla.wizard.resources.ResourceUtil.invalidEx;
 
 @MappedSuperclass @Accessors(chain=true)
@@ -89,13 +91,13 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
 
     @HasValue(message=ERR_LAST_NAME_EMPTY)
     @Size(max=LASTNAME_MAXLEN, message=ERR_LAST_NAME_LENGTH)
-    @Column(nullable=false, length=LASTNAME_MAXLEN)
-    @Getter @Setter private String lastName;
+    @Column(nullable=false, length=LASTNAME_MAXLEN+ENC_PAD)
+    @Type(type=ENCRYPTED_STRING) @Getter @Setter private String lastName;
 
     @HasValue(message=ERR_FIRST_NAME_EMPTY)
     @Size(max=FIRSTNAME_MAXLEN, message=ERR_FIRST_NAME_LENGTH)
-    @Column(nullable=false, length=FIRSTNAME_MAXLEN)
-    @Getter @Setter private String firstName;
+    @Column(nullable=false, length=FIRSTNAME_MAXLEN+ENC_PAD)
+    @Type(type=ENCRYPTED_STRING) @Getter @Setter private String firstName;
 
     @JsonIgnore public String getFullName() { return getFirstName() + " " + getLastName(); }
     @JsonIgnore public String getLastNameFirstName() { return getLastName() + ", " + getFirstName(); }
@@ -124,8 +126,8 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     @Email(message=ERR_EMAIL_INVALID)
     @HasValue(message=ERR_EMAIL_EMPTY)
     @Size(max=EMAIL_MAXLEN, message=ERR_EMAIL_LENGTH)
-    @Column(unique=true, nullable=false, length=EMAIL_MAXLEN)
-    @Getter private String email;
+    @Column(unique=true, nullable=false, length=EMAIL_MAXLEN+ENC_PAD)
+    @Getter @Type(type=ENCRYPTED_STRING) private String email;
 
     public AccountBase setEmail (String email) {
         if (this.email == null || !this.email.equals(email)) {
@@ -158,9 +160,10 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
         return emailVerificationCodeCreatedAt != null && emailVerificationCodeCreatedAt > (now() - expiration);
     }
 
-    @Size(min=MOBILEPHONE_MINLEN, max=MOBILEPHONE_MAXLEN, message=ERR_MOBILEPHONE_LENGTH)
+    @Size(min=MOBILEPHONE_MINLEN, max=MOBILEPHONE_MAXLEN+ENC_PAD, message=ERR_MOBILEPHONE_LENGTH)
     @HasValue(message=ERR_MOBILEPHONE_EMPTY)
-    @Getter private String mobilePhone;
+    @Column(nullable=false, length=MOBILEPHONE_MAXLEN+ENC_PAD)
+    @Getter @Type(type=ENCRYPTED_STRING) private String mobilePhone;
     public AccountBase setMobilePhone (String mobilePhone) {
         if (this.mobilePhone == null || !this.mobilePhone.equals(mobilePhone)) {
             this.authId = null;
@@ -170,7 +173,8 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     }
 
     @HasValue(message=ERR_MOBILEPHONE_CC_EMPTY)
-    @Getter private Integer mobilePhoneCountryCode;
+    @Column(nullable=false, length=ENC_INT)
+    @Getter @Type(type=ENCRYPTED_INTEGER) private Integer mobilePhoneCountryCode;
 
     public AccountBase setMobilePhoneCountryCode(Integer mobilePhoneCountryCode) {
         if (this.mobilePhoneCountryCode == null || !this.mobilePhoneCountryCode.equals(mobilePhoneCountryCode)) {
@@ -182,8 +186,8 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
 
     @JsonIgnore @Transient public String getMobilePhoneCountryCodeString() { return mobilePhoneCountryCode == null ? null : mobilePhoneCountryCode.toString(); }
 
-    @Size(max=LOCALE_MAXLEN, message=ERR_LOCALE_LENGTH)
-    @Getter @Setter private String locale;
+    @Size(max=LOCALE_MAXLEN, message=ERR_LOCALE_LENGTH+ENC_PAD)
+    @Getter @Setter @Type(type=ENCRYPTED_STRING) private String locale;
     @JsonIgnore public boolean hasLocale () { return !empty(locale); }
 
     public AccountBase populate(AccountBase other) {

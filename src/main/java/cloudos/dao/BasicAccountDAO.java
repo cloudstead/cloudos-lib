@@ -15,5 +15,5 @@ public interface BasicAccountDAO<A extends BasicAccount> extends DAO<A> {
 
     public A findByResetPasswordToken(String token);
 
-    public void setPassword(A found, String password);
+    public void setPassword(A account, String password);
 }
