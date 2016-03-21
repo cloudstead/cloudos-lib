@@ -186,7 +186,8 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
 
     @JsonIgnore @Transient public String getMobilePhoneCountryCodeString() { return mobilePhoneCountryCode == null ? null : mobilePhoneCountryCode.toString(); }
 
-    @Size(max=LOCALE_MAXLEN, message=ERR_LOCALE_LENGTH+ENC_PAD)
+    @Size(max=LOCALE_MAXLEN, message=ERR_LOCALE_LENGTH)
+    @Column(length=LOCALE_MAXLEN+ENC_PAD)
     @Getter @Setter @Type(type=ENCRYPTED_STRING) private String locale;
     @JsonIgnore public boolean hasLocale () { return !empty(locale); }
 
