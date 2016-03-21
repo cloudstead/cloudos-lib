@@ -58,15 +58,13 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     public static final String ERR_MOBILEPHONE_LENGTH = "{err.mobilePhone.length}";
     public static final String ERR_MOBILEPHONE_EMPTY = "{err.mobilePhone.empty}";
     public static final String ERR_MOBILEPHONE_CC_EMPTY = "{err.mobilePhoneCountryCode.empty}";
-    public static final String ERR_PRIMARY_GROUP_LENGTH = "{err.primaryGroup.length}";
     public static final String ERR_LOCALE_LENGTH = "{err.locale.length}";
-    public static final int EMAIL_MAXLEN = 255;
+    public static final int EMAIL_MAXLEN = 200;
     public static final int VERIFY_CODE_MAXLEN = 100;
     public static final int LASTNAME_MAXLEN = 100;
     public static final int FIRSTNAME_MAXLEN = 100;
     public static final int MOBILEPHONE_MAXLEN = 30;
     public static final int MOBILEPHONE_MINLEN = 8;
-    public static final int PRIMARY_GROUP_MAXLEN = 100;
     public static final int LOCALE_MAXLEN = 40;
 
     @Getter @Setter @Embedded
@@ -77,7 +75,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     @Override public AccountBase setPassword(String newPassword) { hashedPassword.setPassword(newPassword); return this; }
     @Override public void setResetToken(String token) { hashedPassword.setResetToken(token); }
 
-    @Size(max=30, message=ERR_AUTHID_LENGTH)
+    @Size(max=30, message=ERR_AUTHID_LENGTH) @Column(length=30)
     @Getter @Setter private String authId = null;
 
     public boolean hasAuthId() { return !empty(authId); }
@@ -91,12 +89,12 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
 
     @HasValue(message=ERR_LAST_NAME_EMPTY)
     @Size(max=LASTNAME_MAXLEN, message=ERR_LAST_NAME_LENGTH)
-    @Column(nullable=false, length=LASTNAME_MAXLEN+ENC_PAD)
+    @Column(columnDefinition="varchar("+(LASTNAME_MAXLEN+ENC_PAD)+") NOT NULL")
     @Type(type=ENCRYPTED_STRING) @Getter @Setter private String lastName;
 
     @HasValue(message=ERR_FIRST_NAME_EMPTY)
     @Size(max=FIRSTNAME_MAXLEN, message=ERR_FIRST_NAME_LENGTH)
-    @Column(nullable=false, length=FIRSTNAME_MAXLEN+ENC_PAD)
+    @Column(columnDefinition="varchar("+(FIRSTNAME_MAXLEN+ENC_PAD)+") NOT NULL")
     @Type(type=ENCRYPTED_STRING) @Getter @Setter private String firstName;
 
     @JsonIgnore public String getFullName() { return getFirstName() + " " + getLastName(); }
@@ -111,7 +109,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
 
     @HasValue(message=ERR_EMAIL_EMPTY)
     @Size(max=EMAIL_MAXLEN, message=ERR_EMAIL_LENGTH)
-    @Column(unique=true, nullable=false, length=EMAIL_MAXLEN)
+    @Column(columnDefinition="varchar("+EMAIL_MAXLEN+") UNIQUE NOT NULL")
     @JsonIgnore @Getter @Setter private String canonicalEmail;
 
     public static String canonicalizeEmail (String email) {
@@ -126,7 +124,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     @Email(message=ERR_EMAIL_INVALID)
     @HasValue(message=ERR_EMAIL_EMPTY)
     @Size(max=EMAIL_MAXLEN, message=ERR_EMAIL_LENGTH)
-    @Column(unique=true, nullable=false, length=EMAIL_MAXLEN+ENC_PAD)
+    @Column(columnDefinition="varchar("+(EMAIL_MAXLEN+ENC_PAD)+")")
     @Getter @Type(type=ENCRYPTED_STRING) private String email;
 
     public AccountBase setEmail (String email) {
@@ -162,7 +160,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
 
     @Size(min=MOBILEPHONE_MINLEN, max=MOBILEPHONE_MAXLEN+ENC_PAD, message=ERR_MOBILEPHONE_LENGTH)
     @HasValue(message=ERR_MOBILEPHONE_EMPTY)
-    @Column(nullable=false, length=MOBILEPHONE_MAXLEN+ENC_PAD)
+    @Column(nullable=false, columnDefinition="varchar("+(MOBILEPHONE_MAXLEN+ENC_PAD)+") NOT NULL")
     @Getter @Type(type=ENCRYPTED_STRING) private String mobilePhone;
     public AccountBase setMobilePhone (String mobilePhone) {
         if (this.mobilePhone == null || !this.mobilePhone.equals(mobilePhone)) {
@@ -187,7 +185,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     @JsonIgnore @Transient public String getMobilePhoneCountryCodeString() { return mobilePhoneCountryCode == null ? null : mobilePhoneCountryCode.toString(); }
 
     @Size(max=LOCALE_MAXLEN, message=ERR_LOCALE_LENGTH)
-    @Column(length=LOCALE_MAXLEN+ENC_PAD)
+    @Column(columnDefinition="varchar("+(LOCALE_MAXLEN+ENC_PAD)+") NOT NULL")
     @Getter @Setter @Type(type=ENCRYPTED_STRING) private String locale;
     @JsonIgnore public boolean hasLocale () { return !empty(locale); }
 
