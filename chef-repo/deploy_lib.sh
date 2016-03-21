@@ -48,10 +48,7 @@ function deploy_ssh {
     echo $(whoami) > ${t} &&
     sudo cp ${t} /etc/chef-user &&
     rm -f ${t} &&
-    sudo rm -rf ~/chef &&
-    mkdir ~/chef &&
     cd ~/chef &&
-    tar xj &&
     for dir in data_bags data_files certs ; do if [ -d ${dir} ] ; then chmod -R 700 ${dir} || exit 1 ; fi ; done &&
     sudo bash install.sh 2>&1 | tee chef.out &&
     echo "chef-run started at ${start}" | tee -a chef.out &&
