@@ -38,7 +38,7 @@ VERBOSE="${3}"
 # There should be exactly one class named "DbInit" in the test sources
 DBINIT=$(find src/test/java -type f -name DbInit.java | sed -e 's,src/test/java/,,' | sed -e 's/.java$//' | tr '/' '.')
 if [ -x ${DBINIT} ] ; then
-  die "No DbInit class found in src/test/java"
+  die "No DbInit class found in src/test/java (pwd=$(pwd))"
 fi
 
 if [ -z "${GENSQL_NODROPCREATE}" ] ; then
