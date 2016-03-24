@@ -114,6 +114,9 @@ if [ "${MODE}" = "tempdir" ] ; then
   for f in JSON.sh install.sh uninstall.sh solo.rb Dockerfile ; do
     cp ${LIB_BASE}/${f} ${CHEF}/ || die "ERROR: ${LIB_BASE}/${f} could not be copied to ${CHEF}"
   done
+  for f in ${BASE}/pre_install.sh ${BASE}/post_install.sh ; do
+    if [ -x ${f} ] ; then cp ${f} ${CHEF}/ || die "ERROR: ${f} could not be copied to ${CHEF}" ; fi
+  done
   for f in ${BASE}/solo*.json  ; do
     cp ${f} ${CHEF}/ || die "ERROR: ${f} could not be copied to ${CHEF}"
   done

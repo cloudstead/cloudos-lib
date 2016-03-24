@@ -141,6 +141,10 @@ for app in ${apps} ; do
   fi
 done
 
+if [ -x ${THISDIR}/pre_install.sh ] ; then
+  ${THISDIR}/pre_install.sh || die "Error running pre_install.sh: exit status $?"
+fi
+
 cd ${THISDIR} && "${chef_binary}" -c solo.rb -j ${RUN_LIST} -l debug
 
 if [[ $(service apache2 status) =~ " not running" ]] ; then
