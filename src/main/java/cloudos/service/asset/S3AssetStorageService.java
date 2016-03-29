@@ -95,8 +95,9 @@ public class S3AssetStorageService extends AssetStorageService {
 
         final String mimeType = filename.endsWith(".json") ? "application/json" : Mimetypes.getInstance().getMimetype(filename);
 
+        File temp = null;
         try {
-            final File temp = File.createTempFile("s3file-", ".tmp");
+            temp = File.createTempFile("s3file-", ".tmp");
             FileUtil.toFile(temp, fileStream);
             if (path == null) path = getUri(temp, filename);
 
@@ -117,6 +118,13 @@ public class S3AssetStorageService extends AssetStorageService {
 
         } catch (Exception e) {
             return die("store: "+e, e);
+
+        } finally {
+            if (localCache == null) {
+                if (temp != null && temp.exists()) {
+                    if (!temp.delete()) log.warn("store: error deleting temp file: "+abs(temp));
+                }
+            }
         }
     }
 
