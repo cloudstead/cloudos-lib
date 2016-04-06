@@ -32,9 +32,9 @@ public abstract class AssetStorageService {
 
     public abstract String store(InputStream fileStream, String fileName, String uri);
 
-    public String getUri(File file, String filename) {
-        return getUri(sha256_file(file), filename);
-    }
+    public abstract boolean delete(String uri);
+
+    public String getUri(File file, String filename) { return getUri(sha256_file(file), filename); }
 
     public String getUri(String sha256, String filename) {
         return sha256.substring(0, 2) + "/" + sha256.substring(2, 4) + "/" + sha256.substring(4, 6) + "/" + sha256.substring(6, 8) + "/" + sha256 + FileUtil.extension(filename);

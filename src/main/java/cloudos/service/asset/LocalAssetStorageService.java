@@ -44,7 +44,9 @@ public class LocalAssetStorageService extends AssetStorageService {
         return contentType != null ? contentType : toStringOrDie(abs(path)+".contentType");
     }
 
-    @Override public boolean exists(String uri) { return new File(abs(baseDir) + "/" + uri).exists(); }
+    public File uri2file(String uri) { return new File(abs(baseDir) + "/" + uri); }
+
+    @Override public boolean exists(String uri) { return uri2file(uri).exists(); }
 
     @Override public String store(InputStream fileStream, String filename, String path) {
         final String mimeType = getMimeType(filename);
@@ -54,7 +56,7 @@ public class LocalAssetStorageService extends AssetStorageService {
                 IOUtils.copyLarge(fileStream, out);
             }
             if (path == null) path = getUri(temp, filename);
-            final File stored = new File(abs(baseDir) + "/" + path);
+            final File stored = uri2file(path);
             mkdirOrDie(stored.getParentFile());
 
             // rename, or copy, or die
@@ -70,4 +72,11 @@ public class LocalAssetStorageService extends AssetStorageService {
             return die("store: "+e, e);
         }
     }
+
+    @Override public boolean delete(String uri) {
+        if (!exists(uri)) return false;
+        final File f = uri2file(uri);
+        return f.exists() && f.delete();
+    }
+
 }

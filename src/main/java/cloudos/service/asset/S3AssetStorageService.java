@@ -142,4 +142,11 @@ public class S3AssetStorageService extends AssetStorageService {
     public void put(String path, File stored) throws IOException {
         s3Client.putObject(bucket, prefix + "/" + path, stored);
     }
+
+    @Override public boolean delete(String uri) {
+        if (!exists(uri)) return false;
+        s3Client.deleteObject(bucket, prefix + "/" + uri);
+        return true;
+    }
+
 }

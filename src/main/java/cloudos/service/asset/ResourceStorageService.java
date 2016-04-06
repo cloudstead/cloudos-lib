@@ -35,4 +35,7 @@ public class ResourceStorageService extends AssetStorageService {
     @Override public boolean exists(String uri) { return load(uri) != null; }
 
     @Override public String store(InputStream fileStream, String fileName, String uri) { return notSupported(); }
+
+    @Override public boolean delete(String uri) { return notSupported(); }
+
 }
