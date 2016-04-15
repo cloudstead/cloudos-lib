@@ -13,6 +13,11 @@ public abstract class AccountBaseDAOBase<A extends AccountBase>
 
     @Override public A findByName(String name) { return findByUniqueField("name", name); }
 
+    public A findByUuidOrName(String id) {
+        A account = findByUuid(id);
+        return account != null ? account : findByName(id);
+    }
+
     @Override public A findByResetPasswordToken(String token) {
         return findByUniqueField("hashedPassword."+AccountBase.RESET_PASSWORD_TOKEN, token);
     }
