@@ -18,7 +18,6 @@ import javax.persistence.Embedded;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.validation.constraints.Size;
-import java.util.Comparator;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.cobbzilla.util.daemon.ZillaRuntime.*;
@@ -32,12 +31,6 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
 
     public static final String EMAIL_VERIFICATION_CODE = "emailVerificationCode";
     public static final String RESET_PASSWORD_TOKEN = "resetToken";
-
-    public static final Comparator<AccountBase> SORT_ACCOUNT_NAME = new Comparator<AccountBase>() {
-        @Override public int compare(AccountBase a1, AccountBase a2) {
-            return a1 == null ? 1 : a2 == null ? -1 : String.valueOf(a1.getName()).compareTo(String.valueOf(a2.getName()));
-        }
-    };
 
     @JsonIgnore public int getVerifyCodeLength () { return 16; }
 
