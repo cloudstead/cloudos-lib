@@ -12,7 +12,7 @@ import javax.persistence.UniqueConstraint;
 import static org.cobbzilla.util.daemon.ZillaRuntime.now;
 
 @Entity @Accessors(chain=true)
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"account", "deviceId"}))
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"account", "deviceId"}, name="account_device_UNIQ_account_deviceId"))
 public class AccountDevice extends IdentifiableBase {
 
     @Getter @Setter private String account;
