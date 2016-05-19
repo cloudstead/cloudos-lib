@@ -83,7 +83,9 @@ public class S3AssetStorageService extends AssetStorageService {
     @Override public boolean exists(String uri) {
         if (localCache != null && new File(abs(localCache) + "/" + uri).exists()) return true;
         try {
-            s3Client.getObject(bucket, prefix + "/" + uri);
+            synchronized (s3Client) {
+                s3Client.getObject(bucket, prefix + "/" + uri);
+            }
             return true;
 
         } catch (Exception e) {
@@ -91,7 +93,7 @@ public class S3AssetStorageService extends AssetStorageService {
         }
     }
 
-    @Override public String store(InputStream fileStream, String filename, String path) {
+    @Override public synchronized String store(InputStream fileStream, String filename, String path) {
 
         final String mimeType = filename.endsWith(".json") ? "application/json" : Mimetypes.getInstance().getMimetype(filename);
 
@@ -134,18 +136,24 @@ public class S3AssetStorageService extends AssetStorageService {
         } else {
             // ok we have to use an input stream to do the metadata in the same call
             try (InputStream in = new FileInputStream(stored)) {
-                s3Client.putObject(bucket, prefix + "/" + path, in, metadata);
+                synchronized (s3Client) {
+                    s3Client.putObject(bucket, prefix + "/" + path, in, metadata);
+                }
             }
         }
     }
 
     public void put(String path, File stored) throws IOException {
-        s3Client.putObject(bucket, prefix + "/" + path, stored);
+        synchronized (s3Client) {
+            s3Client.putObject(bucket, prefix + "/" + path, stored);
+        }
     }
 
     @Override public boolean delete(String uri) {
         if (!exists(uri)) return false;
-        s3Client.deleteObject(bucket, prefix + "/" + uri);
+        synchronized (s3Client) {
+            s3Client.deleteObject(bucket, prefix + "/" + uri);
+        }
         return true;
     }
 
