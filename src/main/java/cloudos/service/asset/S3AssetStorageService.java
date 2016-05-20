@@ -106,8 +106,8 @@ public class S3AssetStorageService extends AssetStorageService {
             final File stored = (localCache == null) ? temp : new File(abs(localCache) + "/" + path);
 
             if (localCache != null) {
-                FileUtil.toFile(abs(stored) + ".contentType", mimeType);
                 mkdirOrDie(stored.getParentFile());
+                FileUtil.toFile(abs(stored) + ".contentType", mimeType);
                 if (!temp.renameTo(stored)) die("store: error renaming " + abs(temp) + " -> " + abs(stored));
             }
 
