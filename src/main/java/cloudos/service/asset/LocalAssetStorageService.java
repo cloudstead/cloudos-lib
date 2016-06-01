@@ -75,8 +75,12 @@ public class LocalAssetStorageService extends AssetStorageService {
     }
 
     @Override public void copy(String from, String to) {
-        @Cleanup InputStream in = load(from).getStream();
-        store(in, to, to);
+        try {
+            @Cleanup InputStream in = load(from).getStream();
+            store(in, to, to);
+        } catch (Exception e) {
+            die("copy: "+e, e);
+        }
     }
 
     @Override public boolean delete(String uri) {
