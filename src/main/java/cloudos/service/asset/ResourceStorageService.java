@@ -36,6 +36,8 @@ public class ResourceStorageService extends AssetStorageService {
 
     @Override public String store(InputStream fileStream, String fileName, String uri) { return notSupported(); }
 
+    @Override public void copy(String from, String to) { notSupported(); }
+
     @Override public boolean delete(String uri) { return notSupported(); }
 
 }

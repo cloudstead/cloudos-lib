@@ -32,6 +32,8 @@ public abstract class AssetStorageService {
 
     public abstract String store(InputStream fileStream, String fileName, String uri);
 
+    public abstract void copy(String from, String to);
+
     public abstract boolean delete(String uri);
 
     public String getUri(File file, String filename) { return getUri(sha256_file(file), filename); }
@@ -45,4 +47,5 @@ public abstract class AssetStorageService {
     public String getMimeType(String filename) {
         return filename.endsWith(".json") ? APPLICATION_JSON : Mimetypes.getInstance().getMimetype(filename);
     }
+
 }

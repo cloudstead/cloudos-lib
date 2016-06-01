@@ -149,6 +149,12 @@ public class S3AssetStorageService extends AssetStorageService {
         }
     }
 
+    @Override public void copy(String from, String to) {
+        synchronized (s3Client) {
+            s3Client.copyObject(bucket, prefix + "/" + from, bucket, prefix + "/" + to);
+        }
+    }
+
     @Override public boolean delete(String uri) {
         if (!exists(uri)) return false;
         synchronized (s3Client) {

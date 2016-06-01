@@ -1,5 +1,6 @@
 package cloudos.service.asset;
 
+import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -71,6 +72,11 @@ public class LocalAssetStorageService extends AssetStorageService {
         } catch (Exception e) {
             return die("store: "+e, e);
         }
+    }
+
+    @Override public void copy(String from, String to) {
+        @Cleanup InputStream in = load(from).getStream();
+        store(in, to, to);
     }
 
     @Override public boolean delete(String uri) {
