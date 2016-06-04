@@ -12,7 +12,7 @@
 #   init-files:       directory containing init files (dirs should be data_bags, data_files and certs)
 #   required:         space-separated list of required files in the init-files dir (use quotes). paths are relative to init-files dir.
 #   cookbook-sources: space-separated list of directories that contain cookbooks (use quotes)
-#   solo-json-file:   run list to use for chef solo run
+#   solo-json-file:   run-list to use for chef solo run
 #   mode:             default is 'tempdir' which will create a new temp dir with init files added. 'inline' will assume the current directory is the chef repo, and cookbook-sources is ignored.
 #
 
