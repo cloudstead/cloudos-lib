@@ -87,10 +87,11 @@ if [ ${NUM_BASE_DATABAGS} -eq 1 ] ; then
   fi
 fi
 
+export DEBIAN_FRONTEND=noninteractive
+
 # Are we on a vanilla system?
 if ! test -f "${chef_binary}"; then
 
-    export DEBIAN_FRONTEND=noninteractive
     # Upgrade headlessly (this is only safe-ish on vanilla systems)
     apt-get update && apt-get -o Dpkg::Options::="--force-confnew" --force-yes -fuy dist-upgrade &&
 
