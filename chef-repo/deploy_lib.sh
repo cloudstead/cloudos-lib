@@ -40,7 +40,7 @@ function deploy_ssh {
   local deploy_target="${3}"
 
   cd ${chef} && \
-  ssh -o 'StrictHostKeyChecking no' ${ssh_opts} "${deploy_target}" 'rm -rf ~/chef && mkdir -p ~/chef' && \
+  ssh -o 'StrictHostKeyChecking no' ${ssh_opts} "${deploy_target}" 'sudo rm -rf ~/chef && mkdir -p ~/chef' && \
   rsync -avzc -e "ssh -o 'StrictHostKeyChecking no' ${ssh_opts}" ./* ${deploy_target}:chef/ && \
   ssh -o 'StrictHostKeyChecking no' ${ssh_opts} "${deploy_target}" '
   start=$(date) &&
