@@ -9,12 +9,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.util.io.FileUtil;
+import org.cobbzilla.util.system.Sleep;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.util.daemon.ZillaRuntime.die;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
@@ -23,6 +25,9 @@ import static org.cobbzilla.util.io.FileUtil.*;
 
 @Slf4j
 public class S3AssetStorageService extends AssetStorageService {
+
+    public static final int MAX_RETRIES = 5;
+    public static final long RETRY_SLEEP = TimeUnit.SECONDS.toMillis(5);
 
     public static final String PROP_ACCESS_KEY = "accessKey";
     public static final String PROP_SECRET_KEY = "secretKey";
@@ -71,22 +76,39 @@ public class S3AssetStorageService extends AssetStorageService {
                 }
             }
         }
-        try {
-            final S3Object s3Object = s3Client.getObject(bucket, prefix + "/" + uri);
-            return new AssetStream(uri, s3Object.getObjectContent(), s3Object.getObjectMetadata().getContentType());
-        } catch (Exception e) {
-            log.warn("load: "+e);
-            return null;
+        Exception lastException = null;
+        for (int tries = 0; tries < MAX_RETRIES; tries++) {
+            try {
+                synchronized (s3Client) {
+                    final S3Object s3Object = s3Client.getObject(bucket, prefix + "/" + uri);
+                    return new AssetStream(uri, s3Object.getObjectContent(), s3Object.getObjectMetadata().getContentType());
+                }
+            } catch (Exception e) {
+                log.warn("load("+uri+"): "+e);
+                lastException = e;
+                Sleep.sleep(RETRY_SLEEP);
+            }
         }
+        return die("load("+uri+"), failed "+MAX_RETRIES+" times, giving up. lastException: "+lastException, lastException);
     }
 
     @Override public boolean exists(String uri) {
         if (localCache != null && new File(abs(localCache) + "/" + uri).exists()) return true;
+        Exception lastException = null;
         try {
-            synchronized (s3Client) {
-                s3Client.getObject(bucket, prefix + "/" + uri);
+            for (int tries = 0; tries < MAX_RETRIES; tries++) {
+                try {
+                    synchronized (s3Client) {
+                        s3Client.getObject(bucket, prefix + "/" + uri);
+                        return true;
+                    }
+                } catch (Exception e) {
+                    log.warn("exists("+uri+"): "+e);
+                    lastException = e;
+                    Sleep.sleep(RETRY_SLEEP);
+                }
             }
-            return true;
+            return die("exists("+uri+"), failed "+MAX_RETRIES+" times, giving up. lastException: "+lastException, lastException);
 
         } catch (Exception e) {
             return false;
@@ -135,18 +157,40 @@ public class S3AssetStorageService extends AssetStorageService {
             put(path, stored);
         } else {
             // ok we have to use an input stream to do the metadata in the same call
+            Exception lastException = null;
             try (InputStream in = new FileInputStream(stored)) {
-                synchronized (s3Client) {
-                    s3Client.putObject(bucket, prefix + "/" + path, in, metadata);
+                for (int tries = 0; tries < MAX_RETRIES; tries++) {
+                    try {
+                        synchronized (s3Client) {
+                            s3Client.putObject(bucket, prefix + "/" + path, in, metadata);
+                            return;
+                        }
+                    } catch (Exception e) {
+                        log.warn("put("+path+"): "+e);
+                        lastException = e;
+                        Sleep.sleep(RETRY_SLEEP);
+                    }
                 }
+                die("put("+path+"), failed "+MAX_RETRIES+" times, giving up. lastException: "+lastException, lastException);
             }
         }
     }
 
     public void put(String path, File stored) throws IOException {
-        synchronized (s3Client) {
-            s3Client.putObject(bucket, prefix + "/" + path, stored);
+        Exception lastException = null;
+        for (int tries = 0; tries < MAX_RETRIES; tries++) {
+            try {
+                synchronized (s3Client) {
+                    s3Client.putObject(bucket, prefix + "/" + path, stored);
+                    return;
+                }
+            } catch (Exception e) {
+                log.warn("put("+path+"): "+e);
+                lastException = e;
+                Sleep.sleep(RETRY_SLEEP);
+            }
         }
+        die("put("+path+"), failed "+MAX_RETRIES+" times, giving up. lastException: "+lastException, lastException);
     }
 
     @Override public void copy(String from, String to) {
