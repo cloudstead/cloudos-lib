@@ -130,7 +130,11 @@ public class S3AssetStorageService extends AssetStorageService {
             if (localCache != null) {
                 mkdirOrDie(stored.getParentFile());
                 FileUtil.toFile(abs(stored) + ".contentType", mimeType);
-                if (!temp.renameTo(stored)) die("store: error renaming " + abs(temp) + " -> " + abs(stored));
+                if (!temp.renameTo(stored)) {
+                    log.warn("store: error renaming file, copying instead: " + abs(temp) + " -> " + abs(stored));
+                    FileUtil.copyFile(temp, stored);
+                    if (!temp.delete()) log.warn("store: error deleting temp file after copy: "+abs(temp));
+                }
             }
 
             final ObjectMetadata metadata = new ObjectMetadata();
