@@ -1,7 +1,7 @@
 cloudos-lib
 ===========
 
-* src: a Java facade for cloud compute and storage resources.
+* src: Java APIs for cloud compute and storage resources, and common account functions.
 * chef-repo: set of common cookbooks used by cloudos-server
 
 # Compute
@@ -11,7 +11,7 @@ cloudos-lib
 Here's an example using DigitalOcean:
 
     final CsCloudConfig config = new CsCloudConfig()
-            .withAccountId(accountId
+            .withAccountId(accountId)
             .withAccountSecret(accountSecret)
             .withRegion("sfo1")
             .withInstanceSize("2gb")
