@@ -85,7 +85,8 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
      * Forgot password: Send a reset password email
      * @param name The account name
      * @return Just an HTTP status code
-     * @statuscode 200 Regardless.
+     * @statuscode 403 If account with such email was not found.
+     * @statuscode 200 Otherwise.
      */
     @POST
     @Path(EP_FORGOT_PASSWORD)
@@ -99,7 +100,7 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
         final BasicAccountDAO<A> accountBaseDAO = getAccountDAO();
         final A found = findAccountForForgotPassword(name);
 
-        if (found == null) return ok_empty();
+        if (found == null) return forbidden();
 
         // generate a reset token
         final String token = found.initResetToken();
@@ -112,6 +113,7 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
                 .setFromEmail(getFromEmail(T_RESET_PASSWORD))
                 .setTemplateName(T_RESET_PASSWORD)
                 .setParameter(TemplatedMailService.PARAM_ACCOUNT, found)
+                .setParameter("token", token)
                 .setParameter(PARAM_RESETPASSWORD_URL, getResetPasswordUrl(token));
         addForgotPasswordParams(mail.getParameters());
         try {
@@ -128,6 +130,7 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
      * Reset a password.
      * @param request The reset password request
      * @return Just an HTTP status
+     * @statuscode 403 If the key is invalid
      * @statuscode 422 If the key was valid, but has expired
      * @statuscode 200 If the key was not valid, or if the password was successfully reset.
      */
@@ -139,7 +142,7 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
         final BasicAccountDAO<A> accountDAO = getAccountDAO();
         final A found = accountDAO.findByResetPasswordToken(request.getToken());
 
-        if (found == null) return invalid("err.key.invalid");
+        if (found == null) return forbidden();
         if (found.getResetTokenAge() > getVerificationCodeExpiration()) return invalid("err.key.expired");
 
         found.setEmailVerified(true); // if you can reset a password, you must have been able to check your email
