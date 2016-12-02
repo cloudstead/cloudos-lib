@@ -72,7 +72,7 @@ if [ ${NUM_BASE_DATABAGS} -eq 1 ] ; then
     fi
     IP=$(cat ${BASE_DATABAG} | ${JSON} | grep '\["'public_ip'"\]' | head -n 1 | tr -d '"[]' | awk '{print $2}' | tr -d ' ')
     if [ -z "${IP}" ] ; then
-      IP=$(ifconfig | grep -A 3 eth0 | grep "inet addr:" | tr ':' ' ' | awk '{print $3}')
+      IP=$(ifconfig | grep -A 3 '^e*' | grep "inet addr:" -m1 | tr ':' ' ' | awk '{print $3}')
       if [ -z "${IP}" ] ; then
         die "Error determining IP address"
       fi
