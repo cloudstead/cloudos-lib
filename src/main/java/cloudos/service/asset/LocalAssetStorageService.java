@@ -52,7 +52,7 @@ public class LocalAssetStorageService extends AssetStorageService {
     @Override public String store(InputStream fileStream, String filename, String path) {
         final String mimeType = getMimeType(filename);
         try {
-            final File temp = File.createTempFile("localAsset", ".tmp");
+            final File temp = File.createTempFile("localAsset", ".tmp", getDefaultTempDir());
             try (FileOutputStream out = new FileOutputStream(temp)) {
                 IOUtils.copyLarge(fileStream, out);
             }

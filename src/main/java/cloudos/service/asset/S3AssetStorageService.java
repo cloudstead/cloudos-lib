@@ -121,7 +121,7 @@ public class S3AssetStorageService extends AssetStorageService {
 
         File temp = null;
         try {
-            temp = File.createTempFile("s3file-", ".tmp");
+            temp = File.createTempFile("s3file-", ".tmp", getDefaultTempDir());
             FileUtil.toFile(temp, fileStream);
             if (path == null) path = getUri(temp, filename);
 
