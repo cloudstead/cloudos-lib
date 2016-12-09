@@ -26,7 +26,7 @@ import static org.cobbzilla.util.io.FileUtil.*;
 @Slf4j
 public class S3AssetStorageService extends AssetStorageService {
 
-    public static final int MAX_RETRIES = 5;
+    public static final int MAX_RETRIES = 10;
     public static final long RETRY_SLEEP = TimeUnit.SECONDS.toMillis(5);
 
     public static final String PROP_ACCESS_KEY = "accessKey";
