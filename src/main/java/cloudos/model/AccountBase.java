@@ -114,9 +114,15 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     @JsonIgnore @Getter @Setter private String canonicalEmail;
 
     public static String canonicalizeEmail (String email) {
+        return canonicalizeEmail(email, true);
+    }
+
+    public static String canonicalizeEmail(String email, boolean logInvalidEmail) {
         if (empty(email)) throw invalidEx(ERR_EMAIL_EMPTY);
         int atPos = email.indexOf('@');
-        if (atPos == -1 || atPos == email.length()-1) throw invalidEx(ERR_EMAIL_INVALID, "email was invalid", email);
+        if (atPos == -1 || atPos == email.length()-1) {
+            throw invalidEx(ERR_EMAIL_INVALID, "email was invalid", email, logInvalidEmail);
+        }
         String addr = email.substring(0, atPos);
         String domain = email.substring(atPos+1);
         return (urlEncode(addr) + "@" + domain).toLowerCase();
