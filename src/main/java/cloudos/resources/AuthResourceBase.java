@@ -76,7 +76,10 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
     protected String getFromName(String templateName) { return System.getProperty("user.name") + "@" + CommandShell.hostname(); }
     protected String getFromEmail(String templateName) { return getFromName(templateName); }
 
-    // allows subclasses to add params to the forgot-password email
+    // allows subclasses to customize to the forgot-password email
+    protected String getResetPasswordTemplateName() { return T_RESET_PASSWORD; }
+    protected String getResetPasswordFromName() { return getFromName(T_RESET_PASSWORD); }
+    protected String getResetPasswordFromEmail() { return getFromEmail(T_RESET_PASSWORD); }
     protected void addForgotPasswordParams(Map<String, Object> params) {}
 
     public A findAccountForForgotPassword(String name) { return getAccountDAO().findByName(name); }
@@ -109,9 +112,9 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
         final TemplatedMail mail = new TemplatedMail()
                 .setToEmail(found.getEmail())
                 .setToName(found.getFullName())
-                .setFromName(getFromName(T_RESET_PASSWORD))
-                .setFromEmail(getFromEmail(T_RESET_PASSWORD))
-                .setTemplateName(T_RESET_PASSWORD)
+                .setFromName(getResetPasswordFromName())
+                .setFromEmail(getResetPasswordFromEmail())
+                .setTemplateName(getResetPasswordTemplateName())
                 .setParameter(TemplatedMailService.PARAM_ACCOUNT, found)
                 .setParameter("token", token)
                 .setParameter(PARAM_RESETPASSWORD_URL, getResetPasswordUrl(token));
