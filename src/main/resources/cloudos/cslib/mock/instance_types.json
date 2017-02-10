@@ -1,3 +1,3 @@
 [
-  { "name": "mocky", "memory": 1, "vcpu": 1, "storage": 30, "storage_medium": "ssd" },
+  { "name": "mocky", "memory": 1, "vcpu": 1, "storage": 30, "storage_medium": "ssd" }
 ]
