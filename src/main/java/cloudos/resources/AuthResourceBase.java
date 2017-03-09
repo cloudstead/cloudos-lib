@@ -15,10 +15,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.net.URI;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static org.cobbzilla.mail.service.TemplatedMailService.T_RESET_PASSWORD;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.wizard.resources.ResourceUtil.*;
 
@@ -36,6 +34,8 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
     protected abstract TemplatedMailService getTemplatedMailService();
 
     protected abstract String getResetPasswordUrl(String token);
+
+    protected abstract boolean addForgotPasswordParams(TemplatedMail mail, A account);
 
     protected long getVerificationCodeExpiration() { return TimeUnit.DAYS.toMillis(2); }
 
@@ -77,10 +77,8 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
     protected String getFromEmail(String templateName) { return getFromName(templateName); }
 
     // allows subclasses to customize to the forgot-password email
-    protected String getResetPasswordTemplateName() { return T_RESET_PASSWORD; }
-    protected String getResetPasswordFromName() { return getFromName(T_RESET_PASSWORD); }
-    protected String getResetPasswordFromEmail() { return getFromEmail(T_RESET_PASSWORD); }
-    protected void addForgotPasswordParams(Map<String, Object> params) {}
+    protected String getResetPasswordFromName(String name) { return getFromName(name); }
+    protected String getResetPasswordFromEmail(String name) { return getFromEmail(name); }
 
     public A findAccountForForgotPassword(String name) { return getAccountDAO().findByName(name); }
 
@@ -109,16 +107,8 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
         final String token = found.initResetToken();
         accountBaseDAO.update(found);
 
-        final TemplatedMail mail = new TemplatedMail()
-                .setToEmail(found.getEmail())
-                .setToName(found.getFullName())
-                .setFromName(getResetPasswordFromName())
-                .setFromEmail(getResetPasswordFromEmail())
-                .setTemplateName(getResetPasswordTemplateName())
-                .setParameter(TemplatedMailService.PARAM_ACCOUNT, found)
-                .setParameter("token", token)
-                .setParameter(PARAM_RESETPASSWORD_URL, getResetPasswordUrl(token));
-        addForgotPasswordParams(mail.getParameters());
+        final TemplatedMail mail = new TemplatedMail();
+        if (!addForgotPasswordParams(mail, found)) return notFound();
         try {
             getTemplatedMailService().getMailSender().deliverMessage(mail);
         } catch (Exception e) {
