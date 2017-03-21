@@ -3,9 +3,9 @@ package cloudos.cslib.ssh;
 import com.jcraft.jsch.*;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.cobbzilla.util.io.FileUtil;
 import org.cobbzilla.util.string.StringUtil;
 
 import java.io.*;
@@ -91,7 +91,7 @@ public class CsJsch {
         if (passphrase == null) return null;
         File f = new File(passphrase);
         if (f.exists()) {
-            return FileUtils.readFileToString(f).getBytes(StringUtil.UTF8cs);
+            return FileUtil.toString(f).getBytes(StringUtil.UTF8cs);
         }
         return passphrase.getBytes(StringUtil.UTF8cs);
     }
