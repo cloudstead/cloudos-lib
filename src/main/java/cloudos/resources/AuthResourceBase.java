@@ -17,6 +17,7 @@ import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
+import static org.cobbzilla.mail.service.TemplatedMailService.T_RESET_PASSWORD;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
 import static org.cobbzilla.wizard.resources.ResourceUtil.*;
 
@@ -35,7 +36,13 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
 
     protected abstract String getResetPasswordUrl(String token);
 
-    protected abstract boolean addForgotPasswordParams(TemplatedMail mail, A account);
+    protected boolean addForgotPasswordParams(TemplatedMail mail, A account) {
+        mail.setTemplateName(T_RESET_PASSWORD)
+                .setFromName(getResetPasswordFromName(T_RESET_PASSWORD))
+                .setFromEmail(getResetPasswordFromEmail(T_RESET_PASSWORD))
+                .setParameter("resetPasswordUrl", getResetPasswordUrl(account.getResetToken()));
+        return true;
+    }
 
     protected long getVerificationCodeExpiration() { return TimeUnit.DAYS.toMillis(2); }
 
@@ -103,8 +110,8 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
 
         if (found == null) return forbidden();
 
-        // generate a reset token
-        final String token = found.initResetToken();
+        // generate a reset token and save it
+        found.initResetToken();
         accountBaseDAO.update(found);
 
         final TemplatedMail mail = new TemplatedMail();

@@ -4,31 +4,32 @@ import org.cobbzilla.wizard.model.Identifiable;
 
 public interface BasicAccount extends Identifiable {
 
-    public Integer getAuthIdInt();
+    Integer getAuthIdInt();
 
-    public String getName();
+    String getName();
 
-    public boolean isTwoFactor();
+    boolean isTwoFactor();
 
-    public boolean isSuspended();
+    boolean isSuspended();
 
-    public void setLastLogin();
+    void setLastLogin();
 
-    public String getEmailVerificationCode();
+    String getEmailVerificationCode();
 
-    public boolean isEmailVerificationCodeValid(long expiration);
+    boolean isEmailVerificationCodeValid(long expiration);
 
-    public void setEmailVerified(boolean verified);
+    void setEmailVerified(boolean verified);
 
-    public String initResetToken();
+    String initResetToken();
+    String getResetToken();
+    long getResetTokenAge();
 
-    public String getEmail();
+    String getEmail();
 
-    public String getFullName();
+    String getFullName();
 
-    public long getResetTokenAge();
+    BasicAccount setPassword(String newPassword);
 
-    public BasicAccount setPassword(String newPassword);
+    void setResetToken(String token);
 
-    public void setResetToken(String token);
 }
