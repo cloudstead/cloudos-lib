@@ -148,6 +148,6 @@ fi
 
 cd ${THISDIR} && "${chef_binary}" -c solo.rb -j ${RUN_LIST} -l debug
 
-if [[ $(service apache2 status) =~ " not running" ]] ; then
+if [[ ! $(service apache2 status | grep "Active:") =~ "active (running)" ]] ; then
   service apache2 restart
 fi
