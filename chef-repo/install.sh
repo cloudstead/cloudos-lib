@@ -10,8 +10,8 @@
 #
 
 # This runs as root on the server
-CHEF_PACKAGE="chef_11.10.4-1.ubuntu.12.04_amd64.deb"
-CHEF_PACKAGE_URL="https://opscode-omnibus-packages.s3.amazonaws.com/ubuntu/12.04/x86_64/${CHEF_PACKAGE}"
+CHEF_PACKAGE="chef_13.2.20-1_amd64.deb"
+CHEF_PACKAGE_URL="https://packages.chef.io/files/stable/chef/13.2.20/ubuntu/16.04/${CHEF_PACKAGE}"
 THISDIR=$(pwd)
 JSON=${THISDIR}/JSON.sh
 
@@ -100,6 +100,12 @@ if ! test -f "${chef_binary}"; then
       cd /tmp && curl -O ${CHEF_PACKAGE_URL} && sudo dpkg -i ${CHEF_PACKAGE} || die "Error installing Chef package ${CHEF_PACKAGE}"
     fi
 
+    # Install Ruby
+    if [ $(dpkg -l | grep ruby | wc -l) -eq 0 ] ; then
+      apt-get install -y ruby || die "Error installing Ruby"
+    fi
+
+
 fi &&
 
 # If we are only being asked to install a single cookbook, create a custom run-list file just for that
@@ -126,6 +132,7 @@ if [ ! -z ${SINGLE_COOKBOOK} ] ; then
   echo "] }" >> ${SC_RUN_LIST}
 
   RUN_LIST="${SC_RUN_LIST}"
+  echo "DEBUG: RUN_LIST is $RUN_LIST"
 fi
 
 # Some apps may require us to install gems for chef in order to work
@@ -146,8 +153,7 @@ if [ -x ${THISDIR}/pre_install.sh ] ; then
   ${THISDIR}/pre_install.sh || die "Error running pre_install.sh: exit status $?"
 fi
 
-cd ${THISDIR} && "${chef_binary}" -c solo.rb -j ${RUN_LIST} -l debug
-
+cd ${THISDIR} && "${chef_binary}" -c "${THISDIR}/solo.rb" -j "${THISDIR}/${RUN_LIST}" -l debug
 if [[ ! $(service apache2 status | grep "Active:") =~ "active (running)" ]] ; then
   service apache2 restart
 fi

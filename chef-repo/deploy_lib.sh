@@ -50,7 +50,7 @@ function deploy_ssh {
     rm -f ${t} &&
     cd ~/chef &&
     for dir in data_bags data_files certs ; do if [ -d ${dir} ] ; then chmod -R 700 ${dir} || exit 1 ; fi ; done &&
-    sudo bash install.sh 2>&1 | tee chef.out &&
+    sudo bash install.sh "${5}" 2>&1 | tee chef.out &&
     echo "chef-run started at ${start}" | tee -a chef.out &&
     echo "chef-run ended   at $(date)"  | tee -a chef.out ;
     sudo rm -rf /tmp/*'
@@ -201,7 +201,7 @@ fi
 # - run chef-solo
 if [ -z "${DOCKER_TAG}" ] ; then
   # Deploy target is user@host -- use SSH to deploy
-  deploy_ssh "${CHEF}" "${SSH_OPTS}" "${DEPLOY_TARGET}"
+  deploy_ssh "${CHEF}" "${SSH_OPTS}" "${DEPLOY_TARGET}" "${SOLO_JSON}"
   if [ ${DEPLOY_RESULT} -ne 0 ] ; then
     die "Error running chef: exit code ${DEPLOY_RESULT}"
   fi
@@ -237,7 +237,7 @@ else
       die "No IP address found for existing docker container ${DOCKER_TAG}"
     fi
     DEPLOY_TARGET="ubuntu@${IP}"
-    deploy_ssh "${CHEF}" "${SSH_OPTS}" "${DEPLOY_TARGET}"
+    deploy_ssh "${CHEF}" "${SSH_OPTS}" 
     if [ ${DEPLOY_RESULT} -ne 0 ] ; then
       die "Error running chef: exit code ${DEPLOY_RESULT}"
     fi
