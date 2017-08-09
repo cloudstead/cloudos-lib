@@ -201,7 +201,7 @@ fi
 # - run chef-solo
 if [ -z "${DOCKER_TAG}" ] ; then
   # Deploy target is user@host -- use SSH to deploy
-  deploy_ssh "${CHEF}" "${SSH_OPTS}" "${DEPLOY_TARGET}" 
+  deploy_ssh "${CHEF}" "${SSH_OPTS}" "${DEPLOY_TARGET}"
   if [ ${DEPLOY_RESULT} -ne 0 ] ; then
     die "Error running chef: exit code ${DEPLOY_RESULT}"
   fi
@@ -237,7 +237,7 @@ else
       die "No IP address found for existing docker container ${DOCKER_TAG}"
     fi
     DEPLOY_TARGET="ubuntu@${IP}"
-    deploy_ssh "${CHEF}" "${SSH_OPTS}" "${DEPLOY_TARGET}"
+    deploy_ssh "${CHEF}" "${SSH_OPTS}" "${DEPLOY_TARGET}" 
     if [ ${DEPLOY_RESULT} -ne 0 ] ; then
       die "Error running chef: exit code ${DEPLOY_RESULT}"
     fi
