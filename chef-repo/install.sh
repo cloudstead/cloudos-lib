@@ -155,6 +155,6 @@ fi
 
 cd ${THISDIR} && "${chef_binary}" -c "${THISDIR}/solo.rb" -j "${THISDIR}/${RUN_LIST}" -l debug
 
-if [ $(dpkg -l | grep apache2 | wc -l) -gt 0 ] && [ ! $(service apache2 status | grep "Active:") =~ "active (running)" ] ; then
+if [[ $(dpkg -l | grep apache2 | wc -l) -gt 0 && ! $(service apache2 status | grep "Active:") =~ "active (running)" ]] ; then
   service apache2 restart
 fi
