@@ -21,11 +21,8 @@ import javax.validation.constraints.Size;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
-import static org.cobbzilla.util.daemon.ZillaRuntime.die;
-import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
-import static org.cobbzilla.util.daemon.ZillaRuntime.now;
+import static org.cobbzilla.util.daemon.ZillaRuntime.*;
 import static org.cobbzilla.util.io.FileUtil.*;
 import static org.cobbzilla.util.json.JsonUtil.fromJsonOrDie;
 import static org.cobbzilla.util.json.JsonUtil.toJsonOrDie;
@@ -109,7 +106,7 @@ public class CloudOsBase extends UniquelyNamedEntity {
 
     @Column(nullable=false, updatable=false, unique=true, length=100)
     @Getter @Setter private String ucid;
-    public void initUcid () { if (empty(ucid)) this.ucid = UUID.randomUUID().toString(); }
+    public void initUcid () { if (empty(ucid)) this.ucid = java.util.UUID.randomUUID().toString(); }
 
     @Transient @JsonIgnore
     public Crypto getCrypto () { return new CryptoSimple(ShaUtil.sha256_hex(getAdminUuid())); }
