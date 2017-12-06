@@ -40,7 +40,7 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
         mail.setTemplateName(T_RESET_PASSWORD)
                 .setFromName(getResetPasswordFromName(T_RESET_PASSWORD))
                 .setFromEmail(getResetPasswordFromEmail(T_RESET_PASSWORD))
-                .setParameter("resetPasswordUrl", getResetPasswordUrl(account.getResetToken()));
+                .setParameter(PARAM_RESETPASSWORD_URL, getResetPasswordUrl(account.getResetToken()));
         return true;
     }
 
