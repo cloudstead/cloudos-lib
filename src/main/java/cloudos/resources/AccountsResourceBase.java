@@ -1,12 +1,12 @@
 package cloudos.resources;
 
 import cloudos.dao.AccountDeviceDAO;
-import cloudos.dao.BasicAccountDAO;
-import cloudos.model.BasicAccount;
+import org.cobbzilla.wizard.dao.BasicAccountDAO;
+import org.cobbzilla.wizard.model.BasicAccount;
 import cloudos.model.auth.AccountDevice;
-import cloudos.model.auth.AuthResponse;
-import cloudos.model.auth.AuthenticationException;
-import cloudos.model.auth.LoginRequest;
+import org.cobbzilla.wizard.auth.AuthResponse;
+import org.cobbzilla.wizard.auth.AuthenticationException;
+import org.cobbzilla.wizard.auth.LoginRequest;
 import cloudos.server.HasTwoFactorAuthConfiguration;
 import cloudos.service.TwoFactorAuthService;
 import com.qmino.miredot.annotations.ReturnType;

@@ -2,6 +2,7 @@ package cloudos.dao;
 
 import cloudos.model.AccountBase;
 import org.cobbzilla.wizard.dao.AbstractCRUDDAO;
+import org.cobbzilla.wizard.dao.BasicAccountDAO;
 
 public abstract class AccountBaseDAOBase<A extends AccountBase>
         extends AbstractCRUDDAO<A>

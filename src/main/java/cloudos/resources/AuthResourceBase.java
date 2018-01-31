@@ -1,8 +1,8 @@
 package cloudos.resources;
 
-import cloudos.dao.BasicAccountDAO;
-import cloudos.model.BasicAccount;
-import cloudos.model.auth.ResetPasswordRequest;
+import org.cobbzilla.wizard.dao.BasicAccountDAO;
+import org.cobbzilla.wizard.model.BasicAccount;
+import org.cobbzilla.wizard.auth.ResetPasswordRequest;
 import com.qmino.miredot.annotations.ReturnType;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.mail.TemplatedMail;

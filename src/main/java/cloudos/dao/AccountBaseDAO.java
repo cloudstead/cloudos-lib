@@ -1,6 +1,6 @@
 package cloudos.dao;
 
-import cloudos.model.BasicAccount;
+import org.cobbzilla.wizard.model.BasicAccount;
 import org.cobbzilla.wizard.dao.DAO;
 
 public interface AccountBaseDAO<A extends BasicAccount> extends DAO<A> {
