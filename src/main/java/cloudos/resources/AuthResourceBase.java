@@ -1,13 +1,13 @@
 package cloudos.resources;
 
-import org.cobbzilla.wizard.dao.BasicAccountDAO;
-import org.cobbzilla.wizard.model.BasicAccount;
-import org.cobbzilla.wizard.auth.ResetPasswordRequest;
 import com.qmino.miredot.annotations.ReturnType;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.mail.TemplatedMail;
 import org.cobbzilla.mail.service.TemplatedMailService;
 import org.cobbzilla.util.system.CommandShell;
+import org.cobbzilla.wizard.auth.ResetPasswordRequest;
+import org.cobbzilla.wizard.dao.BasicAccountDAO;
+import org.cobbzilla.wizard.model.BasicAccount;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.cobbzilla.mail.service.TemplatedMailService.T_RESET_PASSWORD;
 import static org.cobbzilla.util.daemon.ZillaRuntime.empty;
+import static org.cobbzilla.util.string.StringUtil.trimQuotes;
 import static org.cobbzilla.wizard.resources.ResourceUtil.*;
 
 @Slf4j
@@ -101,8 +102,7 @@ public abstract class AuthResourceBase<A extends BasicAccount> {
     @ReturnType("java.lang.Void")
     public Response forgotPassword (String name) {
 
-        if (name.startsWith("\"")) name = name.substring(1);
-        if (name.endsWith("\"")) name = name.substring(0, name.length()-1);
+        name = trimQuotes(name);
         if (empty(name)) return notFound();
 
         final BasicAccountDAO<A> accountBaseDAO = getAccountDAO();
