@@ -10,6 +10,8 @@ import org.cobbzilla.wizard.filters.ScrubbableField;
 import org.cobbzilla.wizard.model.BasicAccount;
 import org.cobbzilla.wizard.model.HashedPassword;
 import org.cobbzilla.wizard.model.UniquelyNamedEntity;
+import org.cobbzilla.wizard.model.entityconfig.EntityFieldType;
+import org.cobbzilla.wizard.model.entityconfig.annotations.ECField;
 import org.cobbzilla.wizard.validation.HasValue;
 import org.hibernate.annotations.Type;
 import org.hibernate.validator.constraints.Email;
@@ -170,7 +172,7 @@ public class AccountBase extends UniquelyNamedEntity implements Scrubbable, Basi
     @Size(min=MOBILEPHONE_MINLEN, max=MOBILEPHONE_MAXLEN+ENC_PAD, message=ERR_MOBILEPHONE_LENGTH)
     @HasValue(message=ERR_MOBILEPHONE_EMPTY)
     @Column(nullable=false, columnDefinition="varchar("+(MOBILEPHONE_MAXLEN+ENC_PAD)+") NOT NULL")
-    @Getter @Type(type=ENCRYPTED_STRING) private String mobilePhone;
+    @ECField(type=EntityFieldType.us_phone) @Getter @Type(type=ENCRYPTED_STRING) private String mobilePhone;
     public AccountBase setMobilePhone (String mobilePhone) {
         if (this.mobilePhone == null || !this.mobilePhone.equals(mobilePhone)) {
             this.authId = null;
